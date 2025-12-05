@@ -1,14 +1,13 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { isSuperAdmin } from "@/lib/auth"
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { getResend } from "@/lib/resend"
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const supabase = await createServerClient()
+    const resend = getResend()
 
     const {
       data: { user },

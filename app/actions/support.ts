@@ -1,8 +1,7 @@
 "use server"
 
-import { Resend } from "resend"
+import { getResend } from "@/lib/resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const SUPPORT_DESTINATION = "weshinn@gmail.com"
 const FROM_EMAIL = "support@tektonstable.com"
 
@@ -18,6 +17,8 @@ export async function submitSupportTicket(formData: FormData) {
     if (!name || !email || !subject || !message) {
       return { success: false, error: "Please fill in all required fields." }
     }
+
+    const resend = getResend()
 
     // Format the email content
     const emailContent = `
@@ -82,6 +83,7 @@ export async function escalateChatToHuman({
       return { success: false, error: "No chat history to send." }
     }
 
+    const resend = getResend()
     const displayName = name || "A user"
 
     await resend.emails.send({

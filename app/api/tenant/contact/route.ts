@@ -1,8 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { getResend } from "@/lib/resend"
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +42,8 @@ export async function POST(request: Request) {
 
     if (tenant) {
       console.log("[v0] Contact API - sending emails")
+      const resend = getResend()
+
       // Send email to tenant owner
       const recipients = [tenant.email]
       if (tenant.contact_email_recipients) {

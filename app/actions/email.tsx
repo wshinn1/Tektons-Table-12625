@@ -1,13 +1,13 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase/server"
-import { Resend } from "resend"
+import { getResend } from "@/lib/resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "hello@tektonstable.com"
 
 export async function sendPostNotificationEmails(postId: string, tenantId: string) {
   const supabase = await createServerClient()
+  const resend = getResend()
 
   console.log("[v0] Sending post notifications for post:", postId, "tenant:", tenantId)
 

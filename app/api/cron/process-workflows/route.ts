@@ -1,8 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { getResend } from "@/lib/resend"
 
 export async function GET(request: Request) {
   try {
@@ -13,6 +11,7 @@ export async function GET(request: Request) {
     }
 
     const supabase = await createServerClient()
+    const resend = getResend()
 
     console.log("[v0] Starting workflow processing...")
 

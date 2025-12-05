@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
+import { getResend } from "@/lib/resend"
 import { createServerClient } from "@/lib/supabase/server"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: Request) {
   try {
@@ -48,6 +46,7 @@ export async function POST(request: Request) {
       emailData.reply_to = replyToEmail
     }
 
+    const resend = getResend()
     const result = await resend.emails.send(emailData)
 
     console.log("[v0] Test email sent successfully:", result)

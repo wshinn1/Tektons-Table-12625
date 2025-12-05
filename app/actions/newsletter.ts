@@ -2,9 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY!)
+import { getResend } from "@/lib/resend"
 
 export async function getSubscribers(tenantId: string) {
   const supabase = await createClient()
@@ -162,6 +160,7 @@ export async function getNewsletters(tenantId: string) {
 
 export async function sendNewsletter(newsletterId: string) {
   const supabase = await createClient()
+  const resend = getResend()
 
   // Get newsletter
   const { data: newsletter, error: newsletterError } = await supabase
@@ -237,7 +236,6 @@ export async function sendNewsletter(newsletterId: string) {
     throw new Error("No subscribers found for the selected groups")
   }
 
-  // ... existing code for sending emails ...
   const fromEmail = "hello@tektonstable.com"
   const replyToEmail = newsletter.tenant?.personal_reply_email || newsletter.tenant?.email
 
@@ -331,6 +329,7 @@ export async function getAllEmailRecipients(tenantId: string) {
 
 export async function sendTestNewsletter(newsletterId: string, testEmail: string) {
   const supabase = await createClient()
+  const resend = getResend()
 
   // Get newsletter
   const { data: newsletter, error: newsletterError } = await supabase

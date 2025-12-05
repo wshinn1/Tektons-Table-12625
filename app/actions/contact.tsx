@@ -1,10 +1,8 @@
 "use server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
-import { Resend } from "resend"
+import { getResend } from "@/lib/resend"
 import { revalidatePath } from "next/cache"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function submitContactMessage(tenantId: string, formData: FormData) {
   try {
@@ -44,6 +42,8 @@ export async function submitContactMessage(tenantId: string, formData: FormData)
       .single()
 
     if (tenant) {
+      const resend = getResend()
+
       const recipients = [tenant.email]
       if (tenant.contact_email_recipients) {
         recipients.push(...tenant.contact_email_recipients)
