@@ -213,7 +213,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
     tenant_id: tenantId,
     supporter_id: supporterId,
     amount: donationAmount,
-    type: isRecurring ? "recurring" : "one-time",
+    type: isRecurring ? "recurring" : "once",
     status: "completed",
     stripe_payment_id: (session.payment_intent as string) || session.id,
     stripe_subscription_id: (session.subscription as string) || null,
@@ -265,7 +265,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
   // Update tenant's total donations
   const { data: tenant, error: tenantError } = await supabaseAdmin
     .from("tenants")
-    .select("total_donations, total_platform_fees, name, is_tax_deductible, nonprofit_ein, subdomain, custom_domain")
+    .select(
+      "total_donations, total_platform_fees, full_name, is_tax_deductible, nonprofit_ein, subdomain, custom_domain",
+    )
     .eq("id", tenantId)
     .single()
 
@@ -312,7 +314,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
 
       const receiptEmail = EMAIL_TEMPLATES.donationReceipt({
         donorName: customerName,
-        tenantName: tenant.name || "the missionary",
+        tenantName: tenant.full_name || "the missionary",
         amount: donationAmount,
         isRecurring,
         frequency: isRecurring ? "monthly" : undefined,
