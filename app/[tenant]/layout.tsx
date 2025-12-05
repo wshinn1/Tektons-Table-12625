@@ -127,6 +127,7 @@ export default function TenantLayout({
                 setTenantName(cachedName)
                 setIsPersistedAdmin(true)
                 setIsTenantOwner(true)
+                setIsCheckingAuth(false)
                 console.log("[v0] Loaded cached admin session")
               } else if (isExpired) {
                 localStorage.removeItem(`tenant-owner-${detectedSubdomain}`)
