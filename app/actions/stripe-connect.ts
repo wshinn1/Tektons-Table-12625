@@ -26,10 +26,9 @@ export async function getStripeConnectUrl(tenantId: string, subdomain: string) {
     throw new Error("Stripe Connect not configured. Please add STRIPE_CONNECT_CLIENT_ID to your environment variables.")
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-  const redirectUri = `${baseUrl}/api/stripe/connect/callback`
-
-  console.log("[v0] Redirect URI:", redirectUri)
+  // The callback will redirect back to the tenant subdomain using the state parameter
+  const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN || "tektonstable.com"
+  const redirectUri = `https://${mainDomain}/api/stripe/connect/callback`
 
   const state = `${tenantId}:${subdomain}:${Date.now()}`
 
@@ -41,6 +40,7 @@ export async function getStripeConnectUrl(tenantId: string, subdomain: string) {
     state: state,
   })
 
+  console.log("[v0] Redirect URI:", redirectUri)
   console.log("[v0] OAuth URL:", `https://connect.stripe.com/oauth/authorize?${params.toString()}`)
 
   return `https://connect.stripe.com/oauth/authorize?${params.toString()}`

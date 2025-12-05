@@ -174,10 +174,10 @@ export function TenantNavbar({
               {/* Auth Links */}
               {user ? (
                 <Link
-                  href={isTenantOwner ? "/admin/giving" : isDonor ? "/donor" : "/"}
+                  href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/"}
                   className="ml-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold hover:bg-[#1e3a8a]/90 transition-colors font-open-sans"
                 >
-                  {isTenantOwner ? "Admin" : isDonor ? "My Account" : "Dashboard"}
+                  {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
@@ -252,11 +252,11 @@ export function TenantNavbar({
               <div className="pt-2 border-t border-gray-100 mt-2">
                 {user ? (
                   <Link
-                    href={isTenantOwner ? "/admin/giving" : isDonor ? "/donor" : "/"}
+                    href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/"}
                     className="block px-4 py-3 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {isTenantOwner ? "Go to Admin" : isDonor ? "My Account" : "Dashboard"}
+                    {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
                   </Link>
                 ) : (
                   <div className="space-y-2">

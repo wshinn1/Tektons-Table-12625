@@ -2,6 +2,8 @@ import { getPublishedPageBySlug, getPageWithSections } from "@/app/actions/pages
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { SectionRenderer } from "@/components/sections/section-renderer"
+import { MarketingNav } from "@/components/marketing-nav"
+import { MarketingFooter } from "@/components/marketing-footer"
 
 interface Props {
   params: Promise<{
@@ -35,39 +37,43 @@ export default async function PlatformPage({ params }: Props) {
   // Render based on editor type
   if (page.editor_type === "unlayer") {
     return (
-      <div className="min-h-screen">
-        {/* Render the exported HTML content from Unlayer */}
-        <div className="unlayer-content" dangerouslySetInnerHTML={{ __html: page.html_content || "" }} />
+      <div className="min-h-screen flex flex-col">
+        <MarketingNav />
+        <main className="flex-1">
+          {/* Render the exported HTML content from Unlayer */}
+          <div className="unlayer-content" dangerouslySetInnerHTML={{ __html: page.html_content || "" }} />
 
-        {/* Styles for Unlayer content */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              .unlayer-content {
-                width: 100%;
-              }
-              .unlayer-content img {
-                max-width: 100%;
-                height: auto;
-              }
-              .unlayer-content a {
-                color: inherit;
-              }
-              .unlayer-content table {
-                max-width: 100%;
-              }
-              @media (max-width: 768px) {
-                .unlayer-content table,
-                .unlayer-content tbody,
-                .unlayer-content tr,
-                .unlayer-content td {
-                  display: block !important;
-                  width: 100% !important;
+          {/* Styles for Unlayer content */}
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                .unlayer-content {
+                  width: 100%;
                 }
-              }
-            `,
-          }}
-        />
+                .unlayer-content img {
+                  max-width: 100%;
+                  height: auto;
+                }
+                .unlayer-content a {
+                  color: inherit;
+                }
+                .unlayer-content table {
+                  max-width: 100%;
+                }
+                @media (max-width: 768px) {
+                  .unlayer-content table,
+                  .unlayer-content tbody,
+                  .unlayer-content tr,
+                  .unlayer-content td {
+                    display: block !important;
+                    width: 100% !important;
+                  }
+                }
+              `,
+            }}
+          />
+        </main>
+        <MarketingFooter />
       </div>
     )
   }
@@ -76,20 +82,24 @@ export default async function PlatformPage({ params }: Props) {
   const { sections } = await getPageWithSections(slug)
 
   return (
-    <div className="min-h-screen">
-      {sections && sections.length > 0 ? (
-        sections.map((section: any) => (
-          <SectionRenderer
-            key={section.id}
-            templateKey={section.section_templates?.template_key}
-            props={section.props}
-          />
-        ))
-      ) : (
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <p className="text-muted-foreground">This page has no content yet.</p>
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col">
+      <MarketingNav />
+      <main className="flex-1">
+        {sections && sections.length > 0 ? (
+          sections.map((section: any) => (
+            <SectionRenderer
+              key={section.id}
+              templateKey={section.section_templates?.template_key}
+              props={section.props}
+            />
+          ))
+        ) : (
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <p className="text-muted-foreground">This page has no content yet.</p>
+          </div>
+        )}
+      </main>
+      <MarketingFooter />
     </div>
   )
 }
