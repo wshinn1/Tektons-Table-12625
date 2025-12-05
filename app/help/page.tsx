@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, BookOpen, Users, Mail, DollarSign, Settings, BarChart, Globe } from "lucide-react"
+import { Search, BookOpen, Users, Mail, DollarSign, Settings, BarChart, Globe, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { MarketingNav } from "@/components/marketing-nav"
 
@@ -17,6 +17,16 @@ const iconMap: Record<string, any> = {
   analytics: BarChart,
   integrations: Globe,
 }
+
+const helpfulLinks = [
+  { title: "Manage Giving", href: "/p/manage-giving" },
+  { title: "Creating a Blog Post", href: "/p/Creating-a-Blog-Post" },
+  { title: "Creating a Campaign", href: "/p/Creating-a-Campaign" },
+  { title: "Supporters", href: "/p/Supporters" },
+  { title: "Newsletter", href: "/p/Newsletter" },
+  { title: "Creating Custom Pages", href: "/p/Creating-Custom-Pages" },
+  { title: "Managing Your Funds", href: "/p/Managing-Your-Funds" },
+]
 
 export default async function HelpCenter() {
   const supabase = await createClient()
@@ -65,6 +75,20 @@ export default async function HelpCenter() {
               </Link>
             )
           })}
+        </div>
+
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Helpful Links</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+          {helpfulLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base sm:text-lg">{link.title}</CardTitle>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
         </div>
 
         {articles && articles.length > 0 && (
