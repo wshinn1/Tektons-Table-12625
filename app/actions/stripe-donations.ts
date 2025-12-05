@@ -19,6 +19,8 @@ function parseCustomTierId(tierId: string): CustomTierData | null {
   }
 }
 
+const PLATFORM_FEE_PERCENTAGE = 3.5
+
 export async function startDonationCheckout(
   tenantId: string,
   tierId: string,
@@ -40,7 +42,6 @@ export async function startDonationCheckout(
   let isCustom = false
 
   if (customTier) {
-    // Virtual tier for custom donations
     isCustom = true
     const isRecurring = customTier.type === "monthly"
     tier = {
@@ -53,7 +54,6 @@ export async function startDonationCheckout(
     }
     console.log("[v0] Created custom tier:", tier)
   } else {
-    // Standard tier from predefined tiers
     tier = DEFAULT_DONATION_TIERS.find((t) => t.id === tierId)
     if (!tier) {
       throw new Error(`Donation tier with id "${tierId}" not found`)
@@ -68,7 +68,6 @@ export async function startDonationCheckout(
 
   console.log("[v0] Authenticated user ID:", user?.id || "none")
 
-  // Get tenant info for connected Stripe account
   const { data: tenant } = await supabase.from("tenants").select("*").eq("id", tenantId).single()
 
   if (!tenant) {
@@ -93,72 +92,36 @@ export async function startDonationCheckout(
 
   const { data: givingSettings } = await supabase
     .from("tenant_giving_settings")
-    .select("fee_model")
+    .select("fee_model, allow_donor_tips")
     .eq("tenant_id", tenantId)
     .single()
 
-  const feeModel = givingSettings?.fee_model || "donor_tips"
-  console.log("[v0] Fee model:", feeModel)
+  const allowDonorTips = givingSettings?.allow_donor_tips || false
+  console.log("[v0] Allow donor tips:", allowDonorTips)
 
   const tipInCents = Math.round(tipAmount * 100)
   const donationAmountInCents = tier.amountInCents
+
+  const platformFeeInCents = Math.round((donationAmountInCents * PLATFORM_FEE_PERCENTAGE) / 100)
+
+  const totalApplicationFeeInCents = platformFeeInCents + tipInCents
+
+  // Total charged to donor = donation + tip (platform fee comes out of donation)
   const totalAmountInCents = donationAmountInCents + tipInCents
 
   console.log(
     "[v0] Amounts - Donation:",
     donationAmountInCents,
+    "cents, Platform Fee (3.5%):",
+    platformFeeInCents,
     "cents, Tip:",
     tipInCents,
-    "cents, Total:",
+    "cents, Total App Fee:",
+    totalApplicationFeeInCents,
+    "cents, Total Charged:",
     totalAmountInCents,
     "cents",
   )
-
-  let platformFeePercentage = 0
-  let applicationFeeAmount = 0 // For one-time payments
-  let applicationFeePercent = 0 // For subscriptions
-
-  if (feeModel === "platform_fee") {
-    const { data: platformFeeConfig } = await supabase
-      .from("platform_fee_config")
-      .select("base_fee_percentage")
-      .order("effective_date", { ascending: false })
-      .limit(1)
-      .single()
-
-    platformFeePercentage = platformFeeConfig?.base_fee_percentage || 3.5
-
-    // Calculate application fee based on donation amount
-    if (tier.recurring) {
-      applicationFeePercent = platformFeePercentage
-    } else {
-      applicationFeeAmount = Math.round((tier.amountInCents * platformFeePercentage) / 100)
-    }
-  } else if (feeModel === "donor_tips" && tipInCents > 0) {
-    // The application_fee_percent is applied to the TOTAL subscription amount (all line items)
-    // So we need to calculate what percentage of the total equals the tip amount
-
-    if (tier.recurring) {
-      // For recurring subscriptions:
-      // application_fee_percent is applied to the total of ALL line items
-      // Total = donation + tip, and we want the fee to equal the tip
-      // So: applicationFeePercent = (tipInCents / totalAmountInCents) * 100
-      applicationFeePercent = Math.round((tipInCents / totalAmountInCents) * 100 * 100) / 100
-      console.log(
-        "[v0] Recurring subscription - applicationFeePercent:",
-        applicationFeePercent,
-        "% of total",
-        totalAmountInCents,
-        "cents =",
-        Math.round((totalAmountInCents * applicationFeePercent) / 100),
-        "cents",
-      )
-    } else {
-      // For one-time payments, the application_fee_amount is a fixed amount
-      applicationFeeAmount = tipInCents
-      console.log("[v0] One-time payment - applicationFeeAmount:", applicationFeeAmount, "cents")
-    }
-  }
 
   const lineItems: any[] = [
     {
@@ -179,7 +142,7 @@ export async function startDonationCheckout(
     },
   ]
 
-  if (tipInCents > 0) {
+  if (allowDonorTips && tipInCents > 0) {
     console.log("[v0] Adding tip line item:", tipInCents, "cents")
     lineItems.push({
       price_data: {
@@ -200,7 +163,7 @@ export async function startDonationCheckout(
   }
 
   const totalLineItemsAmount = lineItems.reduce((sum, item) => sum + item.price_data.unit_amount * item.quantity, 0)
-  console.log("[v0] Total line items amount:", totalLineItemsAmount, "cents (should equal", totalAmountInCents, ")")
+  console.log("[v0] Total line items amount:", totalLineItemsAmount, "cents")
 
   const sessionParams: any = {
     mode: tier.recurring ? "subscription" : "payment",
@@ -215,10 +178,10 @@ export async function startDonationCheckout(
     metadata: {
       tenant_id: tenantId,
       tier_id: tierId,
-      fee_model: feeModel,
       donation_amount: donationAmountInCents / 100,
+      platform_fee: platformFeeInCents / 100,
       tip_amount: tipInCents / 100,
-      total_amount: totalAmountInCents / 100,
+      total_amount: totalLineItemsAmount / 100,
       authenticated_user_id: user?.id || "",
       campaign_id: campaignId || "",
       campaign_name: campaign?.title || "",
@@ -226,13 +189,14 @@ export async function startDonationCheckout(
     payment_intent_data: tier.recurring
       ? undefined
       : {
+          receipt_email: donorEmail,
           metadata: {
             tenant_id: tenantId,
             tier_id: tierId,
-            fee_model: feeModel,
             donation_amount: donationAmountInCents / 100,
+            platform_fee: platformFeeInCents / 100,
             tip_amount: tipInCents / 100,
-            total_amount: totalAmountInCents / 100,
+            total_amount: totalLineItemsAmount / 100,
             authenticated_user_id: user?.id || "",
             campaign_id: campaignId || "",
             campaign_name: campaign?.title || "",
@@ -243,13 +207,16 @@ export async function startDonationCheckout(
           metadata: {
             tenant_id: tenantId,
             tier_id: tierId,
-            fee_model: feeModel,
             donation_amount: donationAmountInCents / 100,
+            platform_fee: platformFeeInCents / 100,
             tip_amount: tipInCents / 100,
-            total_amount: totalAmountInCents / 100,
+            total_amount: totalLineItemsAmount / 100,
             authenticated_user_id: user?.id || "",
             campaign_id: campaignId || "",
             campaign_name: campaign?.title || "",
+          },
+          invoice_settings: {
+            // Stripe will send invoice emails for subscriptions
           },
         }
       : undefined,
@@ -259,30 +226,30 @@ export async function startDonationCheckout(
     console.log("[v0] Using Stripe Connect account")
 
     if (tier.recurring) {
-      if (applicationFeePercent > 0) {
-        sessionParams.subscription_data = {
-          ...sessionParams.subscription_data,
-          application_fee_percent: applicationFeePercent,
-        }
-        console.log(
-          "[v0] Setting subscription application_fee_percent:",
-          applicationFeePercent,
-          "% (will collect",
-          Math.round((totalAmountInCents * applicationFeePercent) / 100),
-          "cents from",
-          totalAmountInCents,
-          "total)",
-        )
+      // For subscriptions, calculate the percentage that equals our total fee
+      // application_fee_percent applies to the total of all line items
+      const applicationFeePercent = Math.round((totalApplicationFeeInCents / totalLineItemsAmount) * 100 * 100) / 100
+
+      sessionParams.subscription_data = {
+        ...sessionParams.subscription_data,
+        application_fee_percent: applicationFeePercent,
       }
+      console.log(
+        "[v0] Setting subscription application_fee_percent:",
+        applicationFeePercent,
+        "% (will collect",
+        Math.round((totalLineItemsAmount * applicationFeePercent) / 100),
+        "cents from",
+        totalLineItemsAmount,
+        "total)",
+      )
     } else {
-      // For one-time payments, use application_fee_amount
-      if (applicationFeeAmount > 0) {
-        sessionParams.payment_intent_data = {
-          ...sessionParams.payment_intent_data,
-          application_fee_amount: applicationFeeAmount,
-        }
-        console.log("[v0] Setting payment application_fee_amount:", applicationFeeAmount, "cents")
+      // For one-time payments, use fixed application_fee_amount
+      sessionParams.payment_intent_data = {
+        ...sessionParams.payment_intent_data,
+        application_fee_amount: totalApplicationFeeInCents,
       }
+      console.log("[v0] Setting payment application_fee_amount:", totalApplicationFeeInCents, "cents")
     }
   } else {
     console.error("[v0] Tenant has no Stripe account connected")
@@ -297,7 +264,6 @@ export async function startDonationCheckout(
     let session
     if (tenant.stripe_account_id) {
       console.log("[v0] Creating session on connected account:", tenant.stripe_account_id)
-      // Remove stripe_account from sessionParams (if it exists from previous code)
       const { stripe_account, ...cleanParams } = sessionParams
 
       session = await stripe.checkout.sessions.create(cleanParams, {

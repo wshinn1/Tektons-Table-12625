@@ -22,6 +22,7 @@ interface GivingSettings {
   fundraising_target_goal?: number
   show_donor_names?: boolean
   show_progress_widget?: boolean
+  homepage_widget_preference?: "giving" | "campaign" | "none"
 }
 
 export function GivingSettingsForm({
@@ -39,7 +40,9 @@ export function GivingSettingsForm({
   const [startingAmount, setStartingAmount] = useState(initialSettings?.fundraising_start_amount || 0)
   const [targetGoal, setTargetGoal] = useState(initialSettings?.fundraising_target_goal || 5000)
   const [showDonorNames, setShowDonorNames] = useState(initialSettings?.show_donor_names ?? false)
-  const [showWidget, setShowWidget] = useState(initialSettings?.show_progress_widget ?? true)
+  const [showWidget, setShowWidget] = useState(
+    initialSettings?.homepage_widget_preference === "giving" || initialSettings?.show_progress_widget === true,
+  )
 
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -55,7 +58,7 @@ export function GivingSettingsForm({
         fundraising_start_amount: startingAmount,
         fundraising_target_goal: targetGoal,
         show_donor_names: showDonorNames,
-        show_progress_widget: showWidget,
+        homepage_widget_preference: showWidget ? "giving" : "none",
       })
 
       toast({

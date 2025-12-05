@@ -27,6 +27,8 @@ export async function updateGivingSettings(
     fundraising_target_goal?: number
     show_donor_names?: boolean
     show_progress_widget?: boolean
+    show_progress?: boolean
+    homepage_widget_preference?: "giving" | "campaign" | "none"
   },
 ) {
   const supabase = await createClient()
@@ -55,6 +57,9 @@ export async function updateGivingSettings(
     updateData.fundraising_target_goal = settings.fundraising_target_goal
   if (settings.show_donor_names !== undefined) updateData.show_donor_names = settings.show_donor_names
   if (settings.show_progress_widget !== undefined) updateData.show_progress_widget = settings.show_progress_widget
+  if (settings.show_progress !== undefined) updateData.show_progress = settings.show_progress
+  if (settings.homepage_widget_preference !== undefined)
+    updateData.homepage_widget_preference = settings.homepage_widget_preference
 
   console.log("[v0] Updating giving settings with data:", updateData)
 
@@ -121,37 +126,37 @@ export async function getGivingStats(tenantId: string) {
   const supabase = createAdminClient()
 
   const { count: donationCount } = await supabase
-    .from("donations")
+    .from("tenant_donations")
     .select("*", { count: "exact", head: true })
     .eq("tenant_id", tenantId)
     .eq("status", "completed")
 
-  // Get total supporters count
+  // Get total supporters count from tenant_financial_supporters
   const { count: totalSupporters } = await supabase
-    .from("supporters")
+    .from("tenant_financial_supporters")
     .select("*", { count: "exact", head: true })
     .eq("tenant_id", tenantId)
 
   // Get monthly supporters (recurring donations)
   const { count: monthlySupporters } = await supabase
-    .from("supporters")
+    .from("tenant_financial_supporters")
     .select("*", { count: "exact", head: true })
     .eq("tenant_id", tenantId)
-    .eq("is_recurring", true)
+    .gt("monthly_amount", 0)
 
-  // Get total monthly recurring revenue
+  // Get total monthly recurring revenue from tenant_donations
   const { data: recurringDonations } = await supabase
-    .from("donations")
+    .from("tenant_donations")
     .select("amount")
     .eq("tenant_id", tenantId)
     .eq("status", "completed")
-    .eq("is_recurring", true)
+    .eq("type", "recurring")
 
   const totalMonthlyRecurring = recurringDonations?.reduce((sum, d) => sum + Number(d.amount || 0), 0) || 0
 
-  // Get total lifetime giving
+  // Get total lifetime giving from tenant_donations
   const { data: allDonations } = await supabase
-    .from("donations")
+    .from("tenant_donations")
     .select("amount")
     .eq("tenant_id", tenantId)
     .eq("status", "completed")
@@ -223,8 +228,8 @@ export async function getTotalRaised(tenantId: string): Promise<number> {
   console.log("[v0] getTotalRaised - Starting amount from settings:", startingAmount)
 
   const { data: donations, error: donationsError } = await supabase
-    .from("donations")
-    .select("id, amount, status, tenant_id, created_at")
+    .from("tenant_donations")
+    .select("id, amount, status, tenant_id, donated_at")
     .eq("tenant_id", tenantId)
     .eq("status", "completed")
 
@@ -239,18 +244,19 @@ export async function getTotalRaised(tenantId: string): Promise<number> {
     console.log("[v0] getTotalRaised - Donation details:")
     donations.forEach((d, i) => {
       console.log(
-        `[v0]   Donation ${i + 1}: id=${d.id}, amount=${d.amount}, status=${d.status}, tenant_id=${d.tenant_id}, created_at=${d.created_at}`,
+        `[v0]   Donation ${i + 1}: id=${d.id}, amount=${d.amount}, status=${d.status}, tenant_id=${d.tenant_id}, donated_at=${d.donated_at}`,
       )
     })
   } else {
     console.log("[v0] getTotalRaised - No donations found for tenant:", tenantId)
 
+    // Debug: Check all donations in tenant_donations table
     const { data: allDonations, error: allError } = await supabase
-      .from("donations")
+      .from("tenant_donations")
       .select("id, tenant_id, status, amount")
       .limit(10)
 
-    console.log("[v0] getTotalRaised - Sample of all donations in table:", allDonations)
+    console.log("[v0] getTotalRaised - Sample of all donations in tenant_donations table:", allDonations)
     if (allError) {
       console.error("[v0] getTotalRaised - Error fetching all donations:", allError)
     }

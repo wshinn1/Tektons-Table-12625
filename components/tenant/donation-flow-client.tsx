@@ -23,6 +23,7 @@ interface DonationFlowClientProps {
 
 const PRESET_AMOUNTS = [50, 100, 200, 300, 500, 1000]
 const SUGGESTED_INDEX = 2 // $200
+const PLATFORM_FEE_PERCENTAGE = 3.5
 
 export function DonationFlowClient({
   subdomain,
@@ -46,13 +47,14 @@ export function DonationFlowClient({
   }
 
   const handleCustomAmountChange = (value: string) => {
-    // Remove non-numeric characters except decimal point
     const cleaned = value.replace(/[^\d.]/g, "")
     setCustomAmount(cleaned)
     setSelectedAmount(null)
   }
 
   const finalAmount = selectedAmount || (customAmount ? Number.parseFloat(customAmount) : 0)
+  const platformFee = finalAmount * (PLATFORM_FEE_PERCENTAGE / 100)
+  const totalAmount = finalAmount // Platform fee comes out of donation, not added on top
 
   const handleContinue = () => {
     if (finalAmount <= 0) return
@@ -224,27 +226,34 @@ export function DonationFlowClient({
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  Recurring fee (5%)
-                  <span className="inline-block w-4 h-4 rounded-full border text-xs flex items-center justify-center">
+                  Platform fee ({PLATFORM_FEE_PERCENTAGE}%)
+                  <span
+                    className="inline-flex w-4 h-4 rounded-full border text-xs items-center justify-center cursor-help"
+                    title="This fee helps maintain the platform and is deducted from your donation"
+                  >
                     i
                   </span>
                 </span>
-                <span>{formatCurrency(finalAmount * 0.05 * 100)}</span>
+                <span>-{formatCurrency(platformFee * 100)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Amount to {tenantName.split(" ")[0]}</span>
+                <span>{formatCurrency((finalAmount - platformFee) * 100)}</span>
               </div>
             </div>
 
             <div className="flex justify-between font-semibold pt-2 border-t">
               <span>Total due today</span>
-              <span>{formatCurrency(finalAmount * 1.05 * 100)}</span>
+              <span>{formatCurrency(totalAmount * 100)}</span>
             </div>
           </div>
 
           {/* Terms */}
           <p className="text-xs text-muted-foreground">
-            By choosing the payment method above, you agree to a recurring{" "}
+            By choosing the payment method above, you agree to a{" "}
             <span className="font-semibold">{donationType === "monthly" ? "monthly" : "one-time"}</span> charge of{" "}
-            <span className="font-semibold">{formatCurrency(finalAmount * 1.05 * 100)}</span> until it is canceled by
-            you or us as per our Terms.
+            <span className="font-semibold">{formatCurrency(totalAmount * 100)}</span>
+            {donationType === "monthly" && " until it is canceled by you or us as per our Terms"}.
           </p>
 
           <Button

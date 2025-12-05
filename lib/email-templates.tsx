@@ -184,6 +184,7 @@ export const EMAIL_TEMPLATES = {
     date,
     isTaxDeductible,
     nonprofitEIN,
+    donorPortalUrl,
   }: {
     donorName: string
     tenantName: string
@@ -193,6 +194,7 @@ export const EMAIL_TEMPLATES = {
     date: string
     isTaxDeductible: boolean
     nonprofitEIN?: string
+    donorPortalUrl?: string
   }) => ({
     subject: `Thank you for your ${isRecurring ? "recurring " : ""}donation to ${tenantName}`,
     html: `
@@ -264,6 +266,23 @@ export const EMAIL_TEMPLATES = {
                           This donation is not tax-deductible as the recipient is not a registered 501(c)(3) nonprofit organization.
                         </p>
                       `
+                      }
+                      ${
+                        donorPortalUrl
+                          ? `
+                      <div style="background-color: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
+                        <p style="color: #333333; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">
+                          Track Your Giving
+                        </p>
+                        <p style="color: #666666; font-size: 14px; line-height: 20px; margin: 0 0 20px 0;">
+                          Create a donor account to view your giving history, manage recurring donations, and download tax receipts.
+                        </p>
+                        <a href="${donorPortalUrl}" style="display: inline-block; padding: 14px 32px; background-color: #0ea5e9; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                          Sign Up or Log In
+                        </a>
+                      </div>
+                      `
+                          : ""
                       }
                       <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 30px 0 0 0;">
                         Your generosity makes a real difference. Thank you for your continued support!
