@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { SectionRenderer } from "@/components/sections/section-renderer"
 import { MarketingNav } from "@/components/marketing-nav"
 import { MarketingFooter } from "@/components/marketing-footer"
+import { UnlayerContentRenderer } from "@/components/unlayer-content-renderer"
 
 interface Props {
   params: Promise<{
@@ -40,38 +41,7 @@ export default async function PlatformPage({ params }: Props) {
       <div className="min-h-screen flex flex-col">
         <MarketingNav />
         <main className="flex-1">
-          {/* Render the exported HTML content from Unlayer */}
-          <div className="unlayer-content" dangerouslySetInnerHTML={{ __html: page.html_content || "" }} />
-
-          {/* Styles for Unlayer content */}
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
-                .unlayer-content {
-                  width: 100%;
-                }
-                .unlayer-content img {
-                  max-width: 100%;
-                  height: auto;
-                }
-                .unlayer-content a {
-                  color: inherit;
-                }
-                .unlayer-content table {
-                  max-width: 100%;
-                }
-                @media (max-width: 768px) {
-                  .unlayer-content table,
-                  .unlayer-content tbody,
-                  .unlayer-content tr,
-                  .unlayer-content td {
-                    display: block !important;
-                    width: 100% !important;
-                  }
-                }
-              `,
-            }}
-          />
+          <UnlayerContentRenderer htmlContent={page.html_content || ""} />
         </main>
         <MarketingFooter />
       </div>
