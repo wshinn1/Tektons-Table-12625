@@ -17,16 +17,31 @@ export async function POST(req: Request) {
   const headersList = await headers()
   const signature = headersList.get("stripe-signature")
 
+  console.log("[v0] Webhook received")
+  console.log("[v0] Has signature:", !!signature)
+  console.log("[v0] Has webhook secret:", !!webhookSecret)
+  console.log("[v0] Webhook secret length:", webhookSecret?.length || 0)
+
   if (!signature) {
+    console.log("[v0] Missing stripe-signature header")
     return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 })
+  }
+
+  if (!webhookSecret) {
+    console.log("[v0] Missing STRIPE_WEBHOOK_SECRET env var")
+    return NextResponse.json({ error: "Missing webhook secret configuration" }, { status: 500 })
   }
 
   let event: Stripe.Event
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+    console.log("[v0] Webhook signature verified successfully")
+    console.log("[v0] Event type:", event.type)
+    console.log("[v0] Event account:", event.account)
   } catch (err: any) {
-    return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 })
+    console.log("[v0] Webhook signature verification failed:", err.message)
+    return NextResponse.json({ error: "Webhook signature verification failed", details: err.message }, { status: 400 })
   }
 
   const supabase = createAdminClient() // Use admin client instead of regular client
