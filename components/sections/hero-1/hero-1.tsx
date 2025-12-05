@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Youtube } from "lucide-react"
 
@@ -79,6 +79,8 @@ export default function Hero1({ props }: Hero1Props) {
   } = props
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
 
   const isVideo =
     backgroundType === "video" ||
@@ -88,29 +90,53 @@ export default function Hero1({ props }: Hero1Props) {
   const actualVideoUrl = videoUrl || (isVideo && cdnLink ? cdnLink : "")
 
   useEffect(() => {
-    const video = videoRef.current
-    if (video && isVideo && actualVideoUrl) {
-      const playVideo = async () => {
-        try {
-          video.muted = true
-          await video.play()
-        } catch (error) {
-          const handleInteraction = async () => {
-            try {
-              await video.play()
-              document.removeEventListener("touchstart", handleInteraction)
-              document.removeEventListener("click", handleInteraction)
-            } catch (e) {
-              // Still failed, ignore
-            }
-          }
-          document.addEventListener("touchstart", handleInteraction, { once: true })
-          document.addEventListener("click", handleInteraction, { once: true })
-        }
-      }
-      playVideo()
+    if (!isVideo || !actualVideoUrl) return
+
+    const deferVideoLoad = () => {
+      setShouldLoadVideo(true)
+    }
+
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+    } else {
+      setTimeout(deferVideoLoad, 1000)
     }
   }, [isVideo, actualVideoUrl])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !isVideo || !actualVideoUrl || !shouldLoadVideo) return
+
+    video.src = actualVideoUrl
+    video.load()
+
+    const playVideo = async () => {
+      try {
+        video.muted = true
+        await video.play()
+        setVideoLoaded(true)
+      } catch (error) {
+        const handleInteraction = async () => {
+          try {
+            await video.play()
+            setVideoLoaded(true)
+            document.removeEventListener("touchstart", handleInteraction)
+            document.removeEventListener("click", handleInteraction)
+          } catch (e) {
+            // Still failed, ignore
+          }
+        }
+        document.addEventListener("touchstart", handleInteraction, { once: true })
+        document.addEventListener("click", handleInteraction, { once: true })
+      }
+    }
+
+    video.addEventListener("canplay", playVideo, { once: true })
+
+    return () => {
+      video.removeEventListener("canplay", playVideo)
+    }
+  }, [isVideo, actualVideoUrl, shouldLoadVideo])
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (isVideo) {
@@ -149,19 +175,19 @@ export default function Hero1({ props }: Hero1Props) {
       className="relative min-h-[700px] lg:min-h-[800px] flex items-center overflow-hidden"
       style={getBackgroundStyle()}
     >
-      {isVideo && actualVideoUrl && (
+      {isVideo && actualVideoUrl && shouldLoadVideo && (
         <video
           ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          preload="auto"
+          preload="none"
           webkit-playsinline="true"
           x-webkit-airplay="allow"
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
         >
-          <source src={actualVideoUrl} type="video/mp4" />
+          {/* Source added dynamically via useEffect */}
         </video>
       )}
 

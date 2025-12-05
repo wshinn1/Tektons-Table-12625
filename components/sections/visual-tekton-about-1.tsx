@@ -37,45 +37,54 @@ export default function VisualTektonAbout1({
   const video2Ref = useRef<HTMLVideoElement>(null)
   const [video1Loaded, setVideo1Loaded] = useState(false)
   const [video2Loaded, setVideo2Loaded] = useState(false)
+  const [shouldLoadVideos, setShouldLoadVideos] = useState(false)
 
   useEffect(() => {
+    const hasVideos = media1_type === "cdn" || media2_type === "cdn"
+    if (!hasVideos) return
+
+    const deferVideoLoad = () => {
+      setShouldLoadVideos(true)
+    }
+
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+    } else {
+      setTimeout(deferVideoLoad, 1000)
+    }
+  }, [media1_type, media2_type])
+
+  useEffect(() => {
+    if (!shouldLoadVideos) return
+
     const loadAndPlayVideo = (video: HTMLVideoElement | null, url: string, setLoaded: (v: boolean) => void) => {
       if (!video || !url) return
 
-      const load = () => {
-        video.src = url
-        video.load()
+      video.src = url
+      video.load()
 
-        const playVideo = async () => {
-          try {
-            video.muted = true
-            await video.play()
-            setLoaded(true)
-          } catch (error) {
-            const handleInteraction = async () => {
-              try {
-                await video.play()
-                setLoaded(true)
-                document.removeEventListener("touchstart", handleInteraction)
-                document.removeEventListener("click", handleInteraction)
-              } catch (e) {
-                // Still failed, ignore
-              }
+      const playVideo = async () => {
+        try {
+          video.muted = true
+          await video.play()
+          setLoaded(true)
+        } catch (error) {
+          const handleInteraction = async () => {
+            try {
+              await video.play()
+              setLoaded(true)
+              document.removeEventListener("touchstart", handleInteraction)
+              document.removeEventListener("click", handleInteraction)
+            } catch (e) {
+              // Still failed, ignore
             }
-            document.addEventListener("touchstart", handleInteraction, { once: true })
-            document.addEventListener("click", handleInteraction, { once: true })
           }
+          document.addEventListener("touchstart", handleInteraction, { once: true })
+          document.addEventListener("click", handleInteraction, { once: true })
         }
-
-        video.addEventListener("canplay", playVideo, { once: true })
       }
 
-      // Use requestIdleCallback to defer video loading
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(load, { timeout: 2000 })
-      } else {
-        setTimeout(load, 100)
-      }
+      video.addEventListener("canplay", playVideo, { once: true })
     }
 
     if (media1_type === "cdn" && media1_url) {
@@ -84,7 +93,7 @@ export default function VisualTektonAbout1({
     if (media2_type === "cdn" && media2_url) {
       loadAndPlayVideo(video2Ref.current, media2_url, setVideo2Loaded)
     }
-  }, [media1_type, media1_url, media2_type, media2_url])
+  }, [media1_type, media1_url, media2_type, media2_url, shouldLoadVideos])
 
   const renderMedia = (
     type: "image" | "cdn",
@@ -95,6 +104,10 @@ export default function VisualTektonAbout1({
     videoLoaded?: boolean,
   ) => {
     if (type === "cdn") {
+      if (!shouldLoadVideos) {
+        // Return a placeholder div while waiting for video
+        return <div className={`w-full h-full ${className} bg-muted`} />
+      }
       return (
         <video
           ref={videoRef}

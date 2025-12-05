@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface HeroOverlayProps {
   title: string
@@ -28,49 +28,82 @@ export function HeroOverlay({
   buttonColor,
 }: HeroOverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
+
+  useEffect(() => {
+    if (backgroundType !== "video") return
+
+    const deferVideoLoad = () => {
+      setShouldLoadVideo(true)
+    }
+
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+    } else {
+      setTimeout(deferVideoLoad, 1000)
+    }
+  }, [backgroundType])
 
   useEffect(() => {
     const video = videoRef.current
-    if (video && backgroundType === "video") {
-      const playVideo = async () => {
-        try {
-          video.muted = true
-          await video.play()
-        } catch (error) {
-          const handleInteraction = async () => {
-            try {
-              await video.play()
-              document.removeEventListener("touchstart", handleInteraction)
-              document.removeEventListener("click", handleInteraction)
-            } catch (e) {
-              // Still failed, ignore
-            }
+    if (!video || backgroundType !== "video" || !shouldLoadVideo) return
+
+    video.src = backgroundUrl
+    video.load()
+
+    const playVideo = async () => {
+      try {
+        video.muted = true
+        await video.play()
+        setVideoLoaded(true)
+      } catch (error) {
+        const handleInteraction = async () => {
+          try {
+            await video.play()
+            setVideoLoaded(true)
+            document.removeEventListener("touchstart", handleInteraction)
+            document.removeEventListener("click", handleInteraction)
+          } catch (e) {
+            // Still failed, ignore
           }
-          document.addEventListener("touchstart", handleInteraction, { once: true })
-          document.addEventListener("click", handleInteraction, { once: true })
         }
+        document.addEventListener("touchstart", handleInteraction, { once: true })
+        document.addEventListener("click", handleInteraction, { once: true })
       }
-      playVideo()
     }
-  }, [backgroundType, backgroundUrl])
+
+    video.addEventListener("canplay", playVideo, { once: true })
+
+    return () => {
+      video.removeEventListener("canplay", playVideo)
+    }
+  }, [backgroundType, backgroundUrl, shouldLoadVideo])
 
   return (
     <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
       {/* Background */}
       {backgroundType === "video" ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          webkit-playsinline="true"
-          x-webkit-airplay="allow"
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={backgroundUrl} type="video/mp4" />
-        </video>
+        <>
+          {/* Fallback background while video loads */}
+          <div className="absolute inset-0 bg-neutral-900" style={{ zIndex: 0 }} />
+          {shouldLoadVideo && (
+            <video
+              ref={videoRef}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="none"
+              webkit-playsinline="true"
+              x-webkit-airplay="allow"
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+              style={{ zIndex: 0 }}
+            >
+              {/* Source added dynamically via useEffect */}
+            </video>
+          )}
+        </>
       ) : (
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundUrl})` }} />
       )}
@@ -81,6 +114,7 @@ export function HeroOverlay({
         style={{
           backgroundColor: overlayColor,
           opacity: overlayOpacity / 100,
+          zIndex: 1,
         }}
       />
 

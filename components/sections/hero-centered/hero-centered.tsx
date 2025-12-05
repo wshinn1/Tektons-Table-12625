@@ -79,6 +79,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
 
   const isVideo =
     backgroundType === "video" ||
@@ -88,45 +89,57 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
   const actualVideoUrl = videoUrl || (isVideo ? backgroundImage : "")
 
   useEffect(() => {
-    const video = videoRef.current
-    if (video && isVideo && actualVideoUrl) {
-      // Wait for idle time before loading video
-      const loadVideo = () => {
-        video.src = actualVideoUrl
-        video.load()
+    if (!isVideo || !actualVideoUrl) return
 
-        const playVideo = async () => {
-          try {
-            video.muted = true
-            await video.play()
-            setVideoLoaded(true)
-          } catch (error) {
-            const handleInteraction = async () => {
-              try {
-                await video.play()
-                setVideoLoaded(true)
-                document.removeEventListener("touchstart", handleInteraction)
-                document.removeEventListener("click", handleInteraction)
-              } catch (e) {
-                // Still failed, ignore
-              }
-            }
-            document.addEventListener("touchstart", handleInteraction, { once: true })
-            document.addEventListener("click", handleInteraction, { once: true })
-          }
-        }
+    // Wait for the page to be interactive before loading video
+    const deferVideoLoad = () => {
+      setShouldLoadVideo(true)
+    }
 
-        video.addEventListener("canplay", playVideo, { once: true })
-      }
-
-      // Use requestIdleCallback for non-critical video loading
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(loadVideo, { timeout: 2000 })
-      } else {
-        setTimeout(loadVideo, 100)
-      }
+    // Use requestIdleCallback with a longer timeout to ensure LCP completes first
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+    } else {
+      // Fallback: wait 1 second after page load
+      setTimeout(deferVideoLoad, 1000)
     }
   }, [isVideo, actualVideoUrl])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !isVideo || !actualVideoUrl || !shouldLoadVideo) return
+
+    // Set the source only after we've decided to load
+    video.src = actualVideoUrl
+    video.load()
+
+    const playVideo = async () => {
+      try {
+        video.muted = true
+        await video.play()
+        setVideoLoaded(true)
+      } catch (error) {
+        const handleInteraction = async () => {
+          try {
+            await video.play()
+            setVideoLoaded(true)
+            document.removeEventListener("touchstart", handleInteraction)
+            document.removeEventListener("click", handleInteraction)
+          } catch (e) {
+            // Still failed, ignore
+          }
+        }
+        document.addEventListener("touchstart", handleInteraction, { once: true })
+        document.addEventListener("click", handleInteraction, { once: true })
+      }
+    }
+
+    video.addEventListener("canplay", playVideo, { once: true })
+
+    return () => {
+      video.removeEventListener("canplay", playVideo)
+    }
+  }, [isVideo, actualVideoUrl, shouldLoadVideo])
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (isVideo) {
@@ -180,7 +193,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
         minHeight,
       }}
     >
-      {isVideo && actualVideoUrl && (
+      {isVideo && actualVideoUrl && shouldLoadVideo && (
         <video
           ref={videoRef}
           autoPlay
