@@ -174,16 +174,12 @@ export function TenantNavbar({
               )}
 
               {/* Auth Links */}
-              {isCheckingAuth ? (
-                <div className="ml-2 px-4 py-2 bg-gray-200 text-gray-400 rounded-lg text-sm font-semibold font-open-sans animate-pulse">
-                  Loading...
-                </div>
-              ) : user ? (
+              {user ? (
                 <Link
-                  href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/auth/login"}
+                  href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin"}
                   className="ml-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold hover:bg-[#1e3a8a]/90 transition-colors font-open-sans"
                 >
-                  {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Sign In"}
+                  {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
@@ -256,17 +252,13 @@ export function TenantNavbar({
 
               {/* Mobile Auth */}
               <div className="pt-2 border-t border-gray-100 mt-2">
-                {isCheckingAuth ? (
-                  <div className="block px-4 py-3 bg-gray-200 text-gray-400 rounded-lg text-sm font-semibold text-center animate-pulse">
-                    Loading...
-                  </div>
-                ) : user ? (
+                {user ? (
                   <Link
-                    href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/auth/login"}
+                    href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin"}
                     className="block px-4 py-3 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Sign In"}
+                    {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
                   </Link>
                 ) : (
                   <div className="space-y-2">
