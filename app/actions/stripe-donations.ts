@@ -212,14 +212,6 @@ export async function startDonationCheckout(
       : `https://${tenant.subdomain}.tektonstable.com/giving`,
     customer_email: donorEmail,
     line_items: lineItems,
-    payment_method_types: ["card", "us_bank_account", "sepa_debit", "ideal", "bancontact"],
-    payment_method_options: {
-      us_bank_account: {
-        financial_connections: {
-          permissions: ["payment_method"],
-        },
-      },
-    },
     metadata: {
       tenant_id: tenantId,
       tier_id: tierId,

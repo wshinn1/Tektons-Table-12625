@@ -453,7 +453,7 @@ export async function uploadBlogImage(formData: FormData) {
 
   if (!user) {
     console.log("[v0] uploadBlogImage: Unauthorized - no user found")
-    throw new Error("Unauthorized")
+    return { success: false, error: "Unauthorized" }
   }
 
   const { data: tenant, error: tenantError } = await adminSupabase
@@ -464,22 +464,22 @@ export async function uploadBlogImage(formData: FormData) {
 
   if (tenantError || !tenant) {
     console.log("[v0] uploadBlogImage: User is not a tenant owner:", tenantError?.message)
-    throw new Error("Access denied - not a tenant owner")
+    return { success: false, error: "Access denied - not a tenant owner" }
   }
 
   console.log("[v0] uploadBlogImage: Tenant verified:", tenant.subdomain)
 
   const file = formData.get("file") as File
   if (!file) {
-    throw new Error("No file provided")
+    return { success: false, error: "No file provided" }
   }
 
   if (!file.type.startsWith("image/")) {
-    throw new Error("File must be an image")
+    return { success: false, error: "File must be an image" }
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    throw new Error("Image must be less than 5MB")
+    return { success: false, error: "Image must be less than 5MB" }
   }
 
   try {
@@ -490,10 +490,10 @@ export async function uploadBlogImage(formData: FormData) {
       access: "public",
     })
     console.log("[v0] uploadBlogImage: Upload successful:", blob.url)
-    return { url: blob.url }
+    return { success: true, url: blob.url }
   } catch (error) {
     console.error("Failed to upload image:", error)
-    throw new Error("Failed to upload image")
+    return { success: false, error: "Failed to upload image" }
   }
 }
 
