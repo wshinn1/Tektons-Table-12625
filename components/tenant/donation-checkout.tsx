@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Heart, Loader2 } from "lucide-react"
+import { Heart, Loader2, AlertCircle } from "lucide-react"
 
 export function DonationCheckout({
   tenantId,
@@ -32,9 +32,12 @@ export function DonationCheckout({
   const [customTipPercent, setCustomTipPercent] = useState(15)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isStripeNotConnected, setIsStripeNotConnected] = useState(false)
 
   const initiateCheckout = async () => {
     setIsProcessing(true)
+    setError(null)
+    setIsStripeNotConnected(false)
     try {
       const tipAmount = calculateTip()
       const checkoutUrl = await startDonationCheckout(tenantId, tierId, donorEmail, tipAmount, campaignId)
@@ -45,9 +48,17 @@ export function DonationCheckout({
         setError("Failed to create checkout session")
         setIsProcessing(false)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Checkout error:", error)
-      setError("Failed to start checkout. Please try again.")
+      const errorMessage = error?.message || ""
+      if (errorMessage.includes("Stripe account") || errorMessage.includes("hasn't connected")) {
+        setIsStripeNotConnected(true)
+        setError(
+          "This missionary hasn't set up their payment account yet. Please check back later or contact them directly.",
+        )
+      } else {
+        setError("Failed to start checkout. Please try again.")
+      }
       setIsProcessing(false)
     }
   }
@@ -80,10 +91,29 @@ export function DonationCheckout({
       <Card>
         <CardContent className="pt-6">
           <div className="text-center space-y-4">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Try again
-            </Button>
+            {isStripeNotConnected ? (
+              <>
+                <AlertCircle className="h-12 w-12 mx-auto text-amber-500" />
+                <h3 className="text-lg font-semibold">Donations Not Available Yet</h3>
+                <p className="text-muted-foreground">{error}</p>
+                <Button onClick={() => window.history.back()} variant="outline">
+                  Go Back
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-red-600 dark:text-red-400">{error}</p>
+                <Button
+                  onClick={() => {
+                    setError(null)
+                    setIsStripeNotConnected(false)
+                  }}
+                  variant="outline"
+                >
+                  Try again
+                </Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

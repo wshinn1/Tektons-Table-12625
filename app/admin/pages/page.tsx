@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getPages } from "@/app/actions/pages"
 import { SetHomepageButton } from "@/components/admin/set-homepage-button"
-import { Home, Info, Cog, DollarSign, Shield, HelpCircle, FileText } from "lucide-react"
+import { Home, Info, Cog, DollarSign, Shield, HelpCircle, FileText, Paintbrush, Layers } from "lucide-react"
 
 const builtInPageEditors = [
   {
@@ -96,42 +96,57 @@ export default async function PagesManagementPage() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Custom Pages</h2>
         <div className="grid gap-4">
           {pages.length > 0 ? (
-            pages.map((page) => (
-              <Card key={page.id} className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <FileText className="h-6 w-6 text-gray-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold">
-                        {page.title}
-                        {page.is_homepage && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            Homepage
+            pages.map((page) => {
+              const isUnlayer = page.editor_type === "unlayer"
+              const editHref = isUnlayer ? `/admin/pages/${page.slug}/builder` : `/admin/pages/${page.slug}/edit`
+              const EditorIcon = isUnlayer ? Paintbrush : Layers
+
+              return (
+                <Card key={page.id} className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <FileText className="h-6 w-6 text-gray-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold flex items-center gap-2">
+                          {page.title}
+                          {page.is_homepage && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Homepage</span>
+                          )}
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                              isUnlayer ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            <EditorIcon className="h-3 w-3" />
+                            {isUnlayer ? "Visual Builder" : "Sections"}
                           </span>
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">/p/{page.slug}</p>
+                        {page.meta_description && <p className="text-sm text-gray-600 mt-2">{page.meta_description}</p>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm">
+                        {page.is_published ? (
+                          <span className="text-green-600 font-medium">Published</span>
+                        ) : (
+                          <span className="text-gray-500">Draft</span>
                         )}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">/{page.slug}</p>
-                      {page.meta_description && <p className="text-sm text-gray-600 mt-2">{page.meta_description}</p>}
+                      </div>
+                      {!page.is_homepage && <SetHomepageButton pageId={page.id} pageTitle={page.title} />}
+                      <Button asChild variant="outline">
+                        <Link href={editHref}>
+                          <EditorIcon className="h-4 w-4 mr-2" />
+                          Edit Page
+                        </Link>
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm">
-                      {page.is_published ? (
-                        <span className="text-green-600 font-medium">Published</span>
-                      ) : (
-                        <span className="text-gray-500">Draft</span>
-                      )}
-                    </div>
-                    {!page.is_homepage && <SetHomepageButton pageId={page.id} pageTitle={page.title} />}
-                    <Button asChild variant="outline">
-                      <Link href={`/admin/pages/${page.slug}/edit`}>Edit Page</Link>
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              )
+            })
           ) : (
             <Card className="p-12 text-center">
               <p className="text-gray-500 mb-4">No custom pages yet.</p>
