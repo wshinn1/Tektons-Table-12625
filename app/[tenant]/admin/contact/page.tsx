@@ -1,0 +1,3 @@
+export default function ContactPage() {
+  // ... rest of code here ...
+}

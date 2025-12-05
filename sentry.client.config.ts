@@ -1,0 +1,46 @@
+import * as Sentry from "@sentry/nextjs"
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
+
+  // Adjust this value in production, or use tracesSampler for finer control
+  tracesSampleRate: 1.0,
+
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+
+  replaysOnErrorSampleRate: 1.0,
+  replaysSessionSampleRate: 0.1,
+
+  integrations: [
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
+  ],
+
+  // Filter out certain errors
+  ignoreErrors: [
+    // Browser extensions
+    "top.GLOBALS",
+    // Random plugins/extensions
+    "originalCreateNotification",
+    "canvas.contentDocument",
+    "MyApp_RemoveAllHighlights",
+    // Facebook blocked
+    "fb_xd_fragment",
+    // ISP optimizing
+    "bmi_SafeAddOnload",
+    // Chrome extensions
+    "chrome-extension",
+    "moz-extension",
+  ],
+
+  beforeSend(event, hint) {
+    // Filter out non-error console messages
+    if (event.level === "log") {
+      return null
+    }
+    return event
+  },
+})

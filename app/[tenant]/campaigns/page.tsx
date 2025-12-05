@@ -1,0 +1,3 @@
+export default function CampaignsPage() {
+  // ... rest of code here ...
+}

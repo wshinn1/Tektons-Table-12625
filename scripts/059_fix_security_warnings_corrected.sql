@@ -1,0 +1,172 @@
+-- Fix security warnings reported by Supabase Security Advisor
+-- Only fix views/functions that actually exist
+-- 1. Remove SECURITY DEFINER from views (views don't need it)
+-- 2. Add search_path to functions with SECURITY DEFINER
+
+-- ==============================================
+-- FIX VIEWS: Remove SECURITY DEFINER
+-- ==============================================
+
+-- Fix backup_stats view (table exists)
+DROP VIEW IF EXISTS backup_stats CASCADE;
+CREATE VIEW backup_stats AS
+SELECT 
+  table_name,
+  COUNT(*) as backup_count,
+  MAX(created_at) as last_backup
+FROM backups
+GROUP BY table_name;
+
+-- Fix tenant_financial_stats view
+DROP VIEW IF EXISTS tenant_financial_stats CASCADE;
+CREATE VIEW tenant_financial_stats AS
+SELECT 
+  t.id,
+  t.subdomain,
+  t.full_name,
+  COUNT(DISTINCT d.id) as total_donations,
+  COALESCE(SUM(d.amount), 0) as total_raised,
+  COALESCE(AVG(d.amount), 0) as average_donation,
+  COUNT(DISTINCT d.supporter_id) as unique_supporters,
+  MAX(d.created_at) as last_donation_date
+FROM tenants t
+LEFT JOIN donations d ON d.tenant_id = t.id
+GROUP BY t.id, t.subdomain, t.full_name;
+
+-- Skip common_questions view (chat_conversations table doesn't exist)
+
+-- Fix post_share_counts view (table exists)
+DROP VIEW IF EXISTS post_share_counts CASCADE;
+CREATE VIEW post_share_counts AS
+SELECT 
+  post_id,
+  platform,
+  COUNT(*) as share_count,
+  MAX(shared_at) as last_shared
+FROM social_shares
+GROUP BY post_id, platform;
+
+-- ==============================================
+-- FIX FUNCTIONS: Add search_path
+-- ==============================================
+
+-- Fix generate_campaign_slug function
+CREATE OR REPLACE FUNCTION generate_campaign_slug(campaign_title text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  base_slug text;
+  final_slug text;
+  counter integer := 1;
+BEGIN
+  -- Generate base slug from title
+  base_slug := lower(trim(regexp_replace(campaign_title, '[^a-zA-Z0-9\s-]', '', 'g')));
+  base_slug := regexp_replace(base_slug, '\s+', '-', 'g');
+  base_slug := regexp_replace(base_slug, '-+', '-', 'g');
+  
+  -- Start with base slug
+  final_slug := base_slug;
+  
+  -- Check if slug exists, if so add counter
+  WHILE EXISTS (SELECT 1 FROM campaigns WHERE slug = final_slug) LOOP
+    final_slug := base_slug || '-' || counter;
+    counter := counter + 1;
+  END LOOP;
+  
+  RETURN final_slug;
+END;
+$$;
+
+-- Fix upsert_campaign_donation_digest function
+CREATE OR REPLACE FUNCTION upsert_campaign_donation_digest()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  INSERT INTO campaign_donation_digest (
+    campaign_id,
+    total_donations,
+    total_amount,
+    unique_donors,
+    last_donation_at,
+    updated_at
+  )
+  VALUES (
+    NEW.campaign_id,
+    1,
+    NEW.amount,
+    1,
+    NEW.created_at,
+    NOW()
+  )
+  ON CONFLICT (campaign_id)
+  DO UPDATE SET
+    total_donations = campaign_donation_digest.total_donations + 1,
+    total_amount = campaign_donation_digest.total_amount + NEW.amount,
+    unique_donors = (
+      SELECT COUNT(DISTINCT supporter_id)
+      FROM donations
+      WHERE campaign_id = NEW.campaign_id
+    ),
+    last_donation_at = NEW.created_at,
+    updated_at = NOW();
+  
+  RETURN NEW;
+END;
+$$;
+
+-- Fix add_tenant_to_contact_group function
+CREATE OR REPLACE FUNCTION add_tenant_to_contact_group()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  default_group_id uuid;
+BEGIN
+  -- Get or create default contact group for this tenant
+  SELECT id INTO default_group_id
+  FROM contact_groups
+  WHERE tenant_id = NEW.id AND name = 'All Contacts'
+  LIMIT 1;
+  
+  IF default_group_id IS NULL THEN
+    INSERT INTO contact_groups (tenant_id, name, description, is_default)
+    VALUES (NEW.id, 'All Contacts', 'Default group for all contacts', true)
+    RETURNING id INTO default_group_id;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+-- Fix initialize_tenant_navigation function
+CREATE OR REPLACE FUNCTION initialize_tenant_navigation()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  -- Create default navigation items for new tenant
+  INSERT INTO tenant_navigation (tenant_id, label, href, order_index, is_visible)
+  VALUES
+    (NEW.id, 'Home', '/', 1, true),
+    (NEW.id, 'About', '/about', 2, true),
+    (NEW.id, 'Blog', '/blog', 3, true),
+    (NEW.id, 'Contact', '/contact', 4, true);
+  
+  RETURN NEW;
+END;
+$$;
+
+-- Grant appropriate permissions on views
+GRANT SELECT ON backup_stats TO authenticated;
+GRANT SELECT ON tenant_financial_stats TO authenticated;
+GRANT SELECT ON post_share_counts TO authenticated;

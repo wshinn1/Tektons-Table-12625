@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/backup-platform",
+      "schedule": "0 5,17 * * *"
+    },
+    {
+      "path": "/api/cron/backup-tenants",
+      "schedule": "0 5,17 * * *"
+    },
+    {
+      "path": "/api/cron/full-backup",
+      "schedule": "0 5,17 * * *"
+    },
+    {
+      "path": "/api/cron/process-workflows",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/send-campaign-digests",
+      "schedule": "0 17 * * *"
+    }
+  ]
+}

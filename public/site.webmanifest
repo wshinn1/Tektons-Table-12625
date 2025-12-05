@@ -1,0 +1,15 @@
+{
+  "name": "Tekton's Table",
+  "short_name": "Tekton's Table",
+  "description": "Missionary fundraising platform",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

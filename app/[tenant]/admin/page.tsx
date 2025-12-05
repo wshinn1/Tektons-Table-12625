@@ -1,0 +1,125 @@
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileText, Users, DollarSign, TrendingUp } from "lucide-react"
+
+export default async function TenantAdminDashboard({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant: subdomain } = await params
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect(`/${subdomain}/auth/login?redirect=/admin`)
+  }
+
+  // Get tenant info
+  const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
+
+  if (!tenant || tenant.email !== user.email) {
+    redirect(`/${subdomain}`)
+  }
+
+  // Get blog stats
+  const { count: postCount } = await supabase
+    .from("blog_posts")
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenant.id)
+
+  // Get follower count (placeholder for Phase 4)
+  const followerCount = 0
+
+  // Get financial stats (placeholder for Phase 6)
+  const monthlyRevenue = 0
+
+  return (
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground mt-2">Welcome back! Here's your overview.</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Blog Posts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{postCount || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Published articles</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Followers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{followerCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">Active followers</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${monthlyRevenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Recurring donations</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Engagement</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground mt-1">Post views this month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              No recent activity yet. Start by creating your first blog post!
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <a href="/admin/blog/create" className="block text-sm text-blue-600 hover:underline">
+              Create New Post
+            </a>
+            <a href="/admin/giving" className="block text-sm text-blue-600 hover:underline">
+              Set Up Giving Page
+            </a>
+            <a href="/admin/newsletter" className="block text-sm text-blue-600 hover:underline">
+              Send Newsletter
+            </a>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

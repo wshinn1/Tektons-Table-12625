@@ -1,0 +1,598 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color theme to match Tekton's Table brand logo colors */
+  /* Navy blue primary, coral/pink accent, cyan secondary */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.2 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.02 250);
+  --primary: oklch(0.35 0.08 250); /* Navy blue from logo */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.7 0.12 200); /* Light cyan/turquoise from logo */
+  --secondary-foreground: oklch(0.15 0 0);
+  --muted: oklch(0.96 0.01 250);
+  --muted-foreground: oklch(0.5 0.02 250);
+  --accent: oklch(0.72 0.12 25); /* Coral/salmon pink from logo */
+  --accent-foreground: oklch(0.15 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.9 0.01 250);
+  --input: oklch(0.9 0.01 250);
+  --ring: oklch(0.35 0.08 250);
+  --chart-1: oklch(0.35 0.08 250); /* Navy */
+  --chart-2: oklch(0.7 0.12 200); /* Cyan */
+  --chart-3: oklch(0.72 0.12 25); /* Coral */
+  --chart-4: oklch(0.8 0.08 60); /* Yellow */
+  --chart-5: oklch(0.45 0.15 160); /* Green */
+  --radius: 0.75rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.2 0.02 250);
+  --sidebar-primary: oklch(0.35 0.08 250);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.01 250);
+  --sidebar-accent-foreground: oklch(0.2 0.02 250);
+  --sidebar-border: oklch(0.9 0.01 250);
+  --sidebar-ring: oklch(0.35 0.08 250);
+  --sidebar-hover-blue: #1e3a8a;
+}
+
+.dark {
+  /* Dark mode colors adjusted to complement brand colors */
+  --background: oklch(0.13 0.01 250);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.17 0.01 250);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.15 0.01 250);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.5 0.12 250); /* Lighter navy for dark mode */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.6 0.15 200); /* Brighter cyan for dark mode */
+  --secondary-foreground: oklch(0.13 0 0);
+  --muted: oklch(0.23 0.02 250);
+  --muted-foreground: oklch(0.65 0.02 250);
+  --accent: oklch(0.68 0.14 25); /* Coral accent for dark mode */
+  --accent-foreground: oklch(0.13 0 0);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.25 0.02 250);
+  --input: oklch(0.25 0.02 250);
+  --ring: oklch(0.5 0.12 250);
+  --chart-1: oklch(0.5 0.12 250);
+  --chart-2: oklch(0.65 0.15 200);
+  --chart-3: oklch(0.68 0.14 25);
+  --chart-4: oklch(0.75 0.12 60);
+  --chart-5: oklch(0.55 0.18 160);
+  --sidebar: oklch(0.17 0.01 250);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.5 0.12 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.23 0.02 250);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(0.25 0.02 250);
+  --sidebar-ring: oklch(0.5 0.12 250);
+}
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-old-standard: var(--font-old-standard);
+  --font-open-sans: var(--font-open-sans);
+  --font-bodoni-moda: var(--font-bodoni-moda);
+  --font-abril-fatface: var(--font-abril-fatface);
+  /* Added Fell font for blog typography */
+  --font-fell: var(--font-fell);
+  /* Added Helvetica font for blog subheadings */
+  --font-helvetica: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Removed all custom BlockNote CSS that was conflicting with Mantine styles */
+/* Let BlockNote's official CSS handle all editor styling */
+
+/* Add Tiptap editor styles for proper heading display */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror h1 {
+  font-size: 2.25em;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.75em;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.ProseMirror p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  margin-left: 0;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  font-style: italic;
+  color: var(--muted-foreground);
+}
+
+.ProseMirror code {
+  background-color: var(--muted);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5em;
+  margin: 1em 0;
+}
+
+.ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.ProseMirror a:hover {
+  color: var(--accent);
+}
+
+/* YouTube embed styling */
+.ProseMirror iframe {
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5em;
+  margin: 1em 0;
+}
+
+/* Placeholder styling */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Removing Easy Email imports and adding GrapeJS CSS */
+/* GrapeJS editor styles */
+@import "grapesjs/dist/css/grapes.min.css";
+
+/* GrapeJS custom overrides for theme compatibility */
+.gjs-cv-canvas {
+  background: var(--background);
+}
+
+.gjs-pn-panel,
+.gjs-sm-sector,
+.gjs-block-category {
+  background-color: var(--card);
+  color: var(--foreground);
+}
+
+/* Add more specificity and use background-image for block icons */
+.gjs-block {
+  border: 1px solid hsl(var(--border));
+  background-color: white !important;
+  color: hsl(var(--foreground)) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+}
+
+.gjs-block:hover {
+  background-color: hsl(var(--accent)) !important;
+  border-color: hsl(var(--primary));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Improve block label visibility */
+.gjs-block-label {
+  color: #111827 !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  margin-top: 0.5rem !important;
+  text-align: center !important;
+}
+
+/* Maximum contrast for block icons - very dark on light background */
+.gjs-block svg,
+.gjs-block svg *,
+.gjs-block__media svg,
+.gjs-block__media svg * {
+  fill: #1f2937 !important;
+  stroke: #1f2937 !important;
+  stroke-width: 2.5 !important;
+  opacity: 1 !important;
+}
+
+.gjs-block:hover svg,
+.gjs-block:hover svg *,
+.gjs-block:hover .gjs-block__media svg,
+.gjs-block:hover .gjs-block__media svg * {
+  fill: #2563eb !important;
+  stroke: #2563eb !important;
+  stroke-width: 2.5 !important;
+}
+
+/* Ensure icon container has proper sizing */
+.gjs-block__media {
+  width: 48px !important;
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.gjs-block__media svg {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Improved Style Manager readability - all text and values in black */
+/* Style Manager - Properties Panel - Maximum contrast and readability */
+.gjs-sm-property,
+.gjs-sm-label,
+.gjs-sm-property__label,
+.gjs-field,
+.gjs-field input,
+.gjs-field select,
+.gjs-clm-tags,
+.gjs-sm-composite,
+.gjs-sm-property__field,
+.gjs-sm-sector .gjs-sm-property,
+.gjs-sm-sector .gjs-sm-label {
+  color: #000000 !important;
+}
+
+/* Property labels (Width, Height, Margin, Padding, etc.) - Black text */
+.gjs-sm-property__label,
+.gjs-sm-label,
+.gjs-sm-sector__title {
+  color: #000000 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+/* All input fields for property values - Black text on white background */
+.gjs-field input[type="text"],
+.gjs-field input[type="number"],
+.gjs-field select,
+.gjs-field-integer input,
+.gjs-field-number input,
+.gjs-sm-property input,
+.gjs-sm-property select {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  font-weight: 500 !important;
+}
+
+/* Numeric property values - Bold black for emphasis */
+.gjs-sm-property .gjs-field-integer input,
+.gjs-sm-property .gjs-field-number input,
+.gjs-field-integer .gjs-field-input,
+.gjs-field-number .gjs-field-input {
+  color: #000000 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+/* Select dropdowns and their options - Black text */
+.gjs-field select option,
+.gjs-sm-property select option {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+/* Unit selectors (px, %, em, auto, etc.) - Black text */
+.gjs-field-units select,
+.gjs-sm-unit select,
+.gjs-field-unit select {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Increment/decrement buttons for numeric values */
+.gjs-field-arrows {
+  color: #000000 !important;
+}
+
+/* Color picker values */
+.gjs-field-color-picker input {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Composite fields (margin, padding with multiple inputs) */
+.gjs-sm-composite .gjs-field input {
+  color: #000000 !important;
+  font-weight: 500 !important;
+}
+
+/* Sector headers in Style Manager */
+.gjs-sm-sector__title {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* Light mode blocks - ensure maximum contrast */
+@media (prefers-color-scheme: light) {
+  .gjs-block {
+    background-color: white !important;
+    border-color: #e5e7eb !important;
+  }
+
+  .gjs-block-label {
+    color: #111827 !important;
+    font-weight: 600 !important;
+  }
+
+  .gjs-block svg,
+  .gjs-block svg *,
+  .gjs-block__media svg,
+  .gjs-block__media svg * {
+    fill: #1f2937 !important;
+    stroke: #1f2937 !important;
+    stroke-width: 2.5 !important;
+  }
+}
+
+/* Dark mode GrapeJS overrides */
+.dark .gjs-pn-panel,
+.dark .gjs-sm-sector,
+.dark .gjs-block-category {
+  background-color: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.dark .gjs-block {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .gjs-block-label {
+  color: #e5e7eb !important;
+}
+
+/* Light icons for dark mode with high contrast */
+.dark .gjs-block svg,
+.dark .gjs-block svg *,
+.dark .gjs-block__media svg,
+.dark .gjs-block__media svg * {
+  fill: #e5e7eb !important;
+  stroke: #e5e7eb !important;
+  stroke-width: 2.5 !important;
+}
+
+.dark .gjs-block:hover svg,
+.dark .gjs-block:hover svg *,
+.dark .gjs-block:hover .gjs-block__media svg,
+.dark .gjs-block:hover .gjs-block__media svg * {
+  fill: #60a5fa !important;
+  stroke: #60a5fa !important;
+}
+
+/* Added custom subtle bounce animation for chatbot button */
+@keyframes subtle-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-subtle-bounce {
+  animation: subtle-bounce 3s ease-in-out infinite;
+}
+
+/* Force desktop layout when embedded in iframe */
+/* Embedded mode - Force desktop breakpoints regardless of iframe width */
+html.embedded-mode,
+html.embedded-mode body,
+.embedded-layout {
+  min-width: 1024px !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+/* Force all responsive elements to use desktop styles when embedded */
+html.embedded-mode .md\:grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+html.embedded-mode .md\:grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+html.embedded-mode .md\:grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+html.embedded-mode .lg\:grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+html.embedded-mode .lg\:grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+html.embedded-mode .lg\:grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+/* Force flex direction for embedded mode */
+html.embedded-mode .md\:flex-row {
+  flex-direction: row !important;
+}
+
+html.embedded-mode .lg\:flex-row {
+  flex-direction: row !important;
+}
+
+/* Force text sizes for embedded mode */
+html.embedded-mode .md\:text-4xl,
+html.embedded-mode .lg\:text-4xl {
+  font-size: 2.25rem !important;
+  line-height: 2.5rem !important;
+}
+
+html.embedded-mode .md\:text-5xl,
+html.embedded-mode .lg\:text-5xl {
+  font-size: 3rem !important;
+  line-height: 1 !important;
+}
+
+html.embedded-mode .md\:text-6xl,
+html.embedded-mode .lg\:text-6xl {
+  font-size: 3.75rem !important;
+  line-height: 1 !important;
+}
+
+/* Force padding/margin for embedded mode */
+html.embedded-mode .md\:px-8,
+html.embedded-mode .lg\:px-8 {
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+
+html.embedded-mode .md\:py-16,
+html.embedded-mode .lg\:py-16 {
+  padding-top: 4rem !important;
+  padding-bottom: 4rem !important;
+}
+
+/* Force hidden elements to show in desktop embedded mode */
+html.embedded-mode .md\:block,
+html.embedded-mode .lg\:block {
+  display: block !important;
+}
+
+html.embedded-mode .md\:flex,
+html.embedded-mode .lg\:flex {
+  display: flex !important;
+}
+
+/* Hide mobile-only elements when embedded */
+html.embedded-mode .md\:hidden,
+html.embedded-mode .lg\:hidden {
+  display: none !important;
+}
+
+/* Force width utilities for embedded */
+html.embedded-mode .md\:w-1\/2,
+html.embedded-mode .lg\:w-1\/2 {
+  width: 50% !important;
+}
+
+html.embedded-mode .md\:w-1\/3,
+html.embedded-mode .lg\:w-1\/3 {
+  width: 33.333333% !important;
+}
+
+html.embedded-mode .md\:w-2\/3,
+html.embedded-mode .lg\:w-2\/3 {
+  width: 66.666667% !important;
+}
+
+/* Force gap utilities for embedded */
+html.embedded-mode .md\:gap-8,
+html.embedded-mode .lg\:gap-8 {
+  gap: 2rem !important;
+}
+
+html.embedded-mode .md\:gap-12,
+html.embedded-mode .lg\:gap-12 {
+  gap: 3rem !important;
+}
+
+/* Hide chatbot in embedded mode */
+html.embedded-mode .support-chatbot {
+  display: none !important;
+}
