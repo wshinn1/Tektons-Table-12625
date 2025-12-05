@@ -11,20 +11,39 @@ export default async function TenantAdminDashboard({
   const { tenant: subdomain } = await params
   const supabase = await createClient()
 
+  console.log("[v0] TenantAdminDashboard: Starting for subdomain:", subdomain)
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
+  console.log("[v0] TenantAdminDashboard: User:", user?.email || "not logged in")
+
   if (!user) {
+    console.log("[v0] TenantAdminDashboard: No user, redirecting to login")
     redirect(`/${subdomain}/auth/login?redirect=/admin`)
   }
 
   // Get tenant info
-  const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .select("*")
+    .eq("subdomain", subdomain)
+    .single()
+
+  console.log("[v0] TenantAdminDashboard: Tenant:", tenant?.email || "not found", "Error:", tenantError?.message)
 
   if (!tenant || tenant.email !== user.email) {
+    console.log(
+      "[v0] TenantAdminDashboard: Not owner, redirecting. Tenant email:",
+      tenant?.email,
+      "User email:",
+      user.email,
+    )
     redirect(`/${subdomain}`)
   }
+
+  console.log("[v0] TenantAdminDashboard: Authorized, rendering dashboard")
 
   // Get blog stats
   const { count: postCount } = await supabase
