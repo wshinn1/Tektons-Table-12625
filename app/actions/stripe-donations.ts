@@ -216,7 +216,7 @@ export async function startDonationCheckout(
     payment_method_options: {
       us_bank_account: {
         financial_connections: {
-          permissions: ["payment_method", "balances"],
+          permissions: ["payment_method"],
         },
       },
     },

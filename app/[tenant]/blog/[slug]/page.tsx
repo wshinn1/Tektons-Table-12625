@@ -54,6 +54,8 @@ async function getBlogPost(slug: string, tenantId: string) {
 
   const decodedSlug = decodeURIComponent(slug)
 
+  console.log("[v0] Fetching blog post:", { slug: decodedSlug, tenantId })
+
   const { data, error } = await supabase
     .from("blog_posts")
     .select(
@@ -68,10 +70,17 @@ async function getBlogPost(slug: string, tenantId: string) {
     .eq("status", "published")
     .maybeSingle()
 
-  if (error || !data) {
-    console.error("Failed to fetch blog post:", error)
+  if (error) {
+    console.error("[v0] Failed to fetch blog post - Supabase error:", error)
     return null
   }
+
+  if (!data) {
+    console.log("[v0] Blog post not found:", { slug: decodedSlug, tenantId, status: "published" })
+    return null
+  }
+
+  console.log("[v0] Blog post found:", { id: data.id, title: data.title })
 
   // Increment view count
   await supabase.rpc("increment_blog_views", { post_id: data.id })
