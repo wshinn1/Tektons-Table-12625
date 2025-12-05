@@ -659,15 +659,13 @@ export default function TenantLayout({
         {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
         {!isAdminPage && (
           <TenantNavbar
-            key={`${user?.id || "logged-out"}-${isTenantOwner}-${subdomain}`}
-            subdomain={subdomain}
             tenantName={tenantName}
+            navItems={navItems}
             user={user}
             isTenantOwner={isTenantOwner}
             isDonor={isDonor}
-            navItems={navItems}
             campaigns={campaigns}
-            visible={navbarVisible}
+            isCheckingAuth={isCheckingAuth}
           />
         )}
         <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>

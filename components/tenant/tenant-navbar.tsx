@@ -33,6 +33,7 @@ interface TenantNavbarProps {
   navItems: NavItem[]
   campaigns?: Campaign[]
   visible?: boolean
+  isCheckingAuth?: boolean
 }
 
 export function TenantNavbar({
@@ -44,6 +45,7 @@ export function TenantNavbar({
   navItems,
   campaigns = [],
   visible = true,
+  isCheckingAuth = false,
 }: TenantNavbarProps) {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -172,12 +174,16 @@ export function TenantNavbar({
               )}
 
               {/* Auth Links */}
-              {user ? (
+              {isCheckingAuth ? (
+                <div className="ml-2 px-4 py-2 bg-gray-200 text-gray-400 rounded-lg text-sm font-semibold font-open-sans animate-pulse">
+                  Loading...
+                </div>
+              ) : user ? (
                 <Link
-                  href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/"}
+                  href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/auth/login"}
                   className="ml-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold hover:bg-[#1e3a8a]/90 transition-colors font-open-sans"
                 >
-                  {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
+                  {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Sign In"}
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
@@ -250,13 +256,17 @@ export function TenantNavbar({
 
               {/* Mobile Auth */}
               <div className="pt-2 border-t border-gray-100 mt-2">
-                {user ? (
+                {isCheckingAuth ? (
+                  <div className="block px-4 py-3 bg-gray-200 text-gray-400 rounded-lg text-sm font-semibold text-center animate-pulse">
+                    Loading...
+                  </div>
+                ) : user ? (
                   <Link
-                    href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/"}
+                    href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/auth/login"}
                     className="block px-4 py-3 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
+                    {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Sign In"}
                   </Link>
                 ) : (
                   <div className="space-y-2">
