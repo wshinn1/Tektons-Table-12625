@@ -108,6 +108,13 @@ export default function DonorLoginPage({
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link href="/auth/donor-signup" className="text-primary hover:underline">
+                Create one
+              </Link>
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
               <Link href="/" className="text-primary hover:underline">
                 Return to site
               </Link>
