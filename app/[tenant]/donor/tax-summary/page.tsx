@@ -1,11 +1,10 @@
-"use client"
-
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Printer, FileText } from "lucide-react"
+import { ArrowLeft, FileText } from "lucide-react"
 import Link from "next/link"
+import { PrintButton } from "@/components/donor/print-button"
 
 export default async function TaxSummary({
   params,
@@ -183,10 +182,7 @@ export default async function TaxSummary({
 
         {/* Print Actions */}
         <div className="flex justify-center gap-4 mt-6 print:hidden">
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print Summary
-          </Button>
+          <PrintButton label="Print Summary" />
         </div>
       </div>
     </div>
