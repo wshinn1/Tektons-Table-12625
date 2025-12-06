@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -9,13 +11,13 @@ import { Button } from "@/components/ui/button"
 import { updateBrandingSettings } from "@/app/actions/tenant-settings"
 import { toast } from "sonner"
 import Image from "next/image"
-import { Upload, RefreshCw, Globe, Share2 } from "lucide-react"
+import { Upload, RefreshCw, Globe, Share2, Loader2 } from "lucide-react"
 
 // Default TektonsTable branding
 const DEFAULT_FAVICON = "/images/android-chrome-512x512.png"
 const DEFAULT_OG_IMAGE = "/images/tektons-20table-whitebg.png"
 const DEFAULT_SITE_TITLE = "Long Term Funding Support"
-const DEFAULT_SITE_DESCRIPTION = "Support missionaries and ministries with recurring donations through TektonsTable"
+const DEFAULT_SITE_DESCRIPTION = "Support missionaries and ministries with recurring donations through Tekton's Table"
 
 interface BrandingSettingsProps {
   tenantId: string
@@ -39,6 +41,49 @@ export function BrandingSettings({
   const [siteTitle, setSiteTitle] = useState(currentSiteTitle || DEFAULT_SITE_TITLE)
   const [siteDescription, setSiteDescription] = useState(currentSiteDescription || DEFAULT_SITE_DESCRIPTION)
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
+  const [isUploadingOgImage, setIsUploadingOgImage] = useState(false)
+
+  const faviconInputRef = useRef<HTMLInputElement>(null)
+  const ogImageInputRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (file: File, type: "favicon" | "og_image") => {
+    const setUploading = type === "favicon" ? setIsUploadingFavicon : setIsUploadingOgImage
+    const setUrl = type === "favicon" ? setFaviconUrl : setOgImageUrl
+
+    setUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", type)
+
+      const response = await fetch("/api/tenant/upload-branding", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Upload failed")
+      }
+
+      const result = await response.json()
+      setUrl(result.url)
+      toast.success(`${type === "favicon" ? "Favicon" : "Social image"} uploaded successfully`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload failed")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: "favicon" | "og_image") => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleUpload(file, type)
+    }
+  }
 
   const handleSave = async () => {
     setIsLoading(true)
@@ -146,15 +191,46 @@ export function BrandingSettings({
               <p className="text-xs text-center text-muted-foreground mt-1">Preview</p>
             </div>
 
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="favicon_url">Favicon URL</Label>
-              <Input
-                id="favicon_url"
-                value={faviconUrl}
-                onChange={(e) => setFaviconUrl(e.target.value)}
-                placeholder="https://example.com/favicon.png"
-              />
-              <p className="text-xs text-muted-foreground">Recommended: Square PNG or ICO, at least 512x512 pixels</p>
+            <div className="flex-1 space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="favicon_url">Favicon URL</Label>
+                <Input
+                  id="favicon_url"
+                  value={faviconUrl}
+                  onChange={(e) => setFaviconUrl(e.target.value)}
+                  placeholder="https://example.com/favicon.png"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  ref={faviconInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, "favicon")}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => faviconInputRef.current?.click()}
+                  disabled={isUploadingFavicon}
+                >
+                  {isUploadingFavicon ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload New Favicon
+                    </>
+                  )}
+                </Button>
+                <span className="text-xs text-muted-foreground">Square PNG or ICO, at least 512x512 pixels</span>
+              </div>
             </div>
           </div>
         </div>
@@ -184,18 +260,46 @@ export function BrandingSettings({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="og_image_url">Open Graph Image URL</Label>
-              <Input
-                id="og_image_url"
-                value={ogImageUrl}
-                onChange={(e) => setOgImageUrl(e.target.value)}
-                placeholder="https://example.com/og-image.png"
-              />
-              <p className="text-xs text-muted-foreground">
-                This image appears when your site is shared on Facebook, Twitter, LinkedIn, etc. Recommended: 1200x630
-                pixels
-              </p>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="og_image_url">Open Graph Image URL</Label>
+                <Input
+                  id="og_image_url"
+                  value={ogImageUrl}
+                  onChange={(e) => setOgImageUrl(e.target.value)}
+                  placeholder="https://example.com/og-image.png"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  ref={ogImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, "og_image")}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => ogImageInputRef.current?.click()}
+                  disabled={isUploadingOgImage}
+                >
+                  {isUploadingOgImage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload New Image
+                    </>
+                  )}
+                </Button>
+                <span className="text-xs text-muted-foreground">Recommended: 1200x630 pixels</span>
+              </div>
             </div>
           </div>
         </div>
