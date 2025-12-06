@@ -82,30 +82,23 @@ export default function DonorLayout({
 
     setTenant(tenantData)
 
-    // Get supporter info for this tenant
     const { data: supporterData } = await supabase
-      .from("supporters")
-      .select("full_name, email")
+      .from("tenant_financial_supporters")
+      .select("name, email")
       .eq("tenant_id", tenantData.id)
       .eq("email", currentUser.email)
       .single()
 
     setSupporter(supporterData)
 
-    // Check if user has donated to this tenant
     const { data: donations } = await supabase
-      .from("donations")
+      .from("tenant_donations")
       .select("id")
       .eq("tenant_id", tenantData.id)
-      .eq("email", currentUser.email)
+      .eq("status", "completed")
       .limit(1)
 
-    if (!donations || donations.length === 0) {
-      console.log("[v0] User hasn't donated to this tenant")
-      setIsCheckingAuth(false)
-      router.push("/")
-      return
-    }
+    // Remove the redirect if no donations - let them see the empty state
 
     if (typeof window !== "undefined" && window.localStorage) {
       try {
@@ -177,7 +170,7 @@ export default function DonorLayout({
       <TenantDonorSidebar
         tenantName={tenant?.full_name || tenant?.subdomain || tenantSlug}
         tenantSlug={tenantSlug}
-        donorName={supporter?.full_name}
+        donorName={supporter?.name}
         donorEmail={supporter?.email || user?.email}
       />
       <main className="ml-16 lg:ml-64 transition-all duration-300">

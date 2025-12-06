@@ -145,7 +145,7 @@ export default async function TenantBlogIndexPage({
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
         <header className="mb-16 text-center">
-          <h1 className="mb-4 text-6xl font-bold tracking-tight">{tenant.name}'s Blog</h1>
+          <h1 className="mb-4 text-6xl font-bold tracking-tight">Blog</h1>
           <p className="text-xl text-muted-foreground">Stories, updates, and insights from my ministry</p>
         </header>
 

@@ -26,7 +26,7 @@ export async function signupSupporter({
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/supporter/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/donor`,
     },
   })
 
@@ -49,6 +49,24 @@ export async function signupSupporter({
 
   if (profileError) {
     return { error: profileError.message }
+  }
+
+  const adminClient = createAdminClient()
+  const { data: existingSupporter } = await adminClient
+    .from("tenant_financial_supporters")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("email", email)
+    .single()
+
+  if (existingSupporter) {
+    // Update the financial supporter record with the new user_id
+    await adminClient
+      .from("tenant_financial_supporters")
+      .update({ user_id: authData.user.id })
+      .eq("id", existingSupporter.id)
+
+    console.log("[v0] Linked new donor account to existing donations")
   }
 
   return { success: true }
