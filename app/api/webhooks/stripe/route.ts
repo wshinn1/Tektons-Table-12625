@@ -1,13 +1,10 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
-import { createClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { sendEmail, FROM_EMAIL, REPLY_TO_EMAIL } from "@/lib/resend"
 import { EMAIL_TEMPLATES } from "@/lib/email-templates"
 import type Stripe from "stripe"
-
-// Use service role client for webhook processing (bypasses RLS)
-const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -100,6 +97,8 @@ export async function POST(req: Request) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connectedAccountId?: string) {
+  const supabaseAdmin = createAdminClient()
+
   console.log("[v0] Processing checkout.session.completed:", session.id)
   console.log("[v0] Session metadata:", session.metadata)
   console.log("[v0] Connected account ID from event:", connectedAccountId)
@@ -416,6 +415,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  const supabaseAdmin = createAdminClient()
+
   console.log("[v0] Processing invoice.paid:", invoice.id)
 
   const subscriptionId = invoice.subscription as string
@@ -478,10 +479,14 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   }
 
   if (campaignId) {
-    await supabaseAdmin.from("campaign_donations").insert({
+    const { error: campaignDonationError } = await supabaseAdmin.from("campaign_donations").insert({
       campaign_id: campaignId,
       amount: donationAmount,
     })
+
+    if (campaignDonationError) {
+      console.error("[v0] Error inserting campaign donation:", campaignDonationError)
+    }
 
     const { data: campaign } = await supabaseAdmin
       .from("tenant_campaigns")
@@ -503,6 +508,8 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  const supabaseAdmin = createAdminClient()
+
   console.log("[v0] Processing subscription.deleted:", subscription.id)
 
   const metadata = subscription.metadata || {}
@@ -514,5 +521,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  const supabaseAdmin = createAdminClient()
+
   console.log("[v0] Payment intent succeeded:", paymentIntent.id)
 }
