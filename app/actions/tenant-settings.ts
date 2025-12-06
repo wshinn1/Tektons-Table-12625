@@ -309,3 +309,45 @@ export async function updateEmailRecipients(data: {
   revalidatePath("/dashboard/settings")
   return { success: true }
 }
+
+export async function updateBrandingSettings(data: {
+  tenantId: string
+  faviconUrl: string
+  ogImageUrl: string
+  siteTitle: string
+  siteDescription: string
+}) {
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Verify user owns this tenant
+  const { data: tenant } = await supabase.from("tenants").select("id, email").eq("id", data.tenantId).single()
+
+  if (!tenant || tenant.email !== user.email) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  const { error } = await supabase
+    .from("tenants")
+    .update({
+      favicon_url: data.faviconUrl,
+      og_image_url: data.ogImageUrl,
+      site_title: data.siteTitle,
+      site_description: data.siteDescription,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.tenantId)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath("/admin/settings")
+  return { success: true }
+}

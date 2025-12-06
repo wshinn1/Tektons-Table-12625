@@ -291,6 +291,17 @@ export const EMAIL_TEMPLATES = {
                   </tr>
                   <tr>
                     <td style="padding: 30px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; text-align: center;">
+                      <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+                        <p style="color: #666666; font-size: 14px; margin: 0 0 8px 0;">
+                          Powered by <a href="https://tektonstable.com?ref=donation-receipt" style="color: #28a745; text-decoration: none; font-weight: bold;">TektonsTable</a>
+                        </p>
+                        <p style="color: #888888; font-size: 12px; margin: 0;">
+                          The all-in-one platform for missionaries to share their story, connect with supporters, and receive donations.
+                        </p>
+                        <a href="https://tektonstable.com?ref=donation-receipt" style="display: inline-block; margin-top: 10px; color: #28a745; font-size: 13px; text-decoration: none;">
+                          Learn more &rarr;
+                        </a>
+                      </div>
                       <p style="color: #999999; font-size: 14px; margin: 0;">
                         © ${new Date().getFullYear()} TektonsTable. All rights reserved.
                       </p>
@@ -688,6 +699,17 @@ export const EMAIL_TEMPLATES = {
                   </tr>
                   <tr>
                     <td style="padding: 30px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; text-align: center;">
+                      <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+                        <p style="color: #666666; font-size: 14px; margin: 0 0 8px 0;">
+                          Powered by <a href="https://tektonstable.com?ref=donation-receipt" style="color: #28a745; text-decoration: none; font-weight: bold;">TektonsTable</a>
+                        </p>
+                        <p style="color: #888888; font-size: 12px; margin: 0;">
+                          The all-in-one platform for missionaries to share their story, connect with supporters, and receive donations.
+                        </p>
+                        <a href="https://tektonstable.com?ref=donation-receipt" style="display: inline-block; margin-top: 10px; color: #28a745; font-size: 13px; text-decoration: none;">
+                          Learn more &rarr;
+                        </a>
+                      </div>
                       <p style="color: #999999; font-size: 14px; margin: 0;">
                         © ${new Date().getFullYear()} TektonsTable. All rights reserved.
                       </p>

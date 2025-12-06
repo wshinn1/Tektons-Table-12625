@@ -15,6 +15,7 @@ import { GoogleAnalytics } from "@/components/google-analytics"
 import { Suspense } from "react"
 import cn from "classnames"
 import { getMenuItemsByLocation } from "@/app/actions/tenant-menu"
+import { TenantHead } from "@/components/tenant/tenant-head"
 
 const montserrat = Montserrat({
   weight: ["900"],
@@ -97,6 +98,17 @@ export default function TenantLayout({
   const [isEmbedMode, setIsEmbedMode] = useState(false)
   const [pageBuilderEnabled, setPageBuilderEnabled] = useState(false)
   const [navbarVisible, setNavbarVisible] = useState(true)
+  const [branding, setBranding] = useState<{
+    faviconUrl: string | null
+    ogImageUrl: string | null
+    siteTitle: string | null
+    siteDescription: string | null
+  }>({
+    faviconUrl: null,
+    ogImageUrl: null,
+    siteTitle: null,
+    siteDescription: null,
+  })
 
   const ownershipVerifiedRef = useRef(false)
   const [isPersistedAdmin, setIsPersistedAdmin] = useState(false)
@@ -216,7 +228,9 @@ export default function TenantLayout({
       try {
         const { data: tenant, error } = await supabase
           .from("tenants")
-          .select("id, subdomain, full_name, email, page_builder_enabled")
+          .select(
+            "id, subdomain, full_name, email, page_builder_enabled, favicon_url, og_image_url, site_title, site_description",
+          )
           .eq("subdomain", currentSubdomain)
           .maybeSingle()
 
@@ -232,6 +246,12 @@ export default function TenantLayout({
           setTenantId(tenant.id)
           setTenantName(tenant.full_name || tenant.subdomain)
           setPageBuilderEnabled(tenant.page_builder_enabled || false)
+          setBranding({
+            faviconUrl: tenant.favicon_url,
+            ogImageUrl: tenant.og_image_url,
+            siteTitle: tenant.site_title,
+            siteDescription: tenant.site_description,
+          })
           const isOwner = tenant.email?.toLowerCase() === currentUser.email?.toLowerCase()
           setIsTenantOwner(isOwner)
           setIsPersistedAdmin(isOwner)
@@ -611,6 +631,14 @@ export default function TenantLayout({
       >
         <div className={`min-h-screen bg-gray-100 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
           <GoogleAnalytics />
+          <TenantHead
+            tenantName={tenantName}
+            faviconUrl={branding.faviconUrl}
+            ogImageUrl={branding.ogImageUrl}
+            siteTitle={branding.siteTitle}
+            siteDescription={branding.siteDescription}
+            subdomain={subdomain}
+          />
           {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
 
           <div className="md:hidden">
@@ -656,6 +684,14 @@ export default function TenantLayout({
     <Suspense fallback={<div>Loading...</div>}>
       <div className={`min-h-screen bg-gray-50 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
         <GoogleAnalytics />
+        <TenantHead
+          tenantName={tenantName}
+          faviconUrl={branding.faviconUrl}
+          ogImageUrl={branding.ogImageUrl}
+          siteTitle={branding.siteTitle}
+          siteDescription={branding.siteDescription}
+          subdomain={subdomain}
+        />
         {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
         {!isAdminPage && (
           <TenantNavbar

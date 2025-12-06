@@ -5,6 +5,7 @@ import { DangerZoneSettings } from "@/components/tenant/admin/danger-zone-settin
 import { CampaignNotificationSettings } from "@/components/tenant/admin/campaign-notification-settings"
 import { BlogWidgetSettings } from "@/components/tenant/admin/blog-widget-settings"
 import { HomepageWidgetSettings } from "@/components/tenant/admin/homepage-widget-settings"
+import { BrandingSettings } from "@/components/tenant/admin/branding-settings"
 
 export default async function TenantSettingsPage({
   params,
@@ -42,6 +43,15 @@ export default async function TenantSettingsPage({
       </div>
 
       <div className="space-y-8">
+        <BrandingSettings
+          tenantId={tenant.id}
+          currentFaviconUrl={tenant.favicon_url}
+          currentOgImageUrl={tenant.og_image_url}
+          currentSiteTitle={tenant.site_title}
+          currentSiteDescription={tenant.site_description}
+          tenantName={tenant.full_name || tenant.subdomain}
+        />
+
         <EmailRecipientsSettings
           tenantId={tenant.id}
           currentRecipients={tenant.contact_email_recipients || []}
