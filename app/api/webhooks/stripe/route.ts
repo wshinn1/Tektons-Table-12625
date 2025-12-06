@@ -2,7 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendEmail, FROM_EMAIL, REPLY_TO_EMAIL } from "@/lib/resend"
+import { sendEmail, GIVING_EMAIL, REPLY_TO_EMAIL } from "@/lib/resend"
 import { EMAIL_TEMPLATES } from "@/lib/email-templates"
 import type Stripe from "stripe"
 
@@ -325,7 +325,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
 
       await sendEmail({
         to: customerEmail,
-        from: FROM_EMAIL,
+        from: GIVING_EMAIL,
         subject: receiptEmail.subject,
         html: receiptEmail.html,
         replyTo: REPLY_TO_EMAIL,
@@ -395,7 +395,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
 
       await sendEmail({
         to: tenantUser.email,
-        from: FROM_EMAIL,
+        from: GIVING_EMAIL,
         subject: `New ${isRecurring ? "recurring " : ""}donation: $${donationAmount.toFixed(2)}`,
         html: notificationHtml,
         replyTo: REPLY_TO_EMAIL,

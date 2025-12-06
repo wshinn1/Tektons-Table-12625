@@ -48,3 +48,4 @@ export const resend = {
 
 export const FROM_EMAIL = "updates@tektonstable.com"
 export const REPLY_TO_EMAIL = "support@tektonstable.com"
+export const GIVING_EMAIL = "giving@tektonstable.com"
