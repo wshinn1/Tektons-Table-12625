@@ -294,7 +294,7 @@ export default async function TenantBlogPostPage({
           <div className="max-w-3xl mx-auto px-6 pt-16 pb-8 sm:px-8">
             {/* Minimal back button */}
             <Link
-              href={`/${tenantSlug}/blog`}
+              href="/blog"
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
