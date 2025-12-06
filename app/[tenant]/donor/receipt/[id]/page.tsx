@@ -1,18 +1,17 @@
-"use client"
-
 import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Printer } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { PrintButton } from "@/components/donor/print-button"
 
 export default async function DonationReceipt({
   params,
 }: {
-  params: Promise<{ tenant: string; id: string }>
+  params: { tenant: string; id: string }
 }) {
-  const { tenant: subdomain, id: donationId } = await params
+  const { tenant: subdomain, id: donationId } = params
   const supabase = await createClient()
 
   const {
@@ -168,10 +167,7 @@ export default async function DonationReceipt({
 
         {/* Print/Download Actions */}
         <div className="flex justify-center gap-4 mt-6 print:hidden">
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print Receipt
-          </Button>
+          <PrintButton />
         </div>
       </div>
     </div>
