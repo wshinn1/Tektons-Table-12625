@@ -264,7 +264,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
   // Update tenant's total donations
   const { data: tenant, error: tenantError } = await supabaseAdmin
     .from("tenants")
-    .select("total_donations, total_platform_fees, full_name, subdomain, custom_domain")
+    .select("total_donations, total_platform_fees, full_name, subdomain")
     .eq("id", tenantId)
     .single()
 
@@ -303,9 +303,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
   if (customerEmail && tenant) {
     try {
       let donorPortalUrl: string | undefined
-      if (tenant.custom_domain) {
-        donorPortalUrl = `https://${tenant.custom_domain}/auth/donor-login`
-      } else if (tenant.subdomain) {
+      if (tenant.subdomain) {
         donorPortalUrl = `https://${tenant.subdomain}.tektonstable.com/auth/donor-login`
       }
 
