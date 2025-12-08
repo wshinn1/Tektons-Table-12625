@@ -12,6 +12,7 @@ import PlatformHomePage from "@/app/page"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
+import { OrganizationSchema } from "@/components/seo/organization-schema"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -41,6 +42,67 @@ const raleway = Raleway({
 })
 
 export const revalidate = 60 // Revalidate every 60 seconds for fresh data
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant: tenantSlug } = await params
+
+  const supabase = await createServerClient()
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id, subdomain, full_name, bio, profile_image_url")
+    .eq("subdomain", tenantSlug)
+    .eq("is_active", true)
+    .single()
+
+  if (!tenant) {
+    return { title: "Tenant Not Found" }
+  }
+
+  const baseUrl = `https://${tenantSlug}.tektonstable.com`
+  const description = tenant.bio || `Support ${tenant.full_name}'s ministry through recurring donations`
+
+  return {
+    title: `${tenant.full_name} - Long Term Funding Support`,
+    description,
+    alternates: {
+      canonical: baseUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+    openGraph: {
+      title: `${tenant.full_name} - Missionary Fundraising`,
+      description,
+      url: baseUrl,
+      siteName: tenant.full_name,
+      images: tenant.profile_image_url
+        ? [
+            {
+              url: tenant.profile_image_url,
+              width: 1200,
+              height: 630,
+              alt: tenant.full_name,
+            },
+          ]
+        : [],
+      locale: "en_US",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${tenant.full_name} - Missionary Fundraising`,
+      description,
+      images: tenant.profile_image_url ? [tenant.profile_image_url] : [],
+    },
+  }
+}
 
 export default async function TenantHomePage({
   params,
@@ -345,12 +407,20 @@ export default async function TenantHomePage({
     </div>
   )
 
+  const baseUrl = `https://${tenant.subdomain}.tektonstable.com`
+
   if (homepage && homepage.page_sections && homepage.page_sections.length > 0) {
     const sortedSections = homepage.page_sections.sort((a, b) => a.order_index - b.order_index)
 
     return (
       <div className="min-h-screen bg-background">
         <div id="tenant-data" data-tenant-id={tenant.id} style={{ display: "none" }} />
+        <OrganizationSchema
+          name={tenant.full_name}
+          url={baseUrl}
+          logo={tenant.profile_image_url}
+          description={tenant.bio}
+        />
         <div className="relative">
           <div
             className={`max-w-4xl mx-auto px-4 py-12 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}
@@ -395,6 +465,12 @@ export default async function TenantHomePage({
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div id="tenant-data" data-tenant-id={tenant.id} style={{ display: "none" }} />
+      <OrganizationSchema
+        name={tenant.full_name}
+        url={baseUrl}
+        logo={tenant.profile_image_url}
+        description={tenant.bio}
+      />
       <div className="relative flex-1">
         <div
           className={`max-w-4xl mx-auto px-4 py-12 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}

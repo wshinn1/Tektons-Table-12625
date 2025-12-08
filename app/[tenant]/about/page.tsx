@@ -3,6 +3,54 @@ import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
+import { PersonSchema } from "@/components/seo/person-schema"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant: subdomain } = await params
+  const supabase = await createServerClient()
+
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("full_name, bio, profile_image_url")
+    .eq("subdomain", subdomain)
+    .single()
+
+  if (!tenant) {
+    return { title: "About - Not Found" }
+  }
+
+  const baseUrl = `https://${subdomain}.tektonstable.com`
+  const description = tenant.bio || `Learn more about ${tenant.full_name}'s ministry and mission`
+
+  return {
+    title: `About ${tenant.full_name}`,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/about`,
+    },
+    openGraph: {
+      title: `About ${tenant.full_name}`,
+      description,
+      url: `${baseUrl}/about`,
+      siteName: tenant.full_name,
+      images: tenant.profile_image_url
+        ? [
+            {
+              url: tenant.profile_image_url,
+              width: 1200,
+              height: 630,
+              alt: tenant.full_name,
+            },
+          ]
+        : [],
+      type: "profile",
+    },
+  }
+}
 
 export default async function TenantAboutPage({
   params,
@@ -21,8 +69,19 @@ export default async function TenantAboutPage({
   // Fetch about content
   const { data: aboutContent } = await supabase.from("about_content").select("*").eq("tenant_id", tenant.id).single()
 
+  const baseUrl = `https://${subdomain}.tektonstable.com`
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
+      {/* Added Person structured data for about page */}
+      <PersonSchema
+        name={tenant.full_name}
+        url={baseUrl}
+        image={tenant.profile_image_url}
+        jobTitle="Missionary"
+        description={tenant.bio}
+      />
+
       <h1 className="text-4xl font-bold mb-6">About {tenant.full_name}</h1>
 
       <div className="space-y-8">

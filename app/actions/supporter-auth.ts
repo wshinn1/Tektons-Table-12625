@@ -38,8 +38,10 @@ export async function signupSupporter({
     return { error: "Failed to create user" }
   }
 
-  // Create supporter profile
-  const { error: profileError } = await supabase.from("supporter_profiles").insert({
+  const adminClient = createAdminClient()
+
+  // Create supporter profile using admin client (user not authenticated yet)
+  const { error: profileError } = await adminClient.from("supporter_profiles").insert({
     id: authData.user.id,
     tenant_id: tenantId,
     email,
@@ -51,7 +53,7 @@ export async function signupSupporter({
     return { error: profileError.message }
   }
 
-  const adminClient = createAdminClient()
+  // Check if this email has existing donations to link
   const { data: existingSupporter } = await adminClient
     .from("tenant_financial_supporters")
     .select("id")
@@ -65,8 +67,6 @@ export async function signupSupporter({
       .from("tenant_financial_supporters")
       .update({ user_id: authData.user.id })
       .eq("id", existingSupporter.id)
-
-    console.log("[v0] Linked new donor account to existing donations")
   }
 
   return { success: true }
@@ -139,6 +139,7 @@ export async function subscribeToTenant({
   groupId?: string
 }) {
   const supabase = await createServerClient()
+  const adminClient = createAdminClient()
 
   // Get tenant info
   const { data: tenant, error: tenantError } = await supabase
@@ -168,7 +169,7 @@ export async function subscribeToTenant({
     return { error: "Failed to create user" }
   }
 
-  const { error: profileError } = await supabase.from("supporter_profiles").insert({
+  const { error: profileError } = await adminClient.from("supporter_profiles").insert({
     id: authData.user.id,
     tenant_id: tenant.id,
     email,
@@ -181,8 +182,6 @@ export async function subscribeToTenant({
   }
 
   if (receiveEmails) {
-    const adminClient = createAdminClient()
-
     const { error: subscriberError } = await adminClient.from("tenant_email_subscribers").upsert(
       {
         tenant_id: tenant.id,
@@ -200,12 +199,10 @@ export async function subscribeToTenant({
 
     if (subscriberError) {
       console.error("[v0] Error adding subscriber to email list:", subscriberError)
-    } else {
-      console.log("[v0] Subscriber added to email newsletter system with group:", groupId || "default")
     }
 
     // Get or create the Email Followers group (system groups don't have tenant_id)
-    const { data: group } = await supabase
+    const { data: group } = await adminClient
       .from("contact_groups")
       .select("id")
       .eq("name", "Email Followers")
@@ -215,7 +212,7 @@ export async function subscribeToTenant({
     let contactGroupId = group?.id
 
     if (!contactGroupId) {
-      const { data: newGroup } = await supabase
+      const { data: newGroup } = await adminClient
         .from("contact_groups")
         .insert({
           name: "Email Followers",
@@ -229,7 +226,7 @@ export async function subscribeToTenant({
     }
 
     if (contactGroupId) {
-      await supabase.from("contact_group_members").insert({
+      await adminClient.from("contact_group_members").insert({
         group_id: contactGroupId,
         contact_id: authData.user.id,
       })

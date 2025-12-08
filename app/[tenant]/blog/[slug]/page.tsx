@@ -13,6 +13,8 @@ import { CampaignWidget } from "@/components/tenant/campaign-widget"
 import { SubscribeCTA } from "@/components/tenant/subscribe-cta"
 import { getTotalRaised, getRecentDonors, getGivingStats } from "@/app/actions/giving"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
+import { BreadcrumbSchema } from "@/components/seo/breadcrumb-schema"
+import { PersonSchema } from "@/components/seo/person-schema"
 
 const montserrat = Montserrat({
   weight: ["900"],
@@ -127,13 +129,22 @@ export async function generateMetadata({
     return { title: "Post Not Found" }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com"
-  const url = `${baseUrl}/${tenantSlug}/blog/${post.slug}`
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tektonstable.com"
+  const url = `${baseUrl}/blog/${post.slug}`
   const description = post.excerpt || post.meta_description || post.subtitle || `Read ${post.title}`
 
   return {
     title: post.title,
     description: description,
+    alternates: {
+      canonical: url,
+    },
+    robots: {
+      index: post.seo_index !== false,
+      follow: post.seo_follow !== false,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
     openGraph: {
       title: post.title,
       description: description,
@@ -244,8 +255,8 @@ export default async function TenantBlogPostPage({
     donationCount = stats.supportersCount
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com"
-  const postUrl = `${baseUrl}/${tenantSlug}/blog/${post.slug}`
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tektonstable.com"
+  const postUrl = `${baseUrl}/blog/${post.slug}`
 
   const jsonLd = generateBlogJsonLd(
     {
@@ -274,6 +285,18 @@ export default async function TenantBlogPostPage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: baseUrl },
+          { name: "Blog", url: `${baseUrl}/blog` },
+          { name: post.title, url: postUrl },
+        ]}
+      />
+
+      {post.author_name && (
+        <PersonSchema name={post.author_name} jobTitle="Missionary" description={`Author of ${post.title}`} />
+      )}
 
       {post.navbar_visible === false && (
         <div className="fixed top-4 left-4 z-50">
