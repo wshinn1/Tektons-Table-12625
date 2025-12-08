@@ -28,18 +28,13 @@ Transform TektonsTable into a **fundraising education platform** by adding premi
 | Feature | Description |
 |---------|-------------|
 | Create categories | Name, slug, description, icon |
-| Category types | `free` or `premium` |
+| Edit categories | Full CRUD - add, edit, delete categories |
+| Category types | `free` or `premium` (admin-configurable) |
 | Premium flag | Requires active subscription to access |
 | Ordering | Drag-and-drop or manual sort order |
 | Assign to posts | Multi-select categories per resource/post |
 
-**Categories to create at launch:**
-- Free Resources (free)
-- Fundraising Fundamentals (premium)
-- Donor Relations (premium)
-- Ministry Leadership (premium)
-- Communication & Marketing (premium)
-- Spiritual Formation (premium)
+**Note:** Categories are NOT hardcoded - super admin has full control to create, edit, and remove categories as needed.
 
 ---
 
@@ -58,7 +53,7 @@ Transform TektonsTable into a **fundraising education platform** by adding premi
 **Subscription States:**
 - `active` - Full access to premium resources
 - `trialing` - Free trial period (1 month)
-- `past_due` - Payment failed, grace period
+- `past_due` - Payment failed, grace period (7 days)
 - `canceled` - No access to premium content
 - `comped` - Manually granted free access
 
@@ -83,7 +78,28 @@ Transform TektonsTable into a **fundraising education platform** by adding premi
 
 ---
 
-### 4. Access Control Flow
+### 4. Subscription Account Management
+
+**User Subscription Dashboard:** `tektonstable.com/account/subscription`
+
+| Feature | Description |
+|---------|-------------|
+| View subscription status | Active, trial, past_due, canceled |
+| View billing history | Past invoices and payments |
+| Update payment method | Via Stripe Customer Portal |
+| Cancel subscription | Self-service cancellation |
+| Reactivate subscription | Easy resubscribe after cancellation |
+| Pay past-due balance | One-click payment to restore access |
+
+**Past-Due Payment Recovery:**
+- When payment fails, show clear message with amount owed
+- "Pay Now" button to immediately submit payment
+- 7-day grace period before access revoked
+- Easy path to restore subscription after grace period
+
+---
+
+### 5. Access Control Flow
 
 \`\`\`
 User visits premium resource
@@ -112,7 +128,7 @@ User visits premium resource
 
 ---
 
-### 5. Paywall Experience
+### 6. Paywall Experience
 
 **When user hits paywall:**
 1. Show resource title, featured image, and first 200 words
@@ -123,6 +139,39 @@ User visits premium resource
    - Benefits list (150,000+ words, 15+ resources, etc.)
    - "Start Reading" button → Stripe Checkout
 4. Show 3 free resource previews as alternative
+
+**Searchability:**
+- Premium resources ARE searchable (titles, excerpts visible)
+- Full content hidden behind paywall
+- Encourages discovery and subscription conversion
+
+---
+
+### 7. Content Format & Editor
+
+**TipTap Editor Capabilities:**
+- Handles 200,000+ words without performance issues
+- Your 25,000-word articles will work perfectly
+- Character/word count extension available
+- Rich text formatting, images, embeds supported
+
+**Content Import Workflow:**
+1. Copy content from Google Docs
+2. Paste into TipTap editor (preserves formatting)
+3. Upload featured image via Vercel Blob
+4. Add images within content as needed
+5. Assign categories and publish
+
+---
+
+## URL Structure
+
+**Resource URLs:** `/resources/category/[category-slug]/[article-slug]`
+
+**Examples:**
+- `/resources/category/fundraising-fundamentals/the-art-of-donor-communication`
+- `/resources/category/free-resources/getting-started-guide`
+- `/resources/category/ministry-leadership/building-your-team`
 
 ---
 
@@ -175,6 +224,7 @@ CREATE TABLE resource_category_assignments (
 CREATE TABLE premium_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email VARCHAR(255),
   stripe_customer_id VARCHAR(255),
   stripe_subscription_id VARCHAR(255),
   status VARCHAR(20) NOT NULL, -- active, trialing, past_due, canceled, comped
@@ -189,6 +239,7 @@ CREATE TABLE premium_subscriptions (
 CREATE TABLE comped_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email VARCHAR(255),
   granted_by UUID REFERENCES auth.users(id),
   reason TEXT,
   starts_at TIMESTAMPTZ DEFAULT NOW(),
@@ -215,12 +266,65 @@ CREATE TABLE resource_read_progress (
 
 ---
 
+## Stripe Configuration
+
+### Products to Create
+
+| Product | Price | Type |
+|---------|-------|------|
+| TektonsTable Premium Resources | $4.99 | Monthly recurring |
+
+### Webhook Events Required
+
+**Events to add in Stripe Dashboard:**
+
+Go to **Stripe Dashboard → Developers → Webhooks → Select your endpoint** and add these events:
+
+| Event | Purpose | Currently Handled? |
+|-------|---------|-------------------|
+| `checkout.session.completed` | Activate new subscription | YES (update handler) |
+| `customer.subscription.created` | Record new subscription | Add new handler |
+| `customer.subscription.updated` | Status changes (active, past_due, etc.) | **ADD NEW** |
+| `customer.subscription.deleted` | Mark subscription canceled | YES (update handler) |
+| `invoice.payment_succeeded` | Extend subscription period | Add new handler |
+| `invoice.payment_failed` | Mark past_due, send reminder email | **ADD NEW** |
+| `customer.subscription.trial_will_end` | Send trial ending reminder (3 days before) | **ADD NEW** |
+
+**Webhook Endpoint:** `https://tektonstable.com/api/webhooks/stripe`
+
+**Note:** You do NOT need a new webhook endpoint. We'll add handlers for the new events in the existing webhook route.
+
+### Payment Failure Flow
+
+\`\`\`
+Payment Fails
+     │
+     ▼
+invoice.payment_failed webhook received
+     │
+     ├── Update subscription status to 'past_due'
+     ├── Send "Payment Failed" email
+     │     - Explain what happened
+     │     - Link to update payment method
+     │     - Mention 7-day grace period
+     │
+     ▼
+Day 3: Send reminder email
+     │
+     ▼
+Day 7: Access revoked if still unpaid
+     │
+     ▼
+User can easily resubscribe from /account/subscription
+\`\`\`
+
+---
+
 ## Implementation Phases
 
 ### Phase 1: Database & Categories (Day 1)
 - [ ] Create database migration script
 - [ ] Run migration to create tables
-- [ ] Seed initial categories (free + premium)
 - [ ] Add RLS policies for security
 
 ### Phase 2: Super Admin Category Management (Day 1-2)
@@ -232,7 +336,7 @@ CREATE TABLE resource_read_progress (
 ### Phase 3: Resource Management (Day 2-3)
 - [ ] Create `/admin/resources` page
 - [ ] Resource list with filters (status, category, premium)
-- [ ] Resource editor with rich text (TipTap)
+- [ ] Resource editor with TipTap (handles 25,000+ words)
 - [ ] Category assignment (multi-select)
 - [ ] Featured image upload (Vercel Blob)
 - [ ] Auto-calculate word count and read time
@@ -243,35 +347,53 @@ CREATE TABLE resource_read_progress (
 - [ ] Create Stripe Price $4.99/month recurring
 - [ ] Implement Stripe Checkout flow
 - [ ] Implement Stripe Customer Portal
-- [ ] Webhook handling for subscription events
+- [ ] Update webhook handler for new events:
+  - [ ] `customer.subscription.updated`
+  - [ ] `invoice.payment_failed`
+  - [ ] `customer.subscription.trial_will_end`
 
 ### Phase 5: Public Resources Pages (Day 4)
 - [ ] Create `/resources` listing page
-- [ ] Create `/resources/[slug]` detail page
+- [ ] Create `/resources/category/[slug]/[article-slug]` detail page
 - [ ] Category filtering and navigation
 - [ ] Premium content paywall
 - [ ] Free content preview (200 words + blur)
 - [ ] Subscription CTA component
 
-### Phase 6: Access Control (Day 5)
+### Phase 6: User Subscription Account (Day 4-5)
+- [ ] Create `/account/subscription` page
+- [ ] View subscription status and billing history
+- [ ] Cancel/reactivate subscription
+- [ ] Pay past-due balance (easy one-click payment)
+- [ ] Update payment method (Stripe Portal)
+
+### Phase 7: Access Control (Day 5)
 - [ ] `checkPremiumAccess()` helper function
 - [ ] Middleware for premium routes
 - [ ] Tenant free trial logic (auto-grant on signup)
 - [ ] Trial expiration checks
 
-### Phase 7: Comped Access Admin (Day 5-6)
+### Phase 8: Comped Access Admin (Day 5-6)
 - [ ] Create `/admin/comped-access` page
 - [ ] Search users by email
 - [ ] Grant access form (duration selector)
 - [ ] Active comps list with expiration
 - [ ] Revoke access functionality
 
-### Phase 8: Polish & Launch (Day 6-7)
-- [ ] Email templates (subscription confirm, trial ending, etc.)
-- [ ] Analytics tracking (views, conversions)
-- [ ] SEO optimization for resource pages
+### Phase 9: Email Notifications (Day 6)
+- [ ] Subscription welcome email
+- [ ] Trial ending soon (7 days before)
+- [ ] Trial ended
+- [ ] Payment failed (with update link)
+- [ ] Payment failed reminder (Day 3)
+- [ ] Subscription canceled
+- [ ] Comp access granted
+
+### Phase 10: Polish & Launch (Day 6-7)
 - [ ] Mobile responsive testing
-- [ ] Upload initial 15 resources
+- [ ] SEO optimization for resource pages
+- [ ] Upload initial resources
+- [ ] Test full flow end-to-end
 
 ---
 
@@ -281,36 +403,44 @@ CREATE TABLE resource_read_progress (
 app/
 ├── (platform)/
 │   ├── resources/
-│   │   ├── page.tsx                    # Resource listing
-│   │   └── [slug]/
-│   │       └── page.tsx                # Resource detail
+│   │   ├── page.tsx                              # Resource listing
+│   │   └── category/
+│   │       └── [category-slug]/
+│   │           └── [article-slug]/
+│   │               └── page.tsx                  # Resource detail
+│   ├── account/
+│   │   └── subscription/
+│   │       └── page.tsx                          # User subscription management
 │   └── subscribe/
 │       └── premium/
-│           └── page.tsx                # Premium subscription page
+│           └── page.tsx                          # Premium subscription checkout
 ├── admin/
 │   ├── categories/
-│   │   └── page.tsx                    # Category management
+│   │   └── page.tsx                              # Category management
 │   ├── resources/
-│   │   ├── page.tsx                    # Resource list
+│   │   ├── page.tsx                              # Resource list
 │   │   ├── new/
-│   │   │   └── page.tsx                # Create resource
+│   │   │   └── page.tsx                          # Create resource
 │   │   └── [id]/
 │   │       └── edit/
-│   │           └── page.tsx            # Edit resource
+│   │           └── page.tsx                      # Edit resource
 │   └── comped-access/
-│       └── page.tsx                    # Manage free access grants
+│       └── page.tsx                              # Manage free access grants
 ├── api/
 │   ├── stripe/
-│   │   └── premium-checkout/
-│   │       └── route.ts                # Create checkout session
+│   │   ├── premium-checkout/
+│   │   │   └── route.ts                          # Create checkout session
+│   │   └── premium-portal/
+│   │       └── route.ts                          # Customer portal session
 │   └── webhooks/
 │       └── stripe/
-│           └── route.ts                # Handle subscription webhooks (update existing)
+│           └── route.ts                          # Handle subscription webhooks (update existing)
+
 actions/
-├── category-actions.ts                  # Category CRUD
-├── resource-actions.ts                  # Resource CRUD
-├── premium-subscription-actions.ts      # Subscription management
-└── comped-access-actions.ts            # Comp access management
+├── category-actions.ts                           # Category CRUD
+├── resource-actions.ts                           # Resource CRUD
+├── premium-subscription-actions.ts               # Subscription management
+└── comped-access-actions.ts                      # Comp access management
 
 components/
 ├── admin/
@@ -326,132 +456,28 @@ components/
 │   ├── premium-paywall.tsx
 │   └── subscription-cta.tsx
 └── premium/
-    └── access-gate.tsx                  # Wrapper for premium content
+    └── access-gate.tsx                           # Wrapper for premium content
 
 lib/
-├── premium-access.ts                    # Access checking utilities
-└── stripe-premium.ts                    # Stripe subscription helpers
+├── premium-access.ts                             # Access checking utilities
+└── stripe-premium.ts                             # Stripe subscription helpers
 \`\`\`
-
----
-
-## Stripe Configuration
-
-### Products to Create
-
-| Product | Price | Type |
-|---------|-------|------|
-| TektonsTable Premium Resources | $4.99 | Monthly recurring |
-
-### Webhook Events to Handle
-
-| Event | Action |
-|-------|--------|
-| `checkout.session.completed` | Create/activate subscription record |
-| `customer.subscription.created` | Record new subscription |
-| `customer.subscription.updated` | Update status (active, past_due, etc.) |
-| `customer.subscription.deleted` | Mark subscription canceled |
-| `invoice.payment_succeeded` | Extend subscription period |
-| `invoice.payment_failed` | Mark past_due, send reminder |
-
----
-
-## Access Check Logic
-
-\`\`\`typescript
-// lib/premium-access.ts
-
-export async function checkPremiumAccess(userId: string): Promise<{
-  hasAccess: boolean
-  reason: 'subscription' | 'trial' | 'comped' | 'none'
-  expiresAt?: Date
-}> {
-  // 1. Check active subscription
-  const subscription = await getActiveSubscription(userId)
-  if (subscription?.status === 'active') {
-    return { hasAccess: true, reason: 'subscription' }
-  }
-
-  // 2. Check comped access
-  const comp = await getActiveComp(userId)
-  if (comp && (!comp.expires_at || new Date(comp.expires_at) > new Date())) {
-    return { 
-      hasAccess: true, 
-      reason: 'comped', 
-      expiresAt: comp.expires_at 
-    }
-  }
-
-  // 3. Check tenant trial (if user is a tenant)
-  const tenant = await getTenantByUserId(userId)
-  if (tenant?.premium_trial_ends_at) {
-    if (new Date(tenant.premium_trial_ends_at) > new Date()) {
-      return { 
-        hasAccess: true, 
-        reason: 'trial', 
-        expiresAt: tenant.premium_trial_ends_at 
-      }
-    }
-  }
-
-  return { hasAccess: false, reason: 'none' }
-}
-\`\`\`
-
----
-
-## UI/UX Specifications
-
-### Premium Badge
-- Small gold/amber badge with lock icon
-- Appears on category cards and resource cards
-- Text: "Premium" or lock icon only
-
-### Paywall Card
-- Clean white card with subtle shadow
-- Headline: "Unlock Premium Resources"
-- Subhead: "Access 150,000+ words of fundraising wisdom"
-- Price: "$4.99/month" with "Cancel anytime" note
-- Benefits list (4-5 bullet points)
-- CTA button: "Start Reading" (primary color)
-- Secondary link: "Browse Free Resources"
-
-### Resource Card
-- Featured image (16:9 aspect ratio)
-- Category badge (top left)
-- Premium lock icon (top right, if premium)
-- Title (truncated to 2 lines)
-- Excerpt (truncated to 3 lines)
-- Read time + word count
-- "Read Now" or "Unlock" button
 
 ---
 
 ## Email Templates Needed
 
-| Email | Trigger |
-|-------|---------|
-| Subscription Welcome | After successful checkout |
-| Trial Starting | When tenant gets free month |
-| Trial Ending Soon | 7 days before trial ends |
-| Trial Ended | When trial expires |
-| Payment Failed | On invoice.payment_failed |
-| Subscription Canceled | On cancellation |
-| Comp Access Granted | When admin grants access |
-| Comp Access Expiring | 7 days before comp ends |
-
----
-
-## Analytics to Track
-
-| Metric | Purpose |
-|--------|---------|
-| Resource views | Popular content |
-| Paywall impressions | Conversion funnel |
-| Checkout starts | Conversion funnel |
-| Successful subscriptions | Revenue |
-| Churn rate | Retention |
-| Trial → Paid conversion | Marketing effectiveness |
+| Email | Trigger | Timing |
+|-------|---------|--------|
+| Subscription Welcome | After successful checkout | Immediate |
+| Trial Starting | When tenant account created | Immediate |
+| Trial Ending Soon | Before trial ends | 7 days before |
+| Trial Ended | When trial expires | On expiration |
+| Payment Failed | On invoice.payment_failed | Immediate |
+| Payment Reminder | Still past_due | 3 days after failure |
+| Subscription Canceled | On cancellation | Immediate |
+| Comp Access Granted | When admin grants access | Immediate |
+| Comp Access Expiring | Before comp ends | 7 days before |
 
 ---
 
@@ -464,48 +490,28 @@ export async function checkPremiumAccess(userId: string): Promise<{
 
 ---
 
-## Future Enhancements (Not in V1)
+## Questions Resolved
 
-- [ ] Tenant resource contributions (revenue share model)
-- [ ] Annual subscription option ($49/year - 2 months free)
-- [ ] Resource downloads (PDF versions)
-- [ ] Resource bookmarking/favorites
-- [ ] Reading progress tracking
-- [ ] Resource search
-- [ ] Related resources suggestions
-- [ ] Comments/discussion on resources
-- [ ] Resource ratings
-- [ ] Referral program (drive 10+ subs = revenue share)
-
----
-
-## Launch Checklist
-
-- [ ] All 15 resources uploaded and categorized
-- [ ] 3-5 free resources available
-- [ ] Stripe products/prices created
-- [ ] Webhooks configured and tested
-- [ ] Email templates created
-- [ ] Paywall tested end-to-end
-- [ ] Mobile responsive verified
-- [ ] Analytics tracking verified
-- [ ] Announcement blog post written
-- [ ] Email to existing tenants about free trial
-
----
-
-## Questions to Resolve Before Starting
-
-1. **Categories** - Confirm the category names and which are free vs premium
-2. **Trial notification** - Email tenants about their free month, or surprise them?
-3. **Grace period** - How long after payment failure before revoking access? (Suggest 7 days)
-4. **Content format** - Are your 15 resources in a specific format (Word, Google Docs, Markdown)?
-5. **Images** - Do resources have featured images, or should we generate placeholders?
+| Question | Answer |
+|----------|--------|
+| Category names hardcoded? | No - admin can create/edit/delete categories |
+| Content format? | Google Docs - copy/paste into TipTap |
+| TipTap word limit? | Handles 200,000+ words - 25K articles are fine |
+| Featured images? | Will upload featured images + images within posts |
+| Grace period? | 7 days with email reminders |
+| Tenant notification? | Yes - email setup after implementation |
+| Self-service cancel? | Yes - full subscription account management |
+| Past-due payments? | Easy one-click payment to restore access |
+| URL structure? | `/resources/category/[slug]/[article-slug]` |
+| Search visibility? | Premium resources searchable, content behind paywall |
+| Trial start? | When tenant creates account |
 
 ---
 
 ## Ready to Build?
 
-Once you confirm the plan, I'll start with **Phase 1: Database & Categories** and work through each phase systematically. Each phase will be a separate task in the todo list.
+Once you confirm the plan, I'll start with **Phase 1: Database & Categories** and work through each phase systematically.
 
-Estimated total time: **5-7 days** of focused development.
+**Estimated total time:** 6-7 days of focused development
+
+**To start:** Just say "Let's start" or "Begin Phase 1"
