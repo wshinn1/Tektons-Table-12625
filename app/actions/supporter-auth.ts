@@ -2,7 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { sendEmail } from "@/lib/resend"
+import { sendEmail, SUBSCRIBE_EMAIL } from "@/lib/resend"
 import { EMAIL_TEMPLATES } from "@/lib/email-templates"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -145,10 +145,10 @@ export async function subscribeToTenant({
   const supabase = await createServerClient()
   const adminClient = createAdminClient()
 
-  // Get tenant info
+  // Get tenant info including their email for reply-to
   const { data: tenant, error: tenantError } = await supabase
     .from("tenants")
-    .select("id, full_name")
+    .select("id, full_name, email")
     .eq("subdomain", tenantSlug)
     .single()
 
@@ -167,7 +167,20 @@ export async function subscribeToTenant({
     userId = existingUser.id
     isExistingUser = true
 
-    // Check if they already have a supporter_profile for this tenant
+    // Check if they're already in tenant_email_subscribers for this tenant
+    const { data: existingSubscriber } = await adminClient
+      .from("tenant_email_subscribers")
+      .select("id")
+      .eq("tenant_id", tenant.id)
+      .eq("email", email)
+      .single()
+
+    if (existingSubscriber) {
+      // They're already subscribed to this tenant
+      return { error: "You're already following this page. Please sign in to view your account." }
+    }
+
+    // Check if they have a supporter_profile for this tenant
     const { data: existingProfile } = await adminClient
       .from("supporter_profiles")
       .select("id")
@@ -175,31 +188,25 @@ export async function subscribeToTenant({
       .eq("tenant_id", tenant.id)
       .single()
 
-    if (existingProfile) {
-      // They're already subscribed to this tenant
-      return { error: "You're already following this page. Please sign in to view your account." }
-    }
+    if (!existingProfile) {
+      // Create supporter profile for this tenant - use insert, not upsert
+      // since supporter_profiles primary key is just 'id', not composite
+      const { data: anyProfile } = await adminClient.from("supporter_profiles").select("id").eq("id", userId).single()
 
-    // Check if they have a profile for a different tenant (they exist but not for this tenant)
-    const { data: otherProfile } = await adminClient.from("supporter_profiles").select("id").eq("id", userId).single()
+      if (!anyProfile) {
+        // No profile exists at all, create one
+        const { error: profileError } = await adminClient.from("supporter_profiles").insert({
+          id: userId,
+          tenant_id: tenant.id,
+          email,
+          full_name: fullName || existingUser.user_metadata?.full_name || email.split("@")[0],
+          email_notifications: receiveEmails,
+        })
 
-    if (!otherProfile) {
-      // User exists in auth but has no supporter profile - create one for this tenant
-      const { error: profileError } = await adminClient.from("supporter_profiles").insert({
-        id: userId,
-        tenant_id: tenant.id,
-        email,
-        full_name: fullName || existingUser.user_metadata?.full_name || email.split("@")[0],
-        email_notifications: receiveEmails,
-      })
-
-      if (profileError) {
-        console.error("[v0] Error creating supporter profile for existing user:", profileError)
-        return { error: "Failed to create profile. " + profileError.message }
+        if (profileError) {
+          console.error("[v0] Error creating supporter profile for existing user:", profileError)
+        }
       }
-    } else {
-      // They have a profile for another tenant - for now, just add them to email subscribers
-      // In the future, you might want to support multi-tenant profiles
     }
   } else {
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -258,74 +265,55 @@ export async function subscribeToTenant({
     if (subscriberError) {
       console.error("[v0] Error adding subscriber to email list:", subscriberError)
     }
+  }
 
-    // Get or create the Email Followers group (system groups don't have tenant_id)
-    const { data: group } = await adminClient
-      .from("contact_groups")
-      .select("id")
-      .eq("name", "Email Followers")
-      .eq("is_system", true)
-      .single()
+  const { error: followerError } = await adminClient.from("tenant_followers").upsert(
+    {
+      tenant_id: tenant.id,
+      user_id: userId,
+      status: "approved",
+      approved_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "tenant_id,user_id",
+      ignoreDuplicates: true,
+    },
+  )
 
-    let contactGroupId = group?.id
+  if (followerError) {
+    console.error("[v0] Error adding to tenant_followers:", followerError)
+  }
 
-    if (!contactGroupId) {
-      const { data: newGroup } = await adminClient
-        .from("contact_groups")
-        .insert({
-          name: "Email Followers",
-          is_system: true,
-          description: "All email subscribers",
-        })
-        .select("id")
+  // Send welcome email (only for new users)
+  if (!isExistingUser && receiveEmails) {
+    try {
+      const { data: latestPost } = await supabase
+        .from("blog_posts")
+        .select("title, slug")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(1)
         .single()
 
-      contactGroupId = newGroup?.id
-    }
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      const tenantUrl = `https://${tenantSlug}.tektonstable.com`
+      const latestPostUrl = latestPost ? `${tenantUrl}/blog/${latestPost.slug}` : undefined
 
-    if (contactGroupId) {
-      // Use upsert to avoid duplicate errors
-      await adminClient.from("contact_group_members").upsert(
-        {
-          group_id: contactGroupId,
-          contact_id: userId,
-        },
-        {
-          onConflict: "group_id,contact_id",
-          ignoreDuplicates: true,
-        },
-      )
-    }
-
-    // Send welcome email (only for new users)
-    if (!isExistingUser) {
-      try {
-        const { data: latestPost } = await supabase
-          .from("blog_posts")
-          .select("title, slug")
-          .eq("tenant_id", tenant.id)
-          .eq("status", "published")
-          .order("published_at", { ascending: false })
-          .limit(1)
-          .single()
-
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-        const latestPostUrl = latestPost ? `${baseUrl}/${tenantSlug}/blog/${latestPost.slug}` : undefined
-
-        await sendEmail({
-          to: email,
-          from: process.env.RESEND_FROM_EMAIL || "noreply@tektonstable.com",
-          ...EMAIL_TEMPLATES.welcomeSubscriber({
-            subscriberName: fullName,
-            tenantName: tenant.full_name || tenantSlug,
-            tenantSlug,
-            latestPostTitle: latestPost?.title,
-            latestPostUrl,
-          }),
-        })
-      } catch (emailError) {
-        console.error("Failed to send welcome email:", emailError)
-      }
+      await sendEmail({
+        to: email,
+        from: `${tenant.full_name || tenantSlug} via TektonsTable <${SUBSCRIBE_EMAIL}>`,
+        replyTo: tenant.email || undefined,
+        ...EMAIL_TEMPLATES.welcomeSubscriber({
+          subscriberName: fullName,
+          tenantName: tenant.full_name || tenantSlug,
+          tenantSlug,
+          latestPostTitle: latestPost?.title,
+          latestPostUrl,
+        }),
+      })
+    } catch (emailError) {
+      console.error("[v0] Failed to send welcome email:", emailError)
     }
   }
 
@@ -342,36 +330,6 @@ export async function subscribeToTenant({
   return { success: true }
 }
 
-export async function donorSignOut() {
-  const supabase = await createServerClient()
-
-  // Sign out from Supabase (global scope clears all sessions)
-  const { error } = await supabase.auth.signOut({ scope: "global" })
-
-  if (error) {
-    console.error("[v0] Signout error:", error)
-  }
-
-  // Add delay to ensure client-side cleanup completes
-  await new Promise((resolve) => setTimeout(resolve, 100))
-
-  // Clear cookies manually for both domains
-  const cookieStore = await import("next/headers").then((m) => m.cookies())
-  const cookiesToClear = ["sb-access-token", "sb-refresh-token", "supabase-auth-token", "sb-auth-token"]
-
-  for (const cookie of cookiesToClear) {
-    ;(await cookieStore).delete(cookie)
-    ;(await cookieStore).delete({
-      name: cookie,
-      domain: ".tektonstable.com",
-    })
-  }
-
-  revalidatePath("/", "layout")
-  return { success: true }
-}
-
-// New function added
 export async function loginAndFollowTenant({
   email,
   password,
@@ -415,44 +373,38 @@ export async function loginAndFollowTenant({
     return { error: "Tenant not found" }
   }
 
-  // Check if they already have a supporter_profile for this tenant
-  const { data: existingProfile } = await adminClient
-    .from("supporter_profiles")
+  // Check if they're already in tenant_email_subscribers
+  const { data: existingSubscriber } = await adminClient
+    .from("tenant_email_subscribers")
     .select("id")
-    .eq("id", userId)
     .eq("tenant_id", tenant.id)
+    .eq("email", email)
     .single()
 
-  if (existingProfile) {
-    // Already following - just redirect to success
+  if (existingSubscriber) {
+    // Already following
     return { success: true, message: "You're already following this ministry!" }
   }
 
-  // Check if they have any supporter profile
   const { data: anyProfile } = await adminClient
     .from("supporter_profiles")
     .select("id, full_name")
     .eq("id", userId)
     .single()
 
-  // Create supporter profile for this tenant
-  const { error: profileError } = await adminClient.from("supporter_profiles").upsert(
-    {
+  if (!anyProfile) {
+    // Create supporter profile for this user
+    const { error: profileError } = await adminClient.from("supporter_profiles").insert({
       id: userId,
       tenant_id: tenant.id,
       email,
-      full_name: anyProfile?.full_name || authData.user.user_metadata?.full_name || email.split("@")[0],
+      full_name: authData.user.user_metadata?.full_name || email.split("@")[0],
       email_notifications: receiveEmails,
-    },
-    {
-      onConflict: "id,tenant_id",
-      ignoreDuplicates: false,
-    },
-  )
+    })
 
-  if (profileError) {
-    console.error("[v0] Error creating supporter profile:", profileError)
-    // Don't fail - user is logged in, just couldn't create profile
+    if (profileError) {
+      console.error("[v0] Error creating supporter profile:", profileError)
+    }
   }
 
   // Add to email subscribers if opted in
@@ -477,8 +429,54 @@ export async function loginAndFollowTenant({
     }
   }
 
+  const { error: followerError } = await adminClient.from("tenant_followers").upsert(
+    {
+      tenant_id: tenant.id,
+      user_id: userId,
+      status: "approved",
+      approved_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "tenant_id,user_id",
+      ignoreDuplicates: true,
+    },
+  )
+
+  if (followerError) {
+    console.error("[v0] Error adding to tenant_followers:", followerError)
+  }
+
   revalidatePath("/", "layout")
   revalidatePath("/admin/supporters", "page")
 
+  return { success: true }
+}
+
+export async function donorSignOut() {
+  const supabase = await createServerClient()
+
+  // Sign out from Supabase (global scope clears all sessions)
+  const { error } = await supabase.auth.signOut({ scope: "global" })
+
+  if (error) {
+    console.error("[v0] Signout error:", error)
+  }
+
+  // Add delay to ensure client-side cleanup completes
+  await new Promise((resolve) => setTimeout(resolve, 100))
+
+  // Clear cookies manually for both domains
+  const cookieStore = await import("next/headers").then((m) => m.cookies())
+  const cookiesToClear = ["sb-access-token", "sb-refresh-token", "supabase-auth-token", "sb-auth-token"]
+
+  for (const cookie of cookiesToClear) {
+    ;(await cookieStore).delete(cookie)
+    ;(await cookieStore).delete({
+      name: cookie,
+      domain: ".tektonstable.com",
+    })
+  }
+
+  revalidatePath("/", "layout")
   return { success: true }
 }

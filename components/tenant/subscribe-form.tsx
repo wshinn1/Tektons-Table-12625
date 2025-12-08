@@ -170,7 +170,7 @@ export function SubscribeForm({
                   <ArrowLeft className="h-3 w-3" />
                   Back
                 </button>
-                <Link href={`${basePath}/auth/supporter-login`} className="text-blue-600 hover:underline">
+                <Link href={`${basePath}/auth/forgot-password`} className="text-blue-600 hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -306,7 +306,7 @@ export function SubscribeForm({
 
             <div className="text-center text-sm text-gray-600">
               Already have an account?{" "}
-              <Link href={`${basePath}/auth/supporter-login`} className="text-blue-600 hover:underline">
+              <Link href={`${basePath}/auth/donor-login`} className="text-blue-600 hover:underline">
                 Sign in
               </Link>
             </div>

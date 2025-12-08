@@ -17,13 +17,21 @@ export default async function SubscribePage({ params }: { params: Promise<{ tena
   let groups: Array<{ id: string; name: string; description: string | null }> = []
 
   if (tenant) {
-    const { count } = await supabase
-      .from("supporter_profiles")
+    const { count: emailSubscriberCount } = await supabase
+      .from("tenant_email_subscribers")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.id)
-      .eq("email_notifications", true)
+      .eq("status", "active")
 
-    subscriberCount = count || 0
+    // Also count approved followers
+    const { count: followerCount } = await supabase
+      .from("tenant_followers")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenant.id)
+      .eq("status", "approved")
+
+    // Use the higher of the two counts, or sum them if they track different things
+    subscriberCount = Math.max(emailSubscriberCount || 0, followerCount || 0)
 
     const { count: postsCount } = await supabase
       .from("blog_posts")
