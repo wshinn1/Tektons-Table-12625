@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  UserCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
@@ -42,6 +43,7 @@ const adminNavItems = [
   { label: "Contact Forms", href: "/admin/contact-submissions", icon: MessageSquare },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Navigation", href: "/admin/navigation", icon: MenuIcon },
+  { label: "About Page", href: "/admin/about", icon: UserCircle }, // Added About page link
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
