@@ -9,25 +9,35 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { subscribeToTenant, loginAndFollowTenant } from "@/app/actions/supporter-auth"
+import { subscribeToTenant, loginAndFollowTenant, followTenantAsLoggedInUser } from "@/app/actions/supporter-auth"
 import Link from "next/link"
-import { Users, Mail, ArrowLeft } from "lucide-react"
+import { Users, Mail, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function SubscribeForm({
   tenantSlug,
   tenantName,
+  tenantId,
   subscriberCount,
   recentPostsCount,
   isSubdomain = false,
   groups = [],
+  isLoggedIn = false,
+  isAlreadyFollowing = false,
+  currentUserEmail = null,
+  currentUserName = "",
 }: {
   tenantSlug: string
   tenantName: string
+  tenantId: string
   subscriberCount: number
   recentPostsCount: number
   isSubdomain?: boolean
   groups?: Array<{ id: string; name: string; description: string | null }>
+  isLoggedIn?: boolean
+  isAlreadyFollowing?: boolean
+  currentUserEmail?: string | null
+  currentUserName?: string
 }) {
   const router = useRouter()
   const basePath = isSubdomain ? "" : `/${tenantSlug}`
@@ -39,10 +49,38 @@ export function SubscribeForm({
   const [selectedGroup, setSelectedGroup] = useState<string>("followers")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const [showLoginForm, setShowLoginForm] = useState(false)
   const [loginPassword, setLoginPassword] = useState("")
   const [existingUserEmail, setExistingUserEmail] = useState("")
+
+  const handleFollowAsLoggedInUser = async () => {
+    setError("")
+    setLoading(true)
+
+    try {
+      const result = await followTenantAsLoggedInUser({
+        tenantSlug,
+        receiveEmails,
+        groupId: selectedGroup === "followers" ? undefined : selectedGroup,
+      })
+
+      if (result.error) {
+        setError(result.error)
+      } else {
+        setSuccess(true)
+        // Redirect to success page after a brief delay
+        setTimeout(() => {
+          router.push(`${basePath}/subscribe/success`)
+        }, 1000)
+      }
+    } catch (err) {
+      setError("An unexpected error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -103,6 +141,139 @@ export function SubscribeForm({
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isAlreadyFollowing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            </div>
+            <CardTitle>You're Already Following!</CardTitle>
+            <CardDescription>You're already subscribed to updates from {tenantName}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-6 justify-center text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>
+                  {subscriberCount} {subscriberCount === 1 ? "follower" : "followers"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>
+                  {recentPostsCount} {recentPostsCount === 1 ? "post" : "posts"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button asChild className="w-full">
+                <Link href={`${basePath}/blog`}>View Latest Posts</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full bg-transparent">
+                <Link href={`${basePath}/donor`}>Go to Dashboard</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (isLoggedIn && currentUserEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Follow {tenantName}</CardTitle>
+            <CardDescription>
+              You're signed in as {currentUserEmail}. Click below to follow and receive updates.
+            </CardDescription>
+
+            <div className="flex items-center gap-6 pt-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>
+                  {subscriberCount} {subscriberCount === 1 ? "follower" : "followers"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>
+                  {recentPostsCount} {recentPostsCount === 1 ? "post" : "posts"}
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">You're now following {tenantName}!</AlertDescription>
+              </Alert>
+            )}
+
+            {groups.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="group">Subscribe to</Label>
+                <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                  <SelectTrigger id="group">
+                    <SelectValue placeholder="Select a group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="followers">General Updates</SelectItem>
+                    {groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedGroup !== "followers" && groups.find((g) => g.id === selectedGroup)?.description && (
+                  <p className="text-xs text-muted-foreground">
+                    {groups.find((g) => g.id === selectedGroup)?.description}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="receiveEmailsLoggedIn"
+                checked={receiveEmails}
+                onCheckedChange={(checked) => setReceiveEmails(checked as boolean)}
+              />
+              <label
+                htmlFor="receiveEmailsLoggedIn"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Receive email updates about new posts and ministry updates
+              </label>
+            </div>
+
+            <Button onClick={handleFollowAsLoggedInUser} className="w-full" disabled={loading || success}>
+              {loading ? "Following..." : success ? "Followed!" : "Follow This Ministry"}
+            </Button>
+
+            <div className="text-center text-sm text-gray-600">
+              <Link href={`${basePath}/donor`} className="text-blue-600 hover:underline">
+                Go to your dashboard
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (showLoginForm) {

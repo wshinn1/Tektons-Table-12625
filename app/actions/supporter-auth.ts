@@ -252,7 +252,7 @@ export async function subscribeToTenant({
         tenant_id: tenant.id,
         email,
         name: fullName,
-        status: "subscribed",
+        status: "active",
         subscribed_at: new Date().toISOString(),
         group_id: groupId || null,
       },
@@ -414,7 +414,7 @@ export async function loginAndFollowTenant({
         tenant_id: tenant.id,
         email,
         name: anyProfile?.full_name || authData.user.user_metadata?.full_name || email.split("@")[0],
-        status: "subscribed",
+        status: "active",
         subscribed_at: new Date().toISOString(),
         group_id: groupId || null,
       },
@@ -478,5 +478,165 @@ export async function donorSignOut() {
   }
 
   revalidatePath("/", "layout")
+  return { success: true }
+}
+
+export async function followTenantAsLoggedInUser({
+  tenantSlug,
+  receiveEmails,
+  groupId,
+}: {
+  tenantSlug: string
+  receiveEmails: boolean
+  groupId?: string
+}) {
+  const supabase = await createServerClient()
+  const adminClient = createAdminClient()
+
+  // Get the current logged-in user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { error: "You must be logged in to follow this ministry." }
+  }
+
+  const userId = user.id
+  const email = user.email
+
+  if (!email) {
+    return { error: "No email associated with your account." }
+  }
+
+  // Get tenant info
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .select("id, full_name, email")
+    .eq("subdomain", tenantSlug)
+    .single()
+
+  if (tenantError || !tenant) {
+    return { error: "Ministry not found" }
+  }
+
+  // Check if already following
+  const { data: existingFollower } = await adminClient
+    .from("tenant_followers")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .eq("user_id", userId)
+    .single()
+
+  const { data: existingSubscriber } = await adminClient
+    .from("tenant_email_subscribers")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .eq("email", email)
+    .single()
+
+  if (existingFollower || existingSubscriber) {
+    return { error: "You're already following this ministry!" }
+  }
+
+  // Get or create supporter profile
+  const { data: existingProfile } = await adminClient
+    .from("supporter_profiles")
+    .select("id, full_name")
+    .eq("id", userId)
+    .single()
+
+  const fullName = existingProfile?.full_name || user.user_metadata?.full_name || email.split("@")[0]
+
+  if (!existingProfile) {
+    // Create supporter profile
+    const { error: profileError } = await adminClient.from("supporter_profiles").insert({
+      id: userId,
+      tenant_id: tenant.id,
+      email,
+      full_name: fullName,
+      email_notifications: receiveEmails,
+    })
+
+    if (profileError) {
+      console.error("[v0] Error creating supporter profile:", profileError)
+    }
+  }
+
+  // Add to tenant_followers
+  const { error: followerError } = await adminClient.from("tenant_followers").upsert(
+    {
+      tenant_id: tenant.id,
+      user_id: userId,
+      status: "approved",
+      approved_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "tenant_id,user_id",
+      ignoreDuplicates: true,
+    },
+  )
+
+  if (followerError) {
+    console.error("[v0] Error adding to tenant_followers:", followerError)
+    return { error: "Failed to follow this ministry. Please try again." }
+  }
+
+  // Add to email subscribers if opted in
+  if (receiveEmails) {
+    const { error: subscriberError } = await adminClient.from("tenant_email_subscribers").upsert(
+      {
+        tenant_id: tenant.id,
+        email,
+        name: fullName,
+        status: "active",
+        subscribed_at: new Date().toISOString(),
+        group_id: groupId || null,
+      },
+      {
+        onConflict: "tenant_id,email",
+        ignoreDuplicates: false,
+      },
+    )
+
+    if (subscriberError) {
+      console.error("[v0] Error adding subscriber to email list:", subscriberError)
+    }
+
+    // Send welcome email
+    try {
+      const { data: latestPost } = await supabase
+        .from("blog_posts")
+        .select("title, slug")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(1)
+        .single()
+
+      const tenantUrl = `https://${tenantSlug}.tektonstable.com`
+      const latestPostUrl = latestPost ? `${tenantUrl}/blog/${latestPost.slug}` : undefined
+
+      await sendEmail({
+        to: email,
+        from: `${tenant.full_name || tenantSlug} via TektonsTable <${SUBSCRIBE_EMAIL}>`,
+        replyTo: tenant.email || undefined,
+        ...EMAIL_TEMPLATES.welcomeSubscriber({
+          subscriberName: fullName,
+          tenantName: tenant.full_name || tenantSlug,
+          tenantSlug,
+          latestPostTitle: latestPost?.title,
+          latestPostUrl,
+        }),
+      })
+    } catch (emailError) {
+      console.error("[v0] Failed to send welcome email:", emailError)
+    }
+  }
+
+  revalidatePath("/", "layout")
+  revalidatePath("/admin/supporters", "page")
+
   return { success: true }
 }
