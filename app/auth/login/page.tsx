@@ -37,6 +37,20 @@ function LoginForm() {
       if (error) throw error
 
       if (data.user) {
+        const { data: superAdminData } = await supabase
+          .from("super_admins")
+          .select("id")
+          .eq("user_id", data.user.id)
+          .single()
+
+        if (superAdminData) {
+          // Super admin - go to admin dashboard
+          router.push("/admin")
+          router.refresh()
+          return
+        }
+
+        // Not a super admin - check if they have a tenant
         const { data: tenantData } = await supabase
           .from("tenants")
           .select("subdomain")
