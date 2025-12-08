@@ -87,7 +87,9 @@ export function TenantAdminSidebar({
     return pathname === href || pathname.startsWith(href + "/")
   }
 
-  const allItems = [...adminNavItems, ...(pageBuilderEnabled ? pageBuilderItems : [])]
+  const allItems = pageBuilderEnabled
+    ? [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
+    : adminNavItems
 
   const handleSignOut = async (formData: FormData) => {
     setIsSigningOut(true)

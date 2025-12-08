@@ -66,7 +66,7 @@ export async function generateMetadata({
   const description = tenant.bio || `Support ${tenant.full_name}'s ministry through recurring donations`
 
   return {
-    title: `${tenant.full_name} - Long Term Funding Support`,
+    title: tenant.full_name,
     description,
     alternates: {
       canonical: baseUrl,
@@ -78,7 +78,7 @@ export async function generateMetadata({
       "max-snippet": -1,
     },
     openGraph: {
-      title: `${tenant.full_name} - Missionary Fundraising`,
+      title: tenant.full_name,
       description,
       url: baseUrl,
       siteName: tenant.full_name,
@@ -97,7 +97,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${tenant.full_name} - Missionary Fundraising`,
+      title: tenant.full_name,
       description,
       images: tenant.profile_image_url ? [tenant.profile_image_url] : [],
     },

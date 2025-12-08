@@ -49,6 +49,8 @@ const navSections: NavSection[] = [
       { label: "Announcement Banner", href: "/admin/banner", icon: "📢" },
       { label: "Blog Posts", href: "/admin/blog", icon: "📝" },
       { label: "Blog Analytics", href: "/admin/blog/analytics", icon: "📈" },
+      { label: "Premium Resources", href: "/admin/resources", icon: "📚" }, // Added Premium Resources link
+      { label: "Comped Access", href: "/admin/comped-access", icon: "🎁" }, // Added Comped Access link for Phase 6
       { label: "Pages", href: "/admin/pages", icon: "📑" },
       { label: "Sections", href: "/admin/sections", icon: "🧩" },
       { label: "Site Content", href: "/admin/site-content", icon: "✏️" },
