@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { SubscribeForm } from "@/components/tenant/subscribe-form"
 import { headers } from "next/headers"
 
@@ -10,6 +11,7 @@ export default async function SubscribePage({ params }: { params: Promise<{ tena
   const isSubdomain = tenantSubdomain === tenantSlug
 
   const supabase = await createServerClient()
+  const adminClient = await createAdminClient()
 
   const {
     data: { user },
@@ -25,14 +27,14 @@ export default async function SubscribePage({ params }: { params: Promise<{ tena
   let currentUserName = ""
 
   if (tenant) {
-    const { count: emailSubscriberCount } = await supabase
+    const { count: emailSubscriberCount } = await adminClient
       .from("tenant_email_subscribers")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.id)
       .in("status", ["active", "subscribed"])
 
     // Also count approved followers
-    const { count: followerCount } = await supabase
+    const { count: followerCount } = await adminClient
       .from("tenant_followers")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.id)
