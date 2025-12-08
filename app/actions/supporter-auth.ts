@@ -19,18 +19,22 @@ export async function signupSupporter({
   language: string
   tenantId: string
 }) {
-  const supabase = await createServerClient()
+  const adminClient = createAdminClient()
 
-  // Create auth user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/donor`,
+    email_confirm: true, // Auto-confirm email so they can log in immediately
+    user_metadata: {
+      full_name: fullName,
     },
   })
 
   if (authError) {
+    // Handle duplicate email error
+    if (authError.message.includes("already been registered")) {
+      return { error: "An account with this email already exists. Please sign in instead." }
+    }
     return { error: authError.message }
   }
 
@@ -38,9 +42,7 @@ export async function signupSupporter({
     return { error: "Failed to create user" }
   }
 
-  const adminClient = createAdminClient()
-
-  // Create supporter profile using admin client (user not authenticated yet)
+  // Create supporter profile using admin client
   const { error: profileError } = await adminClient.from("supporter_profiles").insert({
     id: authData.user.id,
     tenant_id: tenantId,
@@ -50,6 +52,8 @@ export async function signupSupporter({
   })
 
   if (profileError) {
+    // If profile creation fails, delete the auth user to avoid orphaned records
+    await adminClient.auth.admin.deleteUser(authData.user.id)
     return { error: profileError.message }
   }
 
@@ -152,33 +156,87 @@ export async function subscribeToTenant({
     return { error: "Tenant not found" }
   }
 
-  // Create auth user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/supporter/dashboard`,
-    },
-  })
+  const { data: existingUsers } = await adminClient.auth.admin.listUsers()
+  const existingUser = existingUsers?.users?.find((u) => u.email === email)
 
-  if (authError) {
-    return { error: authError.message }
-  }
+  let userId: string
+  let isExistingUser = false
 
-  if (!authData.user) {
-    return { error: "Failed to create user" }
-  }
+  if (existingUser) {
+    // User already exists - use their existing ID
+    userId = existingUser.id
+    isExistingUser = true
 
-  const { error: profileError } = await adminClient.from("supporter_profiles").insert({
-    id: authData.user.id,
-    tenant_id: tenant.id,
-    email,
-    full_name: fullName,
-    email_notifications: receiveEmails,
-  })
+    // Check if they already have a supporter_profile for this tenant
+    const { data: existingProfile } = await adminClient
+      .from("supporter_profiles")
+      .select("id")
+      .eq("id", userId)
+      .eq("tenant_id", tenant.id)
+      .single()
 
-  if (profileError) {
-    return { error: profileError.message }
+    if (existingProfile) {
+      // They're already subscribed to this tenant
+      return { error: "You're already following this page. Please sign in to view your account." }
+    }
+
+    // Check if they have a profile for a different tenant (they exist but not for this tenant)
+    const { data: otherProfile } = await adminClient.from("supporter_profiles").select("id").eq("id", userId).single()
+
+    if (!otherProfile) {
+      // User exists in auth but has no supporter profile - create one for this tenant
+      const { error: profileError } = await adminClient.from("supporter_profiles").insert({
+        id: userId,
+        tenant_id: tenant.id,
+        email,
+        full_name: fullName || existingUser.user_metadata?.full_name || email.split("@")[0],
+        email_notifications: receiveEmails,
+      })
+
+      if (profileError) {
+        console.error("[v0] Error creating supporter profile for existing user:", profileError)
+        return { error: "Failed to create profile. " + profileError.message }
+      }
+    } else {
+      // They have a profile for another tenant - for now, just add them to email subscribers
+      // In the future, you might want to support multi-tenant profiles
+    }
+  } else {
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+      },
+    })
+
+    if (authError) {
+      if (authError.message.includes("already been registered")) {
+        return { error: "An account with this email already exists. Please sign in instead." }
+      }
+      return { error: authError.message }
+    }
+
+    if (!authData.user) {
+      return { error: "Failed to create user" }
+    }
+
+    userId = authData.user.id
+
+    const { error: profileError } = await adminClient.from("supporter_profiles").insert({
+      id: userId,
+      tenant_id: tenant.id,
+      email,
+      full_name: fullName,
+      email_notifications: receiveEmails,
+    })
+
+    if (profileError) {
+      // If profile creation fails, delete the auth user to avoid orphaned records
+      await adminClient.auth.admin.deleteUser(userId)
+      return { error: profileError.message }
+    }
   }
 
   if (receiveEmails) {
@@ -226,44 +284,61 @@ export async function subscribeToTenant({
     }
 
     if (contactGroupId) {
-      await adminClient.from("contact_group_members").insert({
-        group_id: contactGroupId,
-        contact_id: authData.user.id,
-      })
+      // Use upsert to avoid duplicate errors
+      await adminClient.from("contact_group_members").upsert(
+        {
+          group_id: contactGroupId,
+          contact_id: userId,
+        },
+        {
+          onConflict: "group_id,contact_id",
+          ignoreDuplicates: true,
+        },
+      )
     }
 
-    // Send welcome email
-    try {
-      const { data: latestPost } = await supabase
-        .from("blog_posts")
-        .select("title, slug")
-        .eq("tenant_id", tenant.id)
-        .eq("status", "published")
-        .order("published_at", { ascending: false })
-        .limit(1)
-        .single()
+    // Send welcome email (only for new users)
+    if (!isExistingUser) {
+      try {
+        const { data: latestPost } = await supabase
+          .from("blog_posts")
+          .select("title, slug")
+          .eq("tenant_id", tenant.id)
+          .eq("status", "published")
+          .order("published_at", { ascending: false })
+          .limit(1)
+          .single()
 
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      const latestPostUrl = latestPost ? `${baseUrl}/${tenantSlug}/blog/${latestPost.slug}` : undefined
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+        const latestPostUrl = latestPost ? `${baseUrl}/${tenantSlug}/blog/${latestPost.slug}` : undefined
 
-      await sendEmail({
-        to: email,
-        from: process.env.RESEND_FROM_EMAIL || "noreply@tektonstable.com",
-        ...EMAIL_TEMPLATES.welcomeSubscriber({
-          subscriberName: fullName,
-          tenantName: tenant.full_name || tenantSlug,
-          tenantSlug,
-          latestPostTitle: latestPost?.title,
-          latestPostUrl,
-        }),
-      })
-    } catch (emailError) {
-      console.error("Failed to send welcome email:", emailError)
+        await sendEmail({
+          to: email,
+          from: process.env.RESEND_FROM_EMAIL || "noreply@tektonstable.com",
+          ...EMAIL_TEMPLATES.welcomeSubscriber({
+            subscriberName: fullName,
+            tenantName: tenant.full_name || tenantSlug,
+            tenantSlug,
+            latestPostTitle: latestPost?.title,
+            latestPostUrl,
+          }),
+        })
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError)
+      }
     }
   }
 
   revalidatePath("/", "layout")
   revalidatePath("/admin/supporters", "page")
+
+  if (isExistingUser) {
+    return {
+      success: true,
+      message: "You're now following this ministry! Sign in with your existing account to view updates.",
+    }
+  }
+
   return { success: true }
 }
 
@@ -293,5 +368,117 @@ export async function donorSignOut() {
   }
 
   revalidatePath("/", "layout")
+  return { success: true }
+}
+
+// New function added
+export async function loginAndFollowTenant({
+  email,
+  password,
+  tenantSlug,
+  receiveEmails,
+  groupId,
+}: {
+  email: string
+  password: string
+  tenantSlug: string
+  receiveEmails: boolean
+  groupId?: string
+}) {
+  const supabase = await createServerClient()
+  const adminClient = createAdminClient()
+
+  // Authenticate the user
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (authError) {
+    return { error: "Invalid email or password. Please try again." }
+  }
+
+  if (!authData.user) {
+    return { error: "Failed to sign in" }
+  }
+
+  const userId = authData.user.id
+
+  // Get tenant info
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .select("id, full_name")
+    .eq("subdomain", tenantSlug)
+    .single()
+
+  if (tenantError || !tenant) {
+    return { error: "Tenant not found" }
+  }
+
+  // Check if they already have a supporter_profile for this tenant
+  const { data: existingProfile } = await adminClient
+    .from("supporter_profiles")
+    .select("id")
+    .eq("id", userId)
+    .eq("tenant_id", tenant.id)
+    .single()
+
+  if (existingProfile) {
+    // Already following - just redirect to success
+    return { success: true, message: "You're already following this ministry!" }
+  }
+
+  // Check if they have any supporter profile
+  const { data: anyProfile } = await adminClient
+    .from("supporter_profiles")
+    .select("id, full_name")
+    .eq("id", userId)
+    .single()
+
+  // Create supporter profile for this tenant
+  const { error: profileError } = await adminClient.from("supporter_profiles").upsert(
+    {
+      id: userId,
+      tenant_id: tenant.id,
+      email,
+      full_name: anyProfile?.full_name || authData.user.user_metadata?.full_name || email.split("@")[0],
+      email_notifications: receiveEmails,
+    },
+    {
+      onConflict: "id,tenant_id",
+      ignoreDuplicates: false,
+    },
+  )
+
+  if (profileError) {
+    console.error("[v0] Error creating supporter profile:", profileError)
+    // Don't fail - user is logged in, just couldn't create profile
+  }
+
+  // Add to email subscribers if opted in
+  if (receiveEmails) {
+    const { error: subscriberError } = await adminClient.from("tenant_email_subscribers").upsert(
+      {
+        tenant_id: tenant.id,
+        email,
+        name: anyProfile?.full_name || authData.user.user_metadata?.full_name || email.split("@")[0],
+        status: "subscribed",
+        subscribed_at: new Date().toISOString(),
+        group_id: groupId || null,
+      },
+      {
+        onConflict: "tenant_id,email",
+        ignoreDuplicates: false,
+      },
+    )
+
+    if (subscriberError) {
+      console.error("[v0] Error adding subscriber to email list:", subscriberError)
+    }
+  }
+
+  revalidatePath("/", "layout")
+  revalidatePath("/admin/supporters", "page")
+
   return { success: true }
 }

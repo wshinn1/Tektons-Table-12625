@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { subscribeToTenant } from "@/app/actions/supporter-auth"
+import { subscribeToTenant, loginAndFollowTenant } from "@/app/actions/supporter-auth"
 import Link from "next/link"
-import { Users, Mail } from "lucide-react"
+import { Users, Mail, ArrowLeft } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function SubscribeForm({
@@ -40,6 +40,10 @@ export function SubscribeForm({
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
+  const [showLoginForm, setShowLoginForm] = useState(false)
+  const [loginPassword, setLoginPassword] = useState("")
+  const [existingUserEmail, setExistingUserEmail] = useState("")
+
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -58,6 +62,38 @@ export function SubscribeForm({
       })
 
       if (result.error) {
+        if (result.error.includes("already exists") || result.error.includes("already been registered")) {
+          setExistingUserEmail(email.trim())
+          setShowLoginForm(true)
+          setError("")
+        } else {
+          setError(result.error)
+        }
+      } else {
+        router.push(`${basePath}/subscribe/success`)
+      }
+    } catch (err) {
+      setError("An unexpected error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLoginAndFollow = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+
+    try {
+      const result = await loginAndFollowTenant({
+        email: existingUserEmail,
+        password: loginPassword,
+        tenantSlug,
+        receiveEmails,
+        groupId: selectedGroup === "followers" ? undefined : selectedGroup,
+      })
+
+      if (result.error) {
         setError(result.error)
       } else {
         router.push(`${basePath}/subscribe/success`)
@@ -67,6 +103,82 @@ export function SubscribeForm({
     } finally {
       setLoading(false)
     }
+  }
+
+  if (showLoginForm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Welcome Back!</CardTitle>
+            <CardDescription>You already have an account. Sign in to follow {tenantName}.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLoginAndFollow} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="loginEmail">Email Address</Label>
+                <Input id="loginEmail" type="email" value={existingUserEmail} disabled className="bg-muted" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="loginPassword">Password</Label>
+                <Input
+                  id="loginPassword"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
+                  placeholder="Enter your password"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="receiveEmailsLogin"
+                  checked={receiveEmails}
+                  onCheckedChange={(checked) => setReceiveEmails(checked as boolean)}
+                />
+                <label
+                  htmlFor="receiveEmailsLogin"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Receive email updates from {tenantName}
+                </label>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing In..." : "Sign In & Follow"}
+              </Button>
+
+              <div className="flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLoginForm(false)
+                    setLoginPassword("")
+                    setError("")
+                  }}
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <ArrowLeft className="h-3 w-3" />
+                  Back
+                </button>
+                <Link href={`${basePath}/auth/supporter-login`} className="text-blue-600 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
