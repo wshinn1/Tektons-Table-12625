@@ -1,9 +1,9 @@
 // Premium Resources Stripe configuration
-// Product ID: prod_TZJpNoNZRGW8Mj
-// Price ID: price_1ScBCLAw1QCH9rr9ENyD3sVn ($4.99/month)
+// Product ID: prod_TZgIoiEDNgNNXd
+// Price ID: price_1ScWwpAw1QCH9rr9me2PNeuT ($4.99/month)
 
-export const PREMIUM_RESOURCES_PRODUCT_ID = "prod_TZJpNoNZRGW8Mj"
-export const PREMIUM_RESOURCES_PRICE_ID = "price_1ScBCLAw1QCH9rr9ENyD3sVn"
+export const PREMIUM_RESOURCES_PRODUCT_ID = "prod_TZgIoiEDNgNNXd"
+export const PREMIUM_RESOURCES_PRICE_ID = "price_1ScWwpAw1QCH9rr9me2PNeuT"
 export const PREMIUM_RESOURCES_AMOUNT = 499 // in cents
 export const PREMIUM_RESOURCES_CURRENCY = "usd"
 
