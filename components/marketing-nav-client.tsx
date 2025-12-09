@@ -2,9 +2,18 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, ExternalLink } from "lucide-react"
-import { useState } from "react"
+import { Menu, X, ExternalLink, User, Crown, LogOut } from "lucide-react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
+import { createClient } from "@/lib/supabase/client"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface MenuItem {
   id: string
@@ -28,6 +37,33 @@ interface MarketingNavClientProps {
 
 export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = "/"
+  }
 
   const leftItems = menuItems.filter((item) => item.navigation_side === "left")
   const rightItems = menuItems.filter((item) => item.navigation_side === "right")
@@ -84,12 +120,42 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
           {/* Right navigation items */}
           {rightItems.map((item) => renderNavLink(item, "text-sm font-medium hover:text-primary transition-colors"))}
 
-          <Link href="/auth/login" className="text-sm font-medium hover:text-primary transition-colors">
-            Log In
-          </Link>
-          <Button asChild>
-            <Link href="/auth/signup">Get Started Free</Link>
-          </Button>
+          {!loading && (
+            <>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[120px] truncate">{user.email?.split("@")[0]}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/subscription" className="flex items-center gap-2 cursor-pointer">
+                        <Crown className="h-4 w-4" />
+                        My Subscription
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer">
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-sm font-medium hover:text-primary transition-colors">
+                    Log In
+                  </Link>
+                  <Button asChild>
+                    <Link href="/auth/signup">Get Started Free</Link>
+                  </Button>
+                </>
+              )}
+            </>
+          )}
         </nav>
 
         <button
@@ -109,16 +175,45 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                 setMobileMenuOpen(false),
               ),
             )}
-            <Link
-              href="/auth/login"
-              className="text-sm font-medium hover:text-primary transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Log In
-            </Link>
-            <Button asChild className="w-full">
-              <Link href="/auth/signup">Get Started Free</Link>
-            </Button>
+            {!loading && (
+              <>
+                {user ? (
+                  <>
+                    <Link
+                      href="/account/subscription"
+                      className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Crown className="h-4 w-4" />
+                      My Subscription
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleSignOut()
+                        setMobileMenuOpen(false)
+                      }}
+                      className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-2 text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/login"
+                      className="text-sm font-medium hover:text-primary transition-colors py-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Log In
+                    </Link>
+                    <Button asChild className="w-full">
+                      <Link href="/auth/signup">Get Started Free</Link>
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
           </nav>
         </div>
       )}

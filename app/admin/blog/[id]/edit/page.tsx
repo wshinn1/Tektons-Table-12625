@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import {
@@ -9,6 +11,7 @@ import {
   deleteBlogPost,
   createPlatformCategory,
   createPlatformTag,
+  uploadPlatformBlogImage,
 } from "@/app/actions/blog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,7 +34,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
-import { ArrowLeft, Trash2, Plus, Loader2, X, Crown } from "lucide-react"
+import { ArrowLeft, Trash2, Plus, Loader2, X, Crown, Upload } from "lucide-react"
 import Link from "next/link"
 
 const TiptapEditor = dynamic(() => import("@/components/admin/blog/tiptap-editor").then((mod) => mod.TiptapEditor), {
@@ -70,6 +73,7 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
 
 function EditBlogPostClient({ id }: { id: string }) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [title, setTitle] = useState("")
   const [subtitle, setSubtitle] = useState("")
@@ -79,6 +83,8 @@ function EditBlogPostClient({ id }: { id: string }) {
   const [status, setStatus] = useState<"draft" | "published">("draft")
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [featuredImageUrl, setFeaturedImageUrl] = useState("")
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [resourceCategories, setResourceCategories] = useState<ResourceCategory[]>([])
@@ -104,10 +110,41 @@ function EditBlogPostClient({ id }: { id: string }) {
     }
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB")
+      return
+    }
+
+    setIsUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const result = await uploadPlatformBlogImage(formData)
+      setFeaturedImageUrl(result.url)
+      toast.success("Image uploaded successfully")
+    } catch (error) {
+      console.error("Failed to upload image:", error)
+      toast.error("Failed to upload image")
+    } finally {
+      setIsUploadingImage(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
+
   useEffect(() => {
     async function loadData() {
       try {
-        // Load post
         const post = await getBlogPost(id)
         setTitle(post.title)
         setSubtitle(post.subtitle || "")
@@ -117,18 +154,8 @@ function EditBlogPostClient({ id }: { id: string }) {
         setStatus(post.status)
         setIsPremium(post.is_premium || false)
         setSelectedResourceCategoryId(post.resource_category_id || "none")
+        setFeaturedImageUrl(post.featured_image_url || "")
 
-        // Set category if exists
-        if (post.categories && post.categories.length > 0) {
-          setSelectedCategoryId(post.categories[0].category?.id || "none")
-        }
-
-        // Set tags if exist
-        if (post.tags && post.tags.length > 0) {
-          setSelectedTagIds(post.tags.map((t: any) => t.tag?.id).filter(Boolean))
-        }
-
-        // Load categories, resource categories, and tags
         const [categoriesRes, resourceCategoriesRes, tagsRes] = await Promise.all([
           fetch("/api/admin/blog/categories"),
           fetch("/api/admin/resource-categories"),
@@ -244,6 +271,7 @@ function EditBlogPostClient({ id }: { id: string }) {
         tagIds: selectedTagIds,
         resourceCategoryId: selectedResourceCategoryId !== "none" ? selectedResourceCategoryId : undefined,
         isPremium,
+        featuredImageUrl: featuredImageUrl || undefined,
       })
 
       toast.success(newStatus === "published" ? "Blog post published!" : "Changes saved!")
@@ -365,6 +393,50 @@ function EditBlogPostClient({ id }: { id: string }) {
           <p className="mt-1 text-sm text-muted-foreground">
             {process.env.NEXT_PUBLIC_SITE_URL || "https://yoursite.com"}/blog/{slug || "url-slug"}
           </p>
+        </div>
+
+        <div>
+          <Label htmlFor="featured-image">Featured Image</Label>
+          <div className="flex gap-2">
+            <Input
+              id="featured-image"
+              value={featuredImageUrl}
+              onChange={(e) => setFeaturedImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg or upload below"
+              className="flex-1"
+            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingImage}
+            >
+              {isUploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              <span className="ml-2 hidden sm:inline">Upload</span>
+            </Button>
+          </div>
+          {featuredImageUrl && (
+            <div className="mt-2 relative aspect-video w-full max-w-xs overflow-hidden rounded-lg bg-muted">
+              <img
+                src={featuredImageUrl || "/placeholder.svg"}
+                alt="Featured preview"
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none"
+                }}
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 h-6 w-6"
+                onClick={() => setFeaturedImageUrl("")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <div>
@@ -514,7 +586,6 @@ function EditBlogPostClient({ id }: { id: string }) {
         </CardContent>
       </Card>
 
-      {/* Title */}
       <input
         type="text"
         value={title}
@@ -523,7 +594,6 @@ function EditBlogPostClient({ id }: { id: string }) {
         className="mb-2 w-full border-none text-5xl font-bold placeholder:text-muted-foreground focus:outline-none"
       />
 
-      {/* Subtitle */}
       <input
         type="text"
         value={subtitle}

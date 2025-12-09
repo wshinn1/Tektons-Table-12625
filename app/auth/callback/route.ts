@@ -63,9 +63,9 @@ export async function GET(request: NextRequest) {
       console.log("[v0] User ID:", data.user?.id)
       console.log("[v0] User email:", data.user?.email)
 
-      // This allows subscription flows to work even for users with tenant sites
+      // This allows subscription flows and other redirects to work for users with tenant sites
       if (next && next !== "/onboarding") {
-        console.log("[v0] Explicit redirect requested:", next)
+        console.log("[v0] Explicit redirect requested, using that instead of tenant redirect:", next)
         return NextResponse.redirect(`${origin}${next}`)
       }
 

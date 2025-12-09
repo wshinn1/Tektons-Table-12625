@@ -22,6 +22,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
 
   const message = searchParams.get("message")
+  const redirectTo = searchParams.get("redirect")
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +38,13 @@ function LoginForm() {
       if (error) throw error
 
       if (data.user) {
+        // to work for users who also have tenant sites
+        if (redirectTo) {
+          router.push(redirectTo)
+          router.refresh()
+          return
+        }
+
         const { data: superAdminData } = await supabase
           .from("super_admins")
           .select("id")
@@ -81,7 +89,11 @@ function LoginForm() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Login to Tekton's Table</CardTitle>
-            <CardDescription>Enter your email and password to access your missionary dashboard</CardDescription>
+            <CardDescription>
+              {redirectTo?.includes("/blog/")
+                ? "Sign in to subscribe to premium content"
+                : "Enter your email and password to access your missionary dashboard"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {message && (
@@ -97,7 +109,7 @@ function LoginForm() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="missionary@example.com"
+                    placeholder="you@example.com"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -120,7 +132,12 @@ function LoginForm() {
               </div>
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
-                <Link href="/auth/signup" className="underline underline-offset-4">
+                <Link
+                  href={
+                    redirectTo ? `/auth/subscriber-signup?redirect=${encodeURIComponent(redirectTo)}` : "/auth/signup"
+                  }
+                  className="underline underline-offset-4"
+                >
                   Sign up
                 </Link>
               </div>
