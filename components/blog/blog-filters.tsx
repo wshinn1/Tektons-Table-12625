@@ -6,10 +6,10 @@ import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, X } from "lucide-react"
+import { Search, X, Crown } from "lucide-react"
 
 interface BlogFiltersProps {
-  categories: Array<{ id: string; name: string; slug: string }>
+  categories: Array<{ id: string; name: string; slug: string; is_premium?: boolean }>
   tags: Array<{ id: string; name: string; slug: string }>
   basePath: string
 }
@@ -29,6 +29,7 @@ export function BlogFilters({ categories, tags, basePath }: BlogFiltersProps) {
     } else {
       params.delete(key)
     }
+    params.delete("page") // Reset to page 1 when filter changes
     router.push(`${basePath}?${params.toString()}`)
   }
 
@@ -65,9 +66,14 @@ export function BlogFilters({ categories, tags, basePath }: BlogFiltersProps) {
               <Badge
                 key={category.id}
                 variant={selectedCategory === category.slug ? "default" : "outline"}
-                className="cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground"
+                className={`cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground ${
+                  category.is_premium && selectedCategory !== category.slug
+                    ? "border-amber-500 text-amber-700 hover:bg-amber-500 hover:text-white"
+                    : ""
+                }`}
                 onClick={() => updateFilters("category", selectedCategory === category.slug ? null : category.slug)}
               >
+                {category.is_premium && <Crown className="h-3 w-3 mr-1" />}
                 {category.name}
               </Badge>
             ))}

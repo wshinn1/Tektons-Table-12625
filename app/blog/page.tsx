@@ -3,9 +3,11 @@ import Image from "next/image"
 import { createServerClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { BlogFilters } from "@/components/blog/blog-filters"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Crown } from "lucide-react"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
 import { MarketingNav } from "@/components/marketing-nav"
+
+export const dynamic = "force-dynamic"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -32,7 +34,7 @@ const POSTS_PER_PAGE = 4
 
 async function getCategories() {
   const supabase = await createServerClient()
-  const { data } = await supabase.from("blog_categories").select("*").order("name")
+  const { data } = await supabase.from("resource_categories").select("*").order("display_order")
   return data || []
 }
 
@@ -56,7 +58,8 @@ async function getPublishedBlogPosts(filters: {
       `
       *,
       categories:blog_post_categories(category:blog_categories(*)),
-      tags:blog_post_tags(tag:blog_tags(*))
+      tags:blog_post_tags(tag:blog_tags(*)),
+      resource_category:resource_categories(*)
     `,
       { count: "exact" },
     )
@@ -69,23 +72,13 @@ async function getPublishedBlogPosts(filters: {
 
   if (filters.category) {
     const { data: categoryData } = await supabase
-      .from("blog_categories")
+      .from("resource_categories")
       .select("id")
       .eq("slug", filters.category)
       .single()
 
     if (categoryData) {
-      const { data: postIds } = await supabase
-        .from("blog_post_categories")
-        .select("post_id")
-        .eq("category_id", categoryData.id)
-
-      if (postIds && postIds.length > 0) {
-        query = query.in(
-          "id",
-          postIds.map((p) => p.post_id),
-        )
-      }
+      query = query.eq("resource_category_id", categoryData.id)
     }
   }
 
@@ -153,6 +146,8 @@ export default async function BlogIndexPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {posts.map((post, index) => {
               const postCategories = post.categories?.map((cat: any) => cat.category?.name).filter(Boolean) || []
+              const resourceCategory = post.resource_category
+              const isPremium = post.is_premium
 
               return (
                 <Link
@@ -161,7 +156,17 @@ export default async function BlogIndexPage({
                   className="group block bg-white transition-all duration-300 hover:shadow-xl"
                 >
                   <div className="aspect-video w-full overflow-hidden bg-muted relative">
-                    {postCategories.length > 0 && (
+                    {resourceCategory && (
+                      <div className="absolute top-4 left-4 z-10">
+                        <div
+                          className={`${isPremium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-black"} text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider font-raleway flex items-center gap-2`}
+                        >
+                          {isPremium && <Crown className="h-3 w-3" />}
+                          {resourceCategory.name}
+                        </div>
+                      </div>
+                    )}
+                    {!resourceCategory && postCategories.length > 0 && (
                       <div className="absolute top-4 left-4 z-10">
                         <div className="bg-black text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider font-raleway">
                           {postCategories.join(", ")}
