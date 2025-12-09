@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server"
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
-  const next = requestUrl.searchParams.get("next") || "/onboarding"
+  const next = requestUrl.searchParams.get("next") || requestUrl.searchParams.get("redirect") || "/onboarding"
   const origin = requestUrl.origin
 
   console.log("[v0] ========== AUTH CALLBACK ROUTE START ==========")
@@ -62,6 +62,12 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Session created successfully")
       console.log("[v0] User ID:", data.user?.id)
       console.log("[v0] User email:", data.user?.email)
+
+      // This allows subscription flows to work even for users with tenant sites
+      if (next && next !== "/onboarding") {
+        console.log("[v0] Explicit redirect requested:", next)
+        return NextResponse.redirect(`${origin}${next}`)
+      }
 
       // Check if user has completed onboarding
       if (data.user?.email) {
