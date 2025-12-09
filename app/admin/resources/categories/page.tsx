@@ -3,6 +3,8 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { CategoryManager } from "@/components/admin/resources/category-manager"
 
+export const dynamic = "force-dynamic"
+
 export default async function CategoriesPage() {
   const supabase = await createServerClient()
 
@@ -11,9 +13,7 @@ export default async function CategoriesPage() {
     .select("*, resource_count:resource_category_assignments(count)")
     .order("display_order", { ascending: true })
 
-  if (error) {
-    console.error("Error fetching categories:", error)
-  }
+  console.log("[v0] Categories fetched:", categories?.length || 0, "Error:", error?.message || "none")
 
   return (
     <div className="p-8">
