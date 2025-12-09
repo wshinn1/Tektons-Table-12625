@@ -16,6 +16,7 @@ export async function createBlogPost(data: {
   status: "draft" | "published"
   metaDescription?: string
   categoryIds?: string[]
+  categoryId?: string
   tagIds?: string[]
   allowComments?: boolean
   followersOnly?: boolean
@@ -26,6 +27,8 @@ export async function createBlogPost(data: {
   excerpt?: string
   showFeaturedImage?: boolean
   navbarVisible?: boolean
+  resourceCategoryId?: string
+  isPremium?: boolean
 }) {
   const isTenantPost = data.tenantId && data.tenantId !== "platform"
   const supabase = isTenantPost ? createAdminClient() : await createServerClient()
@@ -78,6 +81,8 @@ export async function createBlogPost(data: {
       allow_comments: data.allowComments ?? true,
       followers_only: data.followersOnly ?? false,
       navbar_visible: data.navbarVisible ?? true,
+      is_premium: data.isPremium ?? false,
+      resource_category_id: data.resourceCategoryId || null,
     })
     .select()
     .single()
@@ -88,8 +93,9 @@ export async function createBlogPost(data: {
   }
 
   // Add categories
-  if (data.categoryIds && data.categoryIds.length > 0) {
-    const categoryInserts = data.categoryIds.map((categoryId) => ({
+  const categoryIds = data.categoryIds || (data.categoryId ? [data.categoryId] : [])
+  if (categoryIds.length > 0) {
+    const categoryInserts = categoryIds.map((categoryId) => ({
       post_id: post.id,
       category_id: categoryId,
     }))
@@ -114,6 +120,7 @@ export async function createBlogPost(data: {
   }
 
   revalidatePath("/admin/blog")
+  revalidatePath("/resources")
   return post
 }
 
@@ -138,6 +145,8 @@ export async function updateBlogPost(
     excerpt?: string
     showFeaturedImage?: boolean
     navbarVisible?: boolean
+    resourceCategoryId?: string
+    isPremium?: boolean
   },
 ) {
   const supabase = await createServerClient()
@@ -181,6 +190,8 @@ export async function updateBlogPost(
   }
   if (data.showFeaturedImage !== undefined) updateData.show_featured_image = data.showFeaturedImage
   if (data.navbarVisible !== undefined) updateData.navbar_visible = data.navbarVisible
+  if (data.isPremium !== undefined) updateData.is_premium = data.isPremium
+  if (data.resourceCategoryId !== undefined) updateData.resource_category_id = data.resourceCategoryId || null
 
   console.log("[v0] Updating blog post:", id, "with data:", updateData)
 
@@ -221,12 +232,12 @@ export async function updateBlogPost(
     console.log("[v0] Draft being published, sending notifications...")
     sendPostNotificationEmails(post.id, existingPost.tenant_id).catch((err) => {
       console.error("[v0] Failed to send post notifications:", err)
-      // Don't throw - we don't want email failures to break post updates
     })
   }
 
   revalidatePath("/admin/blog")
   revalidatePath(`/blog/${post.slug}`)
+  revalidatePath("/resources")
   return post
 }
 

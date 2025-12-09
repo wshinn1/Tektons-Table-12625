@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -30,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
-import { ArrowLeft, Trash2, Plus, Loader2, X } from "lucide-react"
+import { ArrowLeft, Trash2, Plus, Loader2, X, Crown } from "lucide-react"
 import Link from "next/link"
 
 const TiptapEditor = dynamic(() => import("@/components/admin/blog/tiptap-editor").then((mod) => mod.TiptapEditor), {
@@ -46,6 +47,13 @@ interface Category {
   id: string
   name: string
   slug: string
+}
+
+interface ResourceCategory {
+  id: string
+  name: string
+  slug: string
+  is_premium: boolean
 }
 
 interface Tag {
@@ -73,8 +81,11 @@ function EditBlogPostClient({ id }: { id: string }) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [resourceCategories, setResourceCategories] = useState<ResourceCategory[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("none")
+  const [selectedResourceCategoryId, setSelectedResourceCategoryId] = useState<string>("none")
+  const [isPremium, setIsPremium] = useState(false)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [showNewCategoryDialog, setShowNewCategoryDialog] = useState(false)
   const [showNewTagDialog, setShowNewTagDialog] = useState(false)
@@ -82,6 +93,16 @@ function EditBlogPostClient({ id }: { id: string }) {
   const [newTagName, setNewTagName] = useState("")
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
   const [isCreatingTag, setIsCreatingTag] = useState(false)
+
+  const handleResourceCategoryChange = (value: string) => {
+    setSelectedResourceCategoryId(value)
+    if (value !== "none") {
+      const category = resourceCategories.find((c) => c.id === value)
+      if (category?.is_premium) {
+        setIsPremium(true)
+      }
+    }
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -94,6 +115,8 @@ function EditBlogPostClient({ id }: { id: string }) {
         setMetaDescription(post.meta_description || "")
         setContent(typeof post.content === "string" ? post.content : JSON.stringify(post.content))
         setStatus(post.status)
+        setIsPremium(post.is_premium || false)
+        setSelectedResourceCategoryId(post.resource_category_id || "none")
 
         // Set category if exists
         if (post.categories && post.categories.length > 0) {
@@ -105,15 +128,21 @@ function EditBlogPostClient({ id }: { id: string }) {
           setSelectedTagIds(post.tags.map((t: any) => t.tag?.id).filter(Boolean))
         }
 
-        // Load categories and tags
-        const [categoriesRes, tagsRes] = await Promise.all([
+        // Load categories, resource categories, and tags
+        const [categoriesRes, resourceCategoriesRes, tagsRes] = await Promise.all([
           fetch("/api/admin/blog/categories"),
+          fetch("/api/admin/resource-categories"),
           fetch("/api/admin/blog/tags"),
         ])
 
         if (categoriesRes.ok) {
           const categoriesData = await categoriesRes.json()
           setCategories(categoriesData)
+        }
+
+        if (resourceCategoriesRes.ok) {
+          const resourceCategoriesData = await resourceCategoriesRes.json()
+          setResourceCategories(resourceCategoriesData)
         }
 
         if (tagsRes.ok) {
@@ -213,6 +242,8 @@ function EditBlogPostClient({ id }: { id: string }) {
         metaDescription: metaDescription.trim() || undefined,
         categoryIds: selectedCategoryId !== "none" ? [selectedCategoryId] : [],
         tagIds: selectedTagIds,
+        resourceCategoryId: selectedResourceCategoryId !== "none" ? selectedResourceCategoryId : undefined,
+        isPremium,
       })
 
       toast.success(newStatus === "published" ? "Blog post published!" : "Changes saved!")
@@ -267,6 +298,12 @@ function EditBlogPostClient({ id }: { id: string }) {
           <Badge variant={status === "published" ? "default" : "secondary"}>
             {status === "published" ? "Published" : "Draft"}
           </Badge>
+          {isPremium && (
+            <Badge className="bg-amber-100 text-amber-800">
+              <Crown className="h-3 w-3 mr-1" />
+              Premium
+            </Badge>
+          )}
         </div>
         <div className="flex gap-2">
           <AlertDialog>
@@ -344,13 +381,63 @@ function EditBlogPostClient({ id }: { id: string }) {
         </div>
       </div>
 
+      {resourceCategories.length > 0 && (
+        <Card className="mb-8 border-amber-200 bg-amber-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-amber-600" />
+              Premium Resources
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="resource-category">Resource Category</Label>
+              <Select value={selectedResourceCategoryId} onValueChange={handleResourceCategoryChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a resource category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No resource category</SelectItem>
+                  {resourceCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <span className="flex items-center gap-2">
+                        {cat.name}
+                        {cat.is_premium && (
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-xs">
+                            Premium
+                          </Badge>
+                        )}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Assign this post to a resource category to show it on the /resources page
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-white">
+              <div className="space-y-0.5">
+                <Label htmlFor="is-premium" className="text-base flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-amber-600" />
+                  Premium Content
+                </Label>
+                <p className="text-sm text-muted-foreground">Require a subscription to view this post</p>
+              </div>
+              <Switch id="is-premium" checked={isPremium} onCheckedChange={setIsPremium} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Categories & Tags</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="category">Category (optional)</Label>
+            <Label htmlFor="category">Blog Category (optional)</Label>
             <div className="flex gap-2">
               <Select
                 value={selectedCategoryId}

@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { X, Upload, Plus, Loader2 } from "lucide-react"
+import { X, Upload, Plus, Loader2, Crown } from "lucide-react"
 import { createBlogPost, uploadPlatformBlogImage, createPlatformCategory, createPlatformTag } from "@/app/actions/blog"
 import { toast } from "sonner"
 import { PublishModal } from "@/components/admin/blog/publish-modal"
@@ -30,11 +30,24 @@ const TiptapEditor = dynamic(() => import("@/components/admin/blog/tiptap-editor
 
 interface AdminPostEditorProps {
   categories: Array<{ id: string; name: string; slug: string }>
+  resourceCategories?: Array<{
+    id: string
+    name: string
+    slug: string
+    is_premium: boolean
+    icon?: string
+    color?: string
+  }>
   tags: Array<{ id: string; name: string; slug: string }>
   post?: any
 }
 
-export function AdminPostEditor({ categories: initialCategories, tags: initialTags, post }: AdminPostEditorProps) {
+export function AdminPostEditor({
+  categories: initialCategories,
+  resourceCategories = [],
+  tags: initialTags,
+  post,
+}: AdminPostEditorProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [title, setTitle] = useState(post?.title || "")
@@ -42,6 +55,8 @@ export function AdminPostEditor({ categories: initialCategories, tags: initialTa
   const [readTime, setReadTime] = useState(post?.read_time?.toString() || "5")
   const [content, setContent] = useState(post?.content || "")
   const [selectedCategory, setSelectedCategory] = useState(post?.category_id || "none")
+  const [selectedResourceCategory, setSelectedResourceCategory] = useState(post?.resource_category_id || "none")
+  const [isPremium, setIsPremium] = useState(post?.is_premium || false)
   const [selectedTags, setSelectedTags] = useState<string[]>(post?.tags?.map((t: any) => t.tag_id) || [])
   const [featuredImageUrl, setFeaturedImageUrl] = useState(post?.featured_image_url || "")
   const [allowComments, setAllowComments] = useState(post?.allow_comments ?? true)
@@ -57,6 +72,16 @@ export function AdminPostEditor({ categories: initialCategories, tags: initialTa
   const [newTagName, setNewTagName] = useState("")
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
   const [isCreatingTag, setIsCreatingTag] = useState(false)
+
+  const handleResourceCategoryChange = (value: string) => {
+    setSelectedResourceCategory(value)
+    if (value !== "none") {
+      const category = resourceCategories.find((c) => c.id === value)
+      if (category?.is_premium) {
+        setIsPremium(true)
+      }
+    }
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -172,6 +197,8 @@ export function AdminPostEditor({ categories: initialCategories, tags: initialTa
         allowComments,
         featuredImageUrl: featuredImageUrl || undefined,
         categoryId: selectedCategory !== "none" ? selectedCategory : undefined,
+        resourceCategoryId: selectedResourceCategory !== "none" ? selectedResourceCategory : undefined,
+        isPremium,
         tagIds: selectedTags,
       })
 
@@ -208,6 +235,8 @@ export function AdminPostEditor({ categories: initialCategories, tags: initialTa
         allowComments,
         featuredImageUrl: featuredImageUrl || undefined,
         categoryId: selectedCategory !== "none" ? selectedCategory : undefined,
+        resourceCategoryId: selectedResourceCategory !== "none" ? selectedResourceCategory : undefined,
+        isPremium,
         tagIds: selectedTags,
       })
 
@@ -324,13 +353,63 @@ export function AdminPostEditor({ categories: initialCategories, tags: initialTa
           </CardContent>
         </Card>
 
+        {resourceCategories.length > 0 && (
+          <Card className="border-amber-200 bg-amber-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-amber-600" />
+                Premium Resources
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="resource-category">Resource Category</Label>
+                <Select value={selectedResourceCategory} onValueChange={handleResourceCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a resource category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No resource category</SelectItem>
+                    {resourceCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          {cat.name}
+                          {cat.is_premium && (
+                            <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-xs">
+                              Premium
+                            </Badge>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Assign this post to a resource category to show it on the /resources page
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-white">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is-premium" className="text-base flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-amber-600" />
+                    Premium Content
+                  </Label>
+                  <p className="text-sm text-muted-foreground">Require a subscription to view this post</p>
+                </div>
+                <Switch id="is-premium" checked={isPremium} onCheckedChange={setIsPremium} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Categories & Tags</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="category">Category (optional)</Label>
+              <Label htmlFor="category">Blog Category (optional)</Label>
               <div className="flex gap-2">
                 <Select
                   value={selectedCategory}
