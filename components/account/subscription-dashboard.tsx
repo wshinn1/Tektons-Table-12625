@@ -320,7 +320,7 @@ export function SubscriptionDashboard({ user, subscription, compedAccess, tenant
             </Button>
           ) : null}
 
-          {subscription?.stripe_customer_id && (
+          {(subscription?.stripe_subscription_id || subscription?.stripe_customer_id) && (
             <Button
               variant="outline"
               onClick={handleManageBilling}

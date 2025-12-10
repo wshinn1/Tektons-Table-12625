@@ -107,6 +107,7 @@
     "recharts": "latest",
     "resend": "latest",
     "server-only": "latest",
+    "sharp": "latest",
     "sonner": "latest",
     "stripe": "latest",
     "tailwind-merge": "^2.5.5",

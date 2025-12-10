@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { createStarterBlogPost } from "@/app/actions/blog"
-import { notifyNewTenantCreated } from "@/app/actions/tenant-notifications"
+import { notifyNewTenantCreated, sendTenantWelcomeEmail } from "@/app/actions/tenant-notifications"
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
@@ -163,6 +163,7 @@ export default function OnboardingPage() {
           console.error("[v0] Failed to create starter blog post:", blogError)
         }
 
+        // Notify admin about new tenant
         try {
           await notifyNewTenantCreated({
             tenantName: fullName,
@@ -175,6 +176,18 @@ export default function OnboardingPage() {
           console.log("[v0] New tenant notification email sent")
         } catch (emailError) {
           console.error("[v0] Failed to send new tenant notification:", emailError)
+          // Don't block onboarding if email fails
+        }
+
+        try {
+          await sendTenantWelcomeEmail({
+            tenantName: fullName,
+            subdomain: subdomain,
+            email: user.email!,
+          })
+          console.log("[v0] Tenant welcome email sent")
+        } catch (emailError) {
+          console.error("[v0] Failed to send tenant welcome email:", emailError)
           // Don't block onboarding if email fails
         }
       }

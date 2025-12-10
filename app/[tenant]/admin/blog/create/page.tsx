@@ -165,7 +165,25 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         return null
       }
 
+      // Check file type - handle HEIC from iPhones
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]
+      const isValidType = validTypes.includes(file.type.toLowerCase()) || file.type.startsWith("image/")
+
+      if (!isValidType) {
+        toast.error("Unsupported image format. Please use JPEG, PNG, GIF, WebP, or HEIC.")
+        return null
+      }
+
+      // Check file size - 10MB limit for mobile photos
+      const maxSize = 10 * 1024 * 1024
+      if (file.size > maxSize) {
+        toast.error("Image must be less than 10MB. Try a smaller image or compress it.")
+        return null
+      }
+
       setIsUploadingImage(true)
+      toast.loading("Uploading image...", { id: "image-upload" })
+
       try {
         const formData = new FormData()
         formData.append("file", file)
@@ -174,14 +192,15 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         const result = await uploadBlogImage(formData)
 
         if (result.success && result.url) {
+          toast.success("Image uploaded!", { id: "image-upload" })
           return result.url
         } else {
-          toast.error(result.error || "Failed to upload image")
+          toast.error(result.error || "Failed to upload image", { id: "image-upload" })
           return null
         }
       } catch (error) {
         console.error("Image upload error:", error)
-        toast.error("Failed to upload image")
+        toast.error("Failed to upload image. Please try again.", { id: "image-upload" })
         return null
       } finally {
         setIsUploadingImage(false)

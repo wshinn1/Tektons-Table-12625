@@ -367,3 +367,85 @@ export async function sendCompExpiringEmail(email: string, expiresAt: Date) {
     replyTo: REPLY_TO_EMAIL,
   })
 }
+
+export async function sendUpcomingRenewalEmail(email: string, renewalDate: Date, amount = 4.99) {
+  const content = `
+    <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
+      This is a friendly reminder that your Premium Resources subscription will renew soon.
+    </p>
+    <div style="background-color: #f5f3ff; border-left: 4px solid ${PURPLE}; padding: 15px; margin: 20px 0;">
+      <p style="color: #333333; font-size: 14px; margin: 0;">
+        <strong>Renewal date:</strong> ${renewalDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+      </p>
+      <p style="color: #666666; font-size: 13px; margin: 10px 0 0 0;">
+        Amount: <strong>$${amount.toFixed(2)}</strong>
+      </p>
+    </div>
+    <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
+      No action needed - your subscription will automatically renew and you'll continue enjoying unlimited access to all premium resources.
+    </p>
+    <p style="color: #666666; font-size: 14px; line-height: 22px; margin: 20px 0 0 0;">
+      Want to make changes? You can manage your subscription anytime from your account settings.
+    </p>
+  `
+
+  const html = emailWrapper(
+    PURPLE,
+    "Subscription Renewal Reminder",
+    content,
+    "https://tektonstable.com/account/subscription",
+    "Manage Subscription",
+  )
+
+  await sendEmail({
+    to: email,
+    from: PREMIUM_EMAIL,
+    subject: "Your Premium Resources Subscription Renews in 7 Days",
+    html,
+    replyTo: REPLY_TO_EMAIL,
+  })
+}
+
+export async function sendNewPremiumPostEmail(
+  email: string,
+  tenantName: string,
+  post: {
+    title: string
+    excerpt: string
+    slug: string
+  },
+) {
+  const content = `
+    <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
+      Hi ${tenantName},
+    </p>
+    <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
+      We just published a new premium resource that we think you'll find valuable:
+    </p>
+    <div style="background-color: #f5f3ff; border-left: 4px solid ${PURPLE}; padding: 20px; margin: 20px 0;">
+      <h2 style="color: #333333; font-size: 20px; margin: 0 0 10px 0;">${post.title}</h2>
+      <p style="color: #666666; font-size: 14px; line-height: 22px; margin: 0;">
+        ${post.excerpt || "Check out our latest premium content to help grow your ministry."}
+      </p>
+    </div>
+    <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
+      As a Tekton's Table ministry partner, you have access to all premium resources. Click below to start reading!
+    </p>
+  `
+
+  const html = emailWrapper(
+    PURPLE,
+    "New Premium Resource Available!",
+    content,
+    `https://tektonstable.com/blog/${post.slug}`,
+    "Read Now",
+  )
+
+  await sendEmail({
+    to: email,
+    from: PREMIUM_EMAIL,
+    subject: `New Premium Post: ${post.title}`,
+    html,
+    replyTo: REPLY_TO_EMAIL,
+  })
+}

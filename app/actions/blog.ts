@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { put } from "@vercel/blob"
 import { sendPostNotificationEmails } from "./email" // Import email notification function
+import { sendNewPremiumPostEmail } from "@/lib/premium-emails"
 
 export async function createBlogPost(data: {
   title: string
@@ -119,6 +120,18 @@ export async function createBlogPost(data: {
     })
   }
 
+  if (data.status === "published" && data.isPremium && (!data.tenantId || data.tenantId === "platform")) {
+    console.log("[v0] Premium platform post published, notifying tenants...")
+    notifyTenantsOfPremiumPost({
+      id: post.id,
+      title: post.title,
+      excerpt: post.excerpt,
+      slug: post.slug,
+    }).catch((err) => {
+      console.error("[v0] Failed to notify tenants of premium post:", err)
+    })
+  }
+
   revalidatePath("/admin/blog")
   revalidatePath("/resources")
   return post
@@ -228,10 +241,23 @@ export async function updateBlogPost(
     }
   }
 
+  // Draft being published, sending notifications...
   if (isBeingPublished && existingPost?.tenant_id && existingPost.tenant_id !== "platform") {
     console.log("[v0] Draft being published, sending notifications...")
     sendPostNotificationEmails(post.id, existingPost.tenant_id).catch((err) => {
       console.error("[v0] Failed to send post notifications:", err)
+    })
+  }
+
+  if (isBeingPublished && data.isPremium && (!existingPost?.tenant_id || existingPost.tenant_id === "platform")) {
+    console.log("[v0] Premium platform post being published, notifying tenants...")
+    notifyTenantsOfPremiumPost({
+      id: post.id,
+      title: post.title,
+      excerpt: post.excerpt,
+      slug: post.slug,
+    }).catch((err) => {
+      console.error("[v0] Failed to notify tenants of premium post:", err)
     })
   }
 
@@ -485,26 +511,63 @@ export async function uploadBlogImage(formData: FormData) {
     return { success: false, error: "No file provided" }
   }
 
-  if (!file.type.startsWith("image/")) {
+  if (!file.type.startsWith("image/") && !file.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
     return { success: false, error: "File must be an image" }
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    return { success: false, error: "Image must be less than 5MB" }
+  if (file.size > 10 * 1024 * 1024) {
+    return { success: false, error: "Image must be less than 10MB" }
   }
 
   try {
     const timestamp = Date.now()
-    const filename = `blog/${tenant.subdomain}/${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
+    const sanitizedName = file.name
+      .replace(/\.[^/.]+$/, "") // Remove extension
+      .replace(/[^a-zA-Z0-9]/g, "_") // Replace non-alphanumeric with underscore
+      .substring(0, 50) // Limit length
 
-    const blob = await put(filename, file, {
+    const originalExtension = file.name.split(".").pop()?.toLowerCase() || "jpg"
+    const isHeic =
+      originalExtension === "heic" ||
+      originalExtension === "heif" ||
+      file.type === "image/heic" ||
+      file.type === "image/heif"
+
+    let fileToUpload: File | Blob = file
+    let extension = originalExtension
+
+    if (isHeic) {
+      console.log("[v0] uploadBlogImage: HEIC file detected, converting to JPEG")
+      try {
+        // Use sharp to convert HEIC to JPEG
+        const sharp = (await import("sharp")).default
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
+        const jpegBuffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer()
+
+        fileToUpload = new Blob([jpegBuffer], { type: "image/jpeg" })
+        extension = "jpg"
+        console.log("[v0] uploadBlogImage: HEIC converted to JPEG successfully")
+      } catch (conversionError) {
+        console.error("[v0] uploadBlogImage: HEIC conversion failed:", conversionError)
+        return {
+          success: false,
+          error: "Could not process this image format. Please convert to JPEG or PNG before uploading.",
+        }
+      }
+    }
+
+    const filename = `blog/${tenant.subdomain}/${timestamp}-${sanitizedName}.${extension}`
+
+    const blob = await put(filename, fileToUpload, {
       access: "public",
     })
     console.log("[v0] uploadBlogImage: Upload successful:", blob.url)
     return { success: true, url: blob.url }
   } catch (error) {
     console.error("Failed to upload image:", error)
-    return { success: false, error: "Failed to upload image" }
+    return { success: false, error: "Failed to upload image. Please try again." }
   }
 }
 
@@ -724,5 +787,63 @@ export async function createStarterBlogPost(tenantId: string, tenantName: string
   } catch (err) {
     console.error("[v0] Error creating starter blog post:", err)
     return null
+  }
+}
+
+// Function to notify tenants about new premium posts
+async function notifyTenantsOfPremiumPost(post: {
+  id: string
+  title: string
+  excerpt?: string
+  slug: string
+}) {
+  try {
+    const supabase = createAdminClient()
+
+    // Get all tenants with their user emails
+    const { data: tenants, error } = await supabase
+      .from("tenants")
+      .select(`
+        id,
+        full_name,
+        user_id,
+        users:user_id (
+          email
+        )
+      `)
+      .eq("is_active", true)
+
+    if (error) {
+      console.error("[v0] Error fetching tenants for premium notification:", error)
+      return
+    }
+
+    if (!tenants || tenants.length === 0) {
+      console.log("[v0] No active tenants to notify")
+      return
+    }
+
+    console.log(`[v0] Notifying ${tenants.length} tenants about new premium post: ${post.title}`)
+
+    // Send emails to all tenants
+    const emailPromises = tenants.map(async (tenant) => {
+      const email = (tenant.users as any)?.email
+      if (!email) return
+
+      try {
+        await sendNewPremiumPostEmail(email, tenant.full_name || "there", {
+          title: post.title,
+          excerpt: post.excerpt || "",
+          slug: post.slug,
+        })
+      } catch (err) {
+        console.error(`[v0] Failed to send premium post notification to ${email}:`, err)
+      }
+    })
+
+    await Promise.allSettled(emailPromises)
+    console.log("[v0] Finished sending premium post notifications")
+  } catch (err) {
+    console.error("[v0] Error in notifyTenantsOfPremiumPost:", err)
   }
 }

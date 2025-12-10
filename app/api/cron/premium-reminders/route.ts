@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendTrialEndingEmail, sendCompExpiringEmail, sendPaymentReminderEmail } from "@/lib/premium-emails"
+import {
+  sendTrialEndingEmail,
+  sendCompExpiringEmail,
+  sendPaymentReminderEmail,
+  sendUpcomingRenewalEmail, // Import new email function
+} from "@/lib/premium-emails"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -17,6 +22,7 @@ export async function GET(request: Request) {
     trialReminders: 0,
     compReminders: 0,
     paymentReminders: 0,
+    renewalReminders: 0, // Add renewal counter
     errors: [] as string[],
   }
 
@@ -89,6 +95,25 @@ export async function GET(request: Request) {
         }
       } catch (err) {
         results.errors.push(`Payment reminder failed for ${sub.user_id}: ${err}`)
+      }
+    }
+
+    const { data: renewingSubs } = await supabaseAdmin
+      .from("premium_subscriptions")
+      .select("user_id, current_period_end")
+      .eq("status", "active")
+      .gte("current_period_end", sixDaysFromNow.toISOString())
+      .lte("current_period_end", sevenDaysFromNow.toISOString())
+
+    for (const sub of renewingSubs || []) {
+      try {
+        const { data: user } = await supabaseAdmin.auth.admin.getUserById(sub.user_id)
+        if (user?.user?.email) {
+          await sendUpcomingRenewalEmail(user.user.email, new Date(sub.current_period_end))
+          results.renewalReminders++
+        }
+      } catch (err) {
+        results.errors.push(`Renewal reminder failed for ${sub.user_id}: ${err}`)
       }
     }
 

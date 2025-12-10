@@ -167,26 +167,33 @@ export default function EditBlogPostPage({ params }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file")
+    const isValidType = file.type.startsWith("image/") || file.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)
+
+    if (!isValidType) {
+      toast.error("Please upload an image file (JPEG, PNG, GIF, WebP, or HEIC)")
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB")
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB")
       return
     }
 
     setIsUploadingImage(true)
+    toast.loading("Uploading image...", { id: "image-upload" })
     try {
       const formData = new FormData()
       formData.append("file", file)
       const result = await uploadBlogImage(formData)
-      setFeaturedImage(result.url)
-      toast.success("Image uploaded successfully")
+      if (result.success && result.url) {
+        setFeaturedImage(result.url)
+        toast.success("Image uploaded successfully", { id: "image-upload" })
+      } else {
+        toast.error(result.error || "Failed to upload image", { id: "image-upload" })
+      }
     } catch (error) {
       console.error("Failed to upload image:", error)
-      toast.error("Failed to upload image")
+      toast.error("Failed to upload image", { id: "image-upload" })
     } finally {
       setIsUploadingImage(false)
     }
@@ -448,7 +455,7 @@ export default function EditBlogPostPage({ params }: Props) {
                       <p className="text-sm font-medium">
                         {isUploadingImage ? "Uploading..." : "Click to upload featured image"}
                       </p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
                     </div>
                   </div>
                 </Label>
