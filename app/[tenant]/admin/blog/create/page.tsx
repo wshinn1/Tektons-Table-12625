@@ -161,7 +161,9 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
   const handleImageUpload = useCallback(
     async (file: File) => {
       console.log("[v0] handleImageUpload called")
-      console.log("[v0] File info:", { name: file.name, size: file.size, type: file.type })
+      console.log("[v0] File name:", file.name)
+      console.log("[v0] File type:", file.type)
+      console.log("[v0] File size:", file.size)
       console.log("[v0] User agent:", navigator.userAgent)
 
       if (!tenantId) {
@@ -170,13 +172,19 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
       }
 
       let processedFile = file
-      const isHeic =
-        file.type === "image/heic" ||
-        file.type === "image/heif" ||
-        file.name.toLowerCase().endsWith(".heic") ||
-        file.name.toLowerCase().endsWith(".heif")
 
-      console.log("[v0] Is HEIC:", isHeic)
+      const fileName = file.name.toLowerCase()
+      const fileType = file.type.toLowerCase()
+      const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
+      const hasHeicMimeType = fileType === "image/heic" || fileType === "image/heif"
+      const hasEmptyOrGenericType = fileType === "" || fileType === "application/octet-stream"
+
+      const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
+
+      console.log("[v0] Has HEIC extension:", hasHeicExtension)
+      console.log("[v0] Has HEIC MIME type:", hasHeicMimeType)
+      console.log("[v0] Has empty/generic type:", hasEmptyOrGenericType)
+      console.log("[v0] Is HEIC (final):", isHeic)
 
       if (isHeic) {
         toast.loading("Converting image format...", { id: "image-upload" })
@@ -185,7 +193,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         try {
           console.log("[v0] Attempting to import heic2any...")
           const heic2any = (await import("heic2any")).default
-          console.log("[v0] heic2any imported successfully, type:", typeof heic2any)
+          console.log("[v0] heic2any imported successfully")
 
           console.log("[v0] Starting heic2any conversion...")
           const convertedBlob = await heic2any({
@@ -193,10 +201,10 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
             toType: "image/jpeg",
             quality: 0.85,
           })
-          console.log("[v0] heic2any conversion completed, result type:", typeof convertedBlob)
+          console.log("[v0] heic2any conversion completed")
 
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
-          console.log("[v0] Blob extracted, size:", blob.size)
+          console.log("[v0] Converted blob size:", blob.size)
 
           processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
             type: "image/jpeg",
@@ -205,8 +213,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           toast.dismiss("image-upload")
         } catch (conversionError) {
           console.error("[v0] Client-side HEIC conversion failed:", conversionError)
-          console.error("[v0] Error name:", (conversionError as Error)?.name)
-          console.error("[v0] Error message:", (conversionError as Error)?.message)
           toast.dismiss("image-upload")
 
           toast.loading("Trying server conversion...", { id: "image-upload" })
@@ -216,7 +222,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
             const formData = new FormData()
             formData.append("file", file)
             formData.append("tenantId", tenantId)
-            console.log("[v0] FormData created for server upload")
 
             const result = await uploadBlogImage(formData)
             console.log("[v0] Server upload result:", result)
