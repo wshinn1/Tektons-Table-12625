@@ -142,22 +142,20 @@ export function PremiumPaywall({ resource, isLoggedIn, categorySlug }: PremiumPa
               ) : (
                 <>
                   <Sparkles className="w-5 h-5 mr-2" />
-                  {isLoggedIn ? "Subscribe Now" : "Sign In to Subscribe"}
+                  Subscribe Now
                 </>
               )}
             </Button>
 
-            {!isLoggedIn && (
-              <p className="text-center text-sm text-muted-foreground">
-                Already a subscriber?{" "}
-                <Link
-                  href={`/auth/login?redirect=${encodeURIComponent(window?.location?.pathname || "/resources")}`}
-                  className="text-primary hover:underline"
-                >
-                  Sign in
-                </Link>
-              </p>
-            )}
+            <p className="text-center text-sm text-muted-foreground">
+              Already a subscriber?{" "}
+              <Link
+                href={`/auth/login?redirect=/resources/category/${categorySlug}`}
+                className="text-amber-600 hover:text-amber-700 font-medium hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
           </div>
 
           <p className="text-center text-sm text-muted-foreground">Cancel anytime. No questions asked.</p>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -19,20 +19,62 @@ interface PublishModalProps {
   onOpenChange: (open: boolean) => void
   onPublish: (metadata: { slug: string; metaDescription: string }) => void
   title: string
+  excerpt?: string
   isPublishing: boolean
 }
 
-export function PublishModal({ open, onOpenChange, onPublish, title, isPublishing }: PublishModalProps) {
-  const [slug, setSlug] = useState(() => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-  })
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-") // Replace multiple consecutive hyphens with single hyphen
+    .replace(/(^-|-$)/g, "")
+}
+
+export function PublishModal({ open, onOpenChange, onPublish, title, excerpt, isPublishing }: PublishModalProps) {
+  const [slug, setSlug] = useState("")
   const [metaDescription, setMetaDescription] = useState("")
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
+  const [metaManuallyEdited, setMetaManuallyEdited] = useState(false)
+
+  useEffect(() => {
+    if (open && !slugManuallyEdited) {
+      setSlug(generateSlug(title))
+    }
+  }, [open, title, slugManuallyEdited])
+
+  useEffect(() => {
+    if (open && !metaManuallyEdited && excerpt) {
+      const truncatedExcerpt = excerpt.length > 160 ? excerpt.substring(0, 157) + "..." : excerpt
+      setMetaDescription(truncatedExcerpt)
+    }
+  }, [open, excerpt, metaManuallyEdited])
+
+  useEffect(() => {
+    if (!open) {
+      setSlugManuallyEdited(false)
+      setMetaManuallyEdited(false)
+    }
+  }, [open])
+
+  const handleSlugChange = (value: string) => {
+    setSlugManuallyEdited(true)
+    // Sanitize as user types - only allow lowercase letters, numbers, and single hyphens
+    const sanitized = value
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-")
+    setSlug(sanitized)
+  }
+
+  const handleMetaChange = (value: string) => {
+    setMetaManuallyEdited(true)
+    setMetaDescription(value)
+  }
 
   const handlePublish = () => {
-    onPublish({ slug, metaDescription })
+    const finalSlug = generateSlug(slug)
+    onPublish({ slug: finalSlug, metaDescription })
   }
 
   return (
@@ -49,7 +91,7 @@ export function PublishModal({ open, onOpenChange, onPublish, title, isPublishin
             <Input
               id="slug"
               value={slug}
-              onChange={(e) => setSlug(e.target.value)}
+              onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="url-friendly-slug"
               className="font-mono"
             />
@@ -63,7 +105,7 @@ export function PublishModal({ open, onOpenChange, onPublish, title, isPublishin
             <Textarea
               id="metaDescription"
               value={metaDescription}
-              onChange={(e) => setMetaDescription(e.target.value)}
+              onChange={(e) => handleMetaChange(e.target.value)}
               placeholder="Brief description for search engines..."
               rows={3}
               maxLength={160}

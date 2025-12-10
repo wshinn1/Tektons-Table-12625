@@ -62,6 +62,7 @@ export function AdminPostEditor({
   const [allowComments, setAllowComments] = useState(post?.allow_comments ?? true)
   const [isSaving, setIsSaving] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [excerpt, setExcerpt] = useState(post?.excerpt || "")
 
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [categories, setCategories] = useState(initialCategories)
@@ -305,6 +306,18 @@ export function AdminPostEditor({
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="Brief summary of the post..."
+                rows={2}
+              />
+            </div>
+
+            {/* Excerpt */}
+            <div>
+              <Label htmlFor="excerpt">Excerpt (optional)</Label>
+              <Textarea
+                id="excerpt"
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                placeholder="Brief excerpt of the post..."
                 rows={2}
               />
             </div>
@@ -571,6 +584,7 @@ export function AdminPostEditor({
         onOpenChange={setShowPublishModal}
         onPublish={handlePublish}
         title={title}
+        excerpt={excerpt || subtitle}
         isPublishing={isSaving}
       />
 
