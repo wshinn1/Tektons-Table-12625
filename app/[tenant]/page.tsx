@@ -128,23 +128,15 @@ export default async function TenantHomePage({
 
   const supabase = await createServerClient()
 
-  const [tenantResult, givingSettingsResult] = await Promise.all([
-    supabase
-      .from("tenants")
-      .select(
-        "id, subdomain, full_name, email, bio, profile_image_url, mission_organization, location, ministry_focus, primary_color, is_active",
-      )
-      .eq("subdomain", subdomain)
-      .eq("is_active", true)
-      .limit(1)
-      .single(),
-
-    supabase
-      .from("tenant_giving_settings")
-      .select("homepage_widget_preference, show_donor_names, fundraising_target_goal")
-      .eq("tenant_id", subdomain)
-      .maybeSingle(),
-  ])
+  const tenantResult = await supabase
+    .from("tenants")
+    .select(
+      "id, subdomain, full_name, email, bio, profile_image_url, mission_organization, location, ministry_focus, primary_color, is_active",
+    )
+    .eq("subdomain", subdomain)
+    .eq("is_active", true)
+    .limit(1)
+    .single()
 
   const tenant = tenantResult.data
 
@@ -165,16 +157,15 @@ export default async function TenantHomePage({
     )
   }
 
-  const givingSettings = await supabase
+  const { data: givingSettingsResult } = await supabase
     .from("tenant_giving_settings")
     .select("homepage_widget_preference, show_donor_names, fundraising_target_goal")
     .eq("tenant_id", tenant.id)
     .maybeSingle()
-    .then((res) => res.data)
 
-  const homepageWidgetPreference = givingSettings?.homepage_widget_preference || "none"
-  const showDonorNames = givingSettings?.show_donor_names ?? false
-  const targetGoal = givingSettings?.fundraising_target_goal || 5000
+  const givingSettings = givingSettingsResult
+
+  console.log("[v0] Tenant page - Loaded data:", { tenant: tenant?.subdomain, givingSettings })
 
   const adminClient = createAdminClient()
 
@@ -244,6 +235,10 @@ export default async function TenantHomePage({
   const posts = postsResult.data || []
   const homepage = homepageResult.data
   const activeCampaign = activeCampaignsResult.data
+
+  const homepageWidgetPreference = givingSettings?.homepage_widget_preference || "none"
+  const showDonorNames = givingSettings?.show_donor_names ?? false
+  const targetGoal = givingSettings?.fundraising_target_goal || 5000
 
   const showGivingWidget = homepageWidgetPreference === "giving"
   const showCampaignWidget = homepageWidgetPreference === "campaign" && activeCampaign

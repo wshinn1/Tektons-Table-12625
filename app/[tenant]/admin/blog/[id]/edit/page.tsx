@@ -174,9 +174,10 @@ const handleContentImageUpload = async (file: File): Promise<string | null> => {
   }
 }
 
-export default function TenantEditBlogPostPage({ params }: Props) {
-  const { tenant, id } = use(params)
+export default function EditBlogPost({ params }: Props) {
   const router = useRouter()
+  const { tenant, id } = use(params)
+
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState("")
   const [subtitle, setSubtitle] = useState("")
@@ -202,8 +203,11 @@ export default function TenantEditBlogPostPage({ params }: Props) {
   const [newCategoryName, setNewCategoryName] = useState("")
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
 
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+
   useEffect(() => {
     async function loadTenant() {
+      if (!isValidUUID) return
       try {
         const supabase = createBrowserClient()
         const { data: tenantData, error } = await supabase.from("tenants").select("id").eq("subdomain", tenant).single()
@@ -224,10 +228,14 @@ export default function TenantEditBlogPostPage({ params }: Props) {
     if (tenant) {
       loadTenant()
     }
-  }, [tenant])
+  }, [tenant, isValidUUID])
 
   useEffect(() => {
     async function loadData() {
+      if (!isValidUUID) {
+        setLoading(false)
+        return
+      }
       try {
         const post = await getBlogPost(id)
         setTitle(post.title)
@@ -253,11 +261,11 @@ export default function TenantEditBlogPostPage({ params }: Props) {
       }
     }
     loadData()
-  }, [id, router])
+  }, [id, router, isValidUUID])
 
   useEffect(() => {
     async function loadCategories() {
-      if (!tenantId) return
+      if (!tenantId || !isValidUUID) return
       try {
         const cats = await getCategories(tenantId)
         setCategories(cats)
@@ -266,7 +274,7 @@ export default function TenantEditBlogPostPage({ params }: Props) {
       }
     }
     loadCategories()
-  }, [tenantId])
+  }, [tenantId, isValidUUID])
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -418,6 +426,26 @@ export default function TenantEditBlogPostPage({ params }: Props) {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (!isValidUUID) {
+    console.error("[v0] Invalid blog post ID format:", id)
+    return (
+      <div className="container mx-auto p-8 max-w-4xl">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-red-900 mb-2">Invalid Blog Post ID</h2>
+          <p className="text-red-700 mb-4">
+            The blog post ID in the URL is invalid. Please navigate to the blog post from your blog list.
+          </p>
+          <Link
+            href={`/${tenant}/admin/blog`}
+            className="inline-block px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Return to Blog List
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
