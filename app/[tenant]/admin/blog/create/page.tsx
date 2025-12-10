@@ -47,6 +47,79 @@ function generateSlug(title: string): string {
     .replace(/(^-|-$)/g, "")
 }
 
+async function compressImage(file: File, maxWidth = 1920, quality = 0.85): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      let { width, height } = img
+
+      // Scale down if larger than maxWidth
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width
+        width = maxWidth
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      const ctx = canvas.getContext("2d")
+      if (!ctx) {
+        resolve(file) // Fallback to original
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+              type: "image/jpeg",
+            })
+            console.log("[v0] Compressed from", file.size, "to", compressedFile.size)
+            resolve(compressedFile)
+          } else {
+            resolve(file)
+          }
+        },
+        "image/jpeg",
+        quality,
+      )
+    }
+    img.onerror = () => resolve(file) // Fallback to original on error
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+async function uploadWithRetry(
+  formData: FormData,
+  maxRetries = 3,
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[v0] Upload attempt ${attempt}/${maxRetries}`)
+      const result = await uploadBlogImage(formData)
+      if (result.success) {
+        return result
+      }
+      lastError = new Error(result.error || "Upload failed")
+    } catch (error) {
+      console.log(`[v0] Attempt ${attempt} failed:`, error)
+      lastError = error as Error
+
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
+      }
+    }
+  }
+
+  return { success: false, error: lastError?.message || "Upload failed after retries" }
+}
+
 export default function TenantCreateBlogPostPage({ params }: Props) {
   const { tenant } = use(params)
   const router = useRouter()
@@ -173,6 +246,9 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
       let processedFile = file
 
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      console.log("[v0] Is mobile:", isMobile)
+
       const fileName = file.name.toLowerCase()
       const fileType = file.type.toLowerCase()
       const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
@@ -223,7 +299,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
             formData.append("file", file)
             formData.append("tenantId", tenantId)
 
-            const result = await uploadBlogImage(formData)
+            const result = await uploadWithRetry(formData)
             console.log("[v0] Server upload result:", result)
 
             if (result.success && result.url) {
@@ -259,6 +335,17 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         return null
       }
 
+      if (isMobile && processedFile.size > 2 * 1024 * 1024) {
+        console.log("[v0] Large file on mobile, compressing before upload...")
+        toast.loading("Optimizing image for upload...", { id: "image-upload" })
+        try {
+          processedFile = await compressImage(processedFile, 1920, 0.85)
+          console.log("[v0] Compression complete, new size:", processedFile.size)
+        } catch (compressError) {
+          console.log("[v0] Compression failed, using original:", compressError)
+        }
+      }
+
       setIsUploadingImage(true)
       toast.loading("Uploading image...", { id: "image-upload" })
 
@@ -267,7 +354,8 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         formData.append("file", processedFile)
         formData.append("tenantId", tenantId)
 
-        const result = await uploadBlogImage(formData)
+        console.log("[v0] Starting upload, file size:", processedFile.size)
+        const result = await uploadWithRetry(formData, isMobile ? 3 : 1)
 
         if (result.success && result.url) {
           toast.success("Image uploaded!", { id: "image-upload" })
@@ -277,8 +365,8 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           return null
         }
       } catch (error) {
-        console.error("Image upload error:", error)
-        toast.error("Failed to upload image. Please try again.", { id: "image-upload" })
+        console.error("[v0] Image upload error:", error)
+        toast.error("Failed to upload image. Check your connection and try again.", { id: "image-upload" })
         return null
       } finally {
         setIsUploadingImage(false)
