@@ -623,6 +623,41 @@ export default function TenantLayout({
     }
   }, [isCheckingAuth])
 
+  useEffect(() => {
+    const fetchTenantSettings = async () => {
+      const hostname = window.location.hostname
+      const parts = hostname.split(".")
+      const detectedSubdomain = parts.length >= 3 ? parts[0] : ""
+
+      if (!detectedSubdomain) return
+
+      const supabase = createBrowserClient()
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("id, full_name, page_builder_enabled, favicon_url, og_image_url, site_title, site_description")
+        .eq("subdomain", detectedSubdomain)
+        .maybeSingle()
+
+      if (tenant) {
+        console.log("[v0] Tenant settings fetched:", {
+          subdomain: detectedSubdomain,
+          page_builder_enabled: tenant.page_builder_enabled,
+        })
+        setTenantId(tenant.id)
+        setTenantName(tenant.full_name || detectedSubdomain)
+        setPageBuilderEnabled(tenant.page_builder_enabled || false)
+        setBranding({
+          faviconUrl: tenant.favicon_url,
+          ogImageUrl: tenant.og_image_url,
+          siteTitle: tenant.site_title,
+          siteDescription: tenant.site_description,
+        })
+      }
+    }
+
+    fetchTenantSettings()
+  }, [])
+
   if (isPreviewUrlPattern) {
     return <>{children}</>
   }
