@@ -539,18 +539,23 @@ export async function uploadBlogImage(formData: FormData) {
     if (isHeic) {
       console.log("[v0] uploadBlogImage: HEIC file detected, converting to JPEG")
       try {
-        // Use sharp to convert HEIC to JPEG
-        const sharp = (await import("sharp")).default
+        const heicConvert = (await import("heic-convert")).default
         const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
+        const inputBuffer = Buffer.from(arrayBuffer)
 
-        const jpegBuffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer()
+        console.log("[v0] uploadBlogImage: Starting HEIC conversion, buffer size:", inputBuffer.length)
 
-        fileToUpload = new Blob([jpegBuffer], { type: "image/jpeg" })
+        const outputBuffer = await heicConvert({
+          buffer: inputBuffer,
+          format: "JPEG",
+          quality: 0.85,
+        })
+
+        fileToUpload = new Blob([outputBuffer], { type: "image/jpeg" })
         extension = "jpg"
-        console.log("[v0] uploadBlogImage: HEIC converted to JPEG successfully")
-      } catch (conversionError) {
-        console.error("[v0] uploadBlogImage: HEIC conversion failed:", conversionError)
+        console.log("[v0] uploadBlogImage: HEIC converted to JPEG successfully, output size:", outputBuffer.length)
+      } catch (conversionError: any) {
+        console.error("[v0] uploadBlogImage: HEIC conversion failed:", conversionError?.message || conversionError)
         return {
           success: false,
           error: "Could not process this image format. Please convert to JPEG or PNG before uploading.",
@@ -565,8 +570,8 @@ export async function uploadBlogImage(formData: FormData) {
     })
     console.log("[v0] uploadBlogImage: Upload successful:", blob.url)
     return { success: true, url: blob.url }
-  } catch (error) {
-    console.error("Failed to upload image:", error)
+  } catch (error: any) {
+    console.error("[v0] uploadBlogImage: Failed to upload image:", error?.message || error)
     return { success: false, error: "Failed to upload image. Please try again." }
   }
 }
