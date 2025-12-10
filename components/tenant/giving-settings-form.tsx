@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -37,8 +39,8 @@ export function GivingSettingsForm({
   const [feeModel, setFeeModel] = useState<"donor_tips" | "platform_fee">(initialSettings?.fee_model || "donor_tips")
   const [suggestedTipPercent, setSuggestedTipPercent] = useState(initialSettings?.suggested_tip_percent || 12)
 
-  const [startingAmount, setStartingAmount] = useState(initialSettings?.fundraising_start_amount || 0)
-  const [targetGoal, setTargetGoal] = useState(initialSettings?.fundraising_target_goal || 5000)
+  const [startingAmount, setStartingAmount] = useState<number | null>(initialSettings?.fundraising_start_amount ?? null)
+  const [targetGoal, setTargetGoal] = useState<number | null>(initialSettings?.fundraising_target_goal ?? null)
   const [showDonorNames, setShowDonorNames] = useState(initialSettings?.show_donor_names ?? false)
   const [showWidget, setShowWidget] = useState(
     initialSettings?.homepage_widget_preference === "giving" || initialSettings?.show_progress_widget === true,
@@ -46,6 +48,16 @@ export function GivingSettingsForm({
 
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: number | null) => void) => {
+    const value = e.target.value
+    if (value === "") {
+      setter(null)
+    } else {
+      const parsed = Number.parseFloat(value)
+      setter(isNaN(parsed) ? null : parsed)
+    }
+  }
 
   const handleSave = async () => {
     setIsLoading(true)
@@ -55,8 +67,8 @@ export function GivingSettingsForm({
         thank_you_message: thankYouMessage,
         fee_model: feeModel,
         suggested_tip_percent: suggestedTipPercent,
-        fundraising_start_amount: startingAmount,
-        fundraising_target_goal: targetGoal,
+        fundraising_start_amount: startingAmount ?? 0,
+        fundraising_target_goal: targetGoal ?? 0,
         show_donor_names: showDonorNames,
         homepage_widget_preference: showWidget ? "giving" : "none",
       })
@@ -77,6 +89,9 @@ export function GivingSettingsForm({
     }
   }
 
+  const startAmount = startingAmount ?? 0
+  const goalAmount = targetGoal ?? 0
+
   return (
     <div className="space-y-6">
       <Card>
@@ -94,10 +109,11 @@ export function GivingSettingsForm({
               <Input
                 id="starting-amount"
                 type="number"
-                value={startingAmount}
-                onChange={(e) => setStartingAmount(Number(e.target.value))}
+                value={startingAmount ?? ""}
+                onChange={(e) => handleNumberChange(e, setStartingAmount)}
                 min={0}
                 step={100}
+                placeholder="0"
               />
               <p className="text-xs text-muted-foreground">Amount already raised before using this platform</p>
             </div>
@@ -107,10 +123,11 @@ export function GivingSettingsForm({
               <Input
                 id="target-goal"
                 type="number"
-                value={targetGoal}
-                onChange={(e) => setTargetGoal(Number(e.target.value))}
+                value={targetGoal ?? ""}
+                onChange={(e) => handleNumberChange(e, setTargetGoal)}
                 min={0}
                 step={100}
+                placeholder="5000"
               />
               <p className="text-xs text-muted-foreground">Your total fundraising target to be fully funded</p>
             </div>
@@ -127,28 +144,28 @@ export function GivingSettingsForm({
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
               <Label>Show Donor Names</Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Display recent donor names in the widget (default: hidden for privacy)
               </p>
             </div>
             <Switch checked={showDonorNames} onCheckedChange={setShowDonorNames} />
           </div>
 
-          {startingAmount > 0 || targetGoal > 0 ? (
+          {startAmount > 0 || goalAmount > 0 ? (
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Progress:</span>
                 <span className="font-semibold">
-                  {startingAmount > 0 && targetGoal > 0
-                    ? `${Math.round((startingAmount / targetGoal) * 100)}%`
+                  {startAmount > 0 && goalAmount > 0
+                    ? `${Math.round((startAmount / goalAmount) * 100)}%`
                     : "Set both values"}
                 </span>
               </div>
-              {startingAmount > 0 && targetGoal > 0 && (
+              {startAmount > 0 && goalAmount > 0 && (
                 <div className="w-full bg-background rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${Math.min((startingAmount / targetGoal) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((startAmount / goalAmount) * 100, 100)}%` }}
                   />
                 </div>
               )}

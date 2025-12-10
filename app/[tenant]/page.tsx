@@ -426,21 +426,39 @@ export default async function TenantHomePage({
           {showAnyWidget && widgetData && (
             <>
               {widgetData.type === "campaign" && widgetData.campaign ? (
-                <CampaignWidget
-                  campaign={widgetData.campaign}
-                  recentDonations={widgetData.recentDonations}
-                  donationCount={widgetData.donationCount}
-                  showDonorNames={showDonorNames}
-                />
+                <aside className="hidden xl:block fixed right-8 top-32 w-72 z-10">
+                  <CampaignWidget
+                    campaign={widgetData.campaign}
+                    recentDonations={widgetData.recentDonations}
+                    donationCount={widgetData.donationCount}
+                    showDonorNames={showDonorNames}
+                  />
+                </aside>
               ) : widgetData.type === "giving" ? (
-                <GivingWidget
-                  subdomain={tenant.subdomain}
-                  raisedAmount={widgetData.totalRaised}
-                  goalAmount={targetGoal}
-                  donationCount={widgetData.donationCount}
-                  showDonorNames={showDonorNames}
-                  recentDonors={widgetData.recentDonors}
-                />
+                <>
+                  {/* Desktop: Fixed position widget */}
+                  <aside className="hidden xl:block fixed right-8 top-32 w-72 z-10">
+                    <GivingWidget
+                      subdomain={tenant.subdomain}
+                      raisedAmount={widgetData.totalRaised}
+                      goalAmount={targetGoal}
+                      donationCount={widgetData.donationCount}
+                      showDonorNames={showDonorNames}
+                      recentDonors={widgetData.recentDonors}
+                    />
+                  </aside>
+                  {/* Mobile: Widget handles its own positioning */}
+                  <div className="xl:hidden">
+                    <GivingWidget
+                      subdomain={tenant.subdomain}
+                      raisedAmount={widgetData.totalRaised}
+                      goalAmount={targetGoal}
+                      donationCount={widgetData.donationCount}
+                      showDonorNames={showDonorNames}
+                      recentDonors={widgetData.recentDonors}
+                    />
+                  </div>
+                </>
               ) : null}
             </>
           )}
@@ -476,21 +494,39 @@ export default async function TenantHomePage({
         {showAnyWidget && widgetData && (
           <>
             {widgetData.type === "campaign" && widgetData.campaign ? (
-              <CampaignWidget
-                campaign={widgetData.campaign}
-                recentDonations={widgetData.recentDonations}
-                donationCount={widgetData.donationCount}
-                showDonorNames={showDonorNames}
-              />
+              <aside className="hidden xl:block fixed right-8 top-32 w-72 z-10">
+                <CampaignWidget
+                  campaign={widgetData.campaign}
+                  recentDonations={widgetData.recentDonations}
+                  donationCount={widgetData.donationCount}
+                  showDonorNames={showDonorNames}
+                />
+              </aside>
             ) : widgetData.type === "giving" ? (
-              <GivingWidget
-                subdomain={tenant.subdomain}
-                raisedAmount={widgetData.totalRaised}
-                goalAmount={targetGoal}
-                donationCount={widgetData.donationCount}
-                showDonorNames={showDonorNames}
-                recentDonors={widgetData.recentDonors}
-              />
+              <>
+                {/* Desktop: Fixed position widget */}
+                <aside className="hidden xl:block fixed right-8 top-32 w-72 z-10">
+                  <GivingWidget
+                    subdomain={tenant.subdomain}
+                    raisedAmount={widgetData.totalRaised}
+                    goalAmount={targetGoal}
+                    donationCount={widgetData.donationCount}
+                    showDonorNames={showDonorNames}
+                    recentDonors={widgetData.recentDonors}
+                  />
+                </aside>
+                {/* Mobile: Widget handles its own positioning */}
+                <div className="xl:hidden">
+                  <GivingWidget
+                    subdomain={tenant.subdomain}
+                    raisedAmount={widgetData.totalRaised}
+                    goalAmount={targetGoal}
+                    donationCount={widgetData.donationCount}
+                    showDonorNames={showDonorNames}
+                    recentDonors={widgetData.recentDonors}
+                  />
+                </div>
+              </>
             ) : null}
           </>
         )}

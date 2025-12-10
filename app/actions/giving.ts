@@ -36,8 +36,18 @@ export async function updateGivingSettings(
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user || user.id !== tenantId) {
-    throw new Error("Unauthorized")
+
+  // Tenants authenticate via their email, so we need to check if the logged-in user's email
+  // matches the tenant's email to authorize the update
+  if (!user) {
+    throw new Error("Unauthorized - not logged in")
+  }
+
+  // Fetch the tenant to verify the user has permission
+  const { data: tenant } = await supabase.from("tenants").select("email").eq("id", tenantId).single()
+
+  if (!tenant || tenant.email !== user.email) {
+    throw new Error("Unauthorized - user email does not match tenant")
   }
 
   const updateData: any = {
