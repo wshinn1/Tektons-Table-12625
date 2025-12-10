@@ -131,16 +131,18 @@ export default function TenantLayout({
                 tenantId: cachedTenantId,
                 userId: cachedUserId,
                 tenantName: cachedName,
+                pageBuilderEnabled: cachedPageBuilderEnabled,
                 timestamp,
               } = JSON.parse(stored)
               const isExpired = Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000
               if (!isExpired && cachedTenantId && cachedUserId) {
                 setTenantId(cachedTenantId)
                 setTenantName(cachedName)
+                setPageBuilderEnabled(cachedPageBuilderEnabled || false)
                 setIsPersistedAdmin(true)
                 setIsTenantOwner(true)
                 setIsCheckingAuth(false)
-                console.log("[v0] Loaded cached admin session")
+                console.log("[v0] Loaded cached admin session with pageBuilderEnabled:", cachedPageBuilderEnabled)
               } else if (isExpired) {
                 localStorage.removeItem(`tenant-owner-${detectedSubdomain}`)
               }
@@ -245,6 +247,10 @@ export default function TenantLayout({
         if (tenant) {
           setTenantId(tenant.id)
           setTenantName(tenant.full_name || tenant.subdomain)
+          console.log("[v0] Tenant data:", {
+            subdomain: tenant.subdomain,
+            page_builder_enabled: tenant.page_builder_enabled,
+          })
           setPageBuilderEnabled(tenant.page_builder_enabled || false)
           setBranding({
             faviconUrl: tenant.favicon_url,
@@ -267,10 +273,11 @@ export default function TenantLayout({
                     tenantId: tenant.id,
                     userId: currentUser.id,
                     tenantName: tenant.full_name || tenant.subdomain,
+                    pageBuilderEnabled: tenant.page_builder_enabled || false,
                     timestamp: Date.now(),
                   }),
                 )
-                console.log("[v0] Saved admin session to cache")
+                console.log("[v0] Saved admin session to cache with pageBuilderEnabled:", tenant.page_builder_enabled)
               }
             } catch (e) {
               // Silently handle localStorage errors
