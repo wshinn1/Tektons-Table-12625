@@ -34,6 +34,7 @@ export function GivingWidget({
   const [isExpanded, setIsExpanded] = useState(false)
   const [isMinimized, setIsMinimized] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false) // Add mounted state to prevent hydration mismatch
   const [currentRaised, setCurrentRaised] = useState(0)
   const [currentCount, setCurrentCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -46,10 +47,15 @@ export function GivingWidget({
   const progressPercent = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const checkMobile = () => {
-      const mobile = window.innerWidth < 1280 // Changed from 768 to 1280 (xl breakpoint) to match when desktop widget hides
+      const mobile = window.innerWidth < 1280
       setIsMobile(mobile)
-      // On desktop (xl+), start expanded. On smaller screens, start minimized.
       if (!mobile) {
         setIsMinimized(false)
       }
@@ -58,7 +64,7 @@ export function GivingWidget({
     checkMobile()
     window.addEventListener("resize", checkMobile)
     return () => window.removeEventListener("resize", checkMobile)
-  }, [])
+  }, [mounted])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -96,16 +102,7 @@ export function GivingWidget({
     return () => clearInterval(pollInterval)
   }, [subdomain, hasLoadedOnce])
 
-  if (isLoading && !hasLoadedOnce) {
-    if (isMobile) {
-      return (
-        <div className="fixed top-20 right-4 z-50">
-          <div className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg animate-pulse">
-            <Heart className="h-5 w-5" />
-          </div>
-        </div>
-      )
-    }
+  if (!mounted || (isLoading && !hasLoadedOnce)) {
     return (
       <div className="sticky top-4 w-full">
         <Card className={cn("overflow-hidden border-2 shadow-lg", compact ? "p-4" : "p-6")}>
