@@ -395,26 +395,31 @@ export default function EditBlogPost({ params }: Props) {
         titleLength: title.length,
         contentLength: content?.length || 0,
         status: newStatus || status,
+        tenantId,
       })
 
-      const result = await updateBlogPost(id, {
-        title,
-        subtitle: subtitle.trim() || undefined,
-        slug,
-        readTime: Number.parseInt(readTime) || 5,
-        content: content || "[]",
-        status: newStatus || status,
-        metaDescription: excerpt.trim() || undefined,
-        allowComments,
-        followersOnly,
-        excerpt: excerpt.trim() || undefined,
-        authorName: authorName.trim() || undefined,
-        featuredImage: featuredImage || undefined,
-        featuredImageCaption: featuredImageCaption.trim() || undefined,
-        showFeaturedImage,
-        categoryIds: selectedCategoryId !== "none" ? [selectedCategoryId] : [],
-        navbarVisible,
-      })
+      const result = await updateBlogPost(
+        id,
+        {
+          title,
+          subtitle: subtitle.trim() || undefined,
+          slug,
+          readTime: Number.parseInt(readTime) || 5,
+          content: content || "[]",
+          status: newStatus || status,
+          metaDescription: excerpt.trim() || undefined,
+          allowComments,
+          followersOnly,
+          excerpt: excerpt.trim() || undefined,
+          authorName: authorName.trim() || undefined,
+          featuredImage: featuredImage || undefined,
+          featuredImageCaption: featuredImageCaption.trim() || undefined,
+          showFeaturedImage,
+          categoryIds: selectedCategoryId !== "none" ? [selectedCategoryId] : [],
+          navbarVisible,
+        },
+        tenantId,
+      ) // Pass tenantId as third argument to use admin client for tenant posts
 
       console.log("[v0] Blog post saved successfully:", result)
       toast.success(newStatus === "published" ? "Post published!" : "Changes saved!")

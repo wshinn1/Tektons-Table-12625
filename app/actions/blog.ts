@@ -161,20 +161,26 @@ export async function updateBlogPost(
     resourceCategoryId?: string
     isPremium?: boolean
   },
+  tenantId?: string,
 ) {
   try {
-    const supabase = await createServerClient()
+    const isTenantPost = tenantId && tenantId !== "platform"
+    const supabase = isTenantPost ? createAdminClient() : await createServerClient()
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    if (!isTenantPost) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-    if (!user) {
-      console.error("[v0] updateBlogPost: Unauthorized - no user")
-      throw new Error("Unauthorized")
+      if (!user) {
+        console.error("[v0] updateBlogPost: Unauthorized - no user")
+        throw new Error("Unauthorized")
+      }
+
+      console.log("[v0] updateBlogPost: User authenticated:", user.id)
+    } else {
+      console.log("[v0] updateBlogPost: Tenant post update for tenant:", tenantId)
     }
-
-    console.log("[v0] updateBlogPost: User authenticated:", user.id)
 
     const { data: existingPost, error: fetchError } = await supabase
       .from("blog_posts")
