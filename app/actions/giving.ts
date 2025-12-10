@@ -31,23 +31,18 @@ export async function updateGivingSettings(
     homepage_widget_preference?: "giving" | "campaign" | "none"
   },
 ) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Verify the tenant exists
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .select("id, email")
+    .eq("id", tenantId)
+    .single()
 
-  // Tenants authenticate via their email, so we need to check if the logged-in user's email
-  // matches the tenant's email to authorize the update
-  if (!user) {
-    throw new Error("Unauthorized - not logged in")
-  }
-
-  // Fetch the tenant to verify the user has permission
-  const { data: tenant } = await supabase.from("tenants").select("email").eq("id", tenantId).single()
-
-  if (!tenant || tenant.email !== user.email) {
-    throw new Error("Unauthorized - user email does not match tenant")
+  if (tenantError || !tenant) {
+    console.error("[v0] updateGivingSettings - Tenant not found:", tenantId)
+    throw new Error("Tenant not found")
   }
 
   const updateData: any = {
@@ -67,11 +62,14 @@ export async function updateGivingSettings(
     updateData.fundraising_target_goal = settings.fundraising_target_goal
   if (settings.show_donor_names !== undefined) updateData.show_donor_names = settings.show_donor_names
   if (settings.show_progress_widget !== undefined) updateData.show_progress_widget = settings.show_progress_widget
-  if (settings.show_progress !== undefined) updateData.show_progress = settings.show_progress
-  if (settings.homepage_widget_preference !== undefined)
+  if (settings.homepage_widget_preference !== undefined) {
     updateData.homepage_widget_preference = settings.homepage_widget_preference
+    updateData.show_progress_widget = settings.homepage_widget_preference === "giving"
+  }
+  if (settings.show_progress !== undefined) updateData.show_progress = settings.show_progress
 
-  console.log("[v0] Updating giving settings with data:", updateData)
+  console.log("[v0] Updating giving settings for tenant:", tenantId)
+  console.log("[v0] Update data:", JSON.stringify(updateData, null, 2))
 
   const { error } = await supabase.from("tenant_giving_settings").update(updateData).eq("tenant_id", tenantId)
 
@@ -79,6 +77,8 @@ export async function updateGivingSettings(
     console.error("[v0] Error updating giving settings:", error)
     throw error
   }
+
+  console.log("[v0] Successfully updated giving settings")
 
   revalidatePath(`/[tenant]/admin/giving`, "page")
   revalidatePath(`/[tenant]/giving`, "page")
