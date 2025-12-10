@@ -306,7 +306,7 @@ importers:
         specifier: latest
         version: 0.0.1
       sharp:
-        specifier: 0.34.5
+        specifier: latest
         version: 0.34.5
       sonner:
         specifier: latest

@@ -540,22 +540,47 @@ export async function uploadBlogImage(formData: FormData) {
       console.log("[v0] uploadBlogImage: HEIC file detected, converting to JPEG")
       try {
         const heicConvert = (await import("heic-convert")).default
+        const sharp = (await import("sharp")).default
         const arrayBuffer = await file.arrayBuffer()
         const inputBuffer = Buffer.from(arrayBuffer)
 
         console.log("[v0] uploadBlogImage: Starting HEIC conversion, buffer size:", inputBuffer.length)
 
-        const outputBuffer = await heicConvert({
+        // Convert HEIC to JPEG with timeout protection
+        const conversionPromise = heicConvert({
           buffer: inputBuffer,
           format: "JPEG",
-          quality: 0.85,
+          quality: 0.9, // Higher quality since we'll resize after
         })
 
-        fileToUpload = new Blob([outputBuffer], { type: "image/jpeg" })
+        const timeoutPromise = new Promise(
+          (_, reject) => setTimeout(() => reject(new Error("Conversion timeout")), 25000), // 25 second timeout
+        )
+
+        const outputBuffer = (await Promise.race([conversionPromise, timeoutPromise])) as Buffer
+
+        console.log("[v0] uploadBlogImage: HEIC converted to JPEG, output size:", outputBuffer.length)
+
+        // Resize if image is very large to improve performance
+        const resizedBuffer = await sharp(outputBuffer)
+          .resize(2400, 2400, {
+            fit: "inside",
+            withoutEnlargement: true,
+          })
+          .jpeg({ quality: 90 })
+          .toBuffer()
+
+        fileToUpload = new Blob([resizedBuffer], { type: "image/jpeg" })
         extension = "jpg"
-        console.log("[v0] uploadBlogImage: HEIC converted to JPEG successfully, output size:", outputBuffer.length)
+        console.log("[v0] uploadBlogImage: HEIC processed successfully, final size:", resizedBuffer.length)
       } catch (conversionError: any) {
         console.error("[v0] uploadBlogImage: HEIC conversion failed:", conversionError?.message || conversionError)
+        if (conversionError?.message === "Conversion timeout") {
+          return {
+            success: false,
+            error: "Image processing took too long. Please try using a smaller image or convert to JPEG first.",
+          }
+        }
         return {
           success: false,
           error: "Could not process this image format. Please convert to JPEG or PNG before uploading.",
@@ -572,7 +597,7 @@ export async function uploadBlogImage(formData: FormData) {
     return { success: true, url: blob.url }
   } catch (error: any) {
     console.error("[v0] uploadBlogImage: Failed to upload image:", error?.message || error)
-    return { success: false, error: "Failed to upload image. Please try again." }
+    return { success: false, error: "Failed to upload image" }
   }
 }
 
