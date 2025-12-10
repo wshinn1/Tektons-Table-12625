@@ -33,13 +33,14 @@ import { Button } from "@/components/ui/button"
 import { Toggle } from "@/components/ui/toggle"
 import { Separator } from "@/components/ui/separator"
 import { MediaLibraryModal } from "@/components/admin/media-library-modal"
+import { toast } from "sonner"
 
 interface TiptapEditorProps {
   initialContent?: string
-  content?: string // Support both prop names for compatibility
+  content?: string
   onChange?: (content: string) => void
   placeholder?: string
-  onImageUpload?: (file: File) => Promise<string | null> // Add image upload callback
+  onImageUpload?: (file: File) => Promise<string | null>
 }
 
 export function TiptapEditor({ initialContent, content, onChange, placeholder, onImageUpload }: TiptapEditorProps) {
@@ -48,6 +49,41 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const startingContent = initialContent || content || ""
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!onImageUpload) {
+      toast.error("Image upload not available")
+      return null
+    }
+
+    setIsUploading(true)
+    try {
+      const url = await onImageUpload(file)
+      if (url && url.startsWith("blob:")) {
+        console.error("Upload returned blob URL instead of real URL")
+        toast.error("Image upload failed - please try again")
+        return null
+      }
+      return url
+    } catch (error) {
+      console.error("Image upload failed:", error)
+      toast.error("Failed to upload image")
+      return null
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleImageFiles = async (files: FileList | File[], editor: any) => {
+    for (const file of Array.from(files)) {
+      if (file.type.startsWith("image/")) {
+        const url = await uploadImage(file)
+        if (url) {
+          editor.chain().focus().setImage({ src: url }).run()
+        }
+      }
+    }
+  }
 
   const editor = useEditor({
     extensions: [
@@ -80,12 +116,72 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
       attributes: {
         class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[400px] max-w-none p-4",
       },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          const files = event.dataTransfer.files
+          const hasImages = Array.from(files).some((file) => file.type.startsWith("image/"))
+
+          if (hasImages && onImageUpload) {
+            event.preventDefault()
+            // Use setTimeout to ensure editor is available
+            setTimeout(() => {
+              if (editor) {
+                handleImageFiles(files, editor)
+              }
+            }, 0)
+            return true
+          }
+        }
+        return false
+      },
+      handlePaste: (view, event, slice) => {
+        const items = event.clipboardData?.items
+        if (items && onImageUpload) {
+          const imageItems = Array.from(items).filter((item) => item.type.startsWith("image/"))
+
+          if (imageItems.length > 0) {
+            event.preventDefault()
+            const files = imageItems.map((item) => item.getAsFile()).filter((f): f is File => f !== null)
+
+            setTimeout(() => {
+              if (editor && files.length > 0) {
+                handleImageFiles(files, editor)
+              }
+            }, 0)
+            return true
+          }
+        }
+        return false
+      },
     },
     onUpdate: ({ editor }) => {
       const json = editor.getJSON()
-      onChange?.(JSON.stringify(json))
+
+      const sanitizedJson = sanitizeBlobUrls(json)
+      onChange?.(JSON.stringify(sanitizedJson))
     },
   })
+
+  const sanitizeBlobUrls = (node: any): any => {
+    if (!node) return node
+
+    if (node.type === "image" && node.attrs?.src?.startsWith("blob:")) {
+      // Replace blob URL images with a placeholder or remove them
+      return {
+        type: "paragraph",
+        content: [{ type: "text", text: "[Image failed to upload - please re-add]" }],
+      }
+    }
+
+    if (node.content && Array.isArray(node.content)) {
+      return {
+        ...node,
+        content: node.content.map(sanitizeBlobUrls).filter(Boolean),
+      }
+    }
+
+    return node
+  }
 
   useEffect(() => {
     const contentToUse = initialContent || content
@@ -126,22 +222,16 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !onImageUpload) return
+    if (!file) return
 
-    setIsUploading(true)
-    try {
-      const url = await onImageUpload(file)
-      if (url) {
-        editor.chain().focus().setImage({ src: url }).run()
-      }
-    } catch (error) {
-      console.error("Image upload failed:", error)
-    } finally {
-      setIsUploading(false)
-      // Reset input so same file can be selected again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+    const url = await uploadImage(file)
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run()
+    }
+
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -290,6 +380,13 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
           >
             <Redo className="h-4 w-4" />
           </Button>
+
+          {isUploading && (
+            <span className="ml-2 text-sm text-muted-foreground flex items-center">
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              Uploading...
+            </span>
+          )}
         </div>
 
         {/* Editor Content */}

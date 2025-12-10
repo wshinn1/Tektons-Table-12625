@@ -251,6 +251,31 @@ export function AdminPostEditor({
     }
   }
 
+  const handleContentImageUpload = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file")
+      return null
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB")
+      return null
+    }
+
+    toast.loading("Uploading image...", { id: "content-image-upload" })
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const result = await uploadPlatformBlogImage(formData)
+      toast.success("Image uploaded", { id: "content-image-upload" })
+      return result.url
+    } catch (error) {
+      console.error("Failed to upload image:", error)
+      toast.error("Failed to upload image", { id: "content-image-upload" })
+      return null
+    }
+  }
+
   return (
     <>
       <form className="space-y-6">
@@ -494,7 +519,8 @@ export function AdminPostEditor({
             <TiptapEditor
               initialContent={content}
               onChange={setContent}
-              placeholder="Start writing your blog post..."
+              placeholder="Write your blog post content here..."
+              onImageUpload={handleContentImageUpload}
             />
             <p className="mt-2 text-xs text-muted-foreground">
               Use the formatting toolbar to add headings, lists, images, quotes, and more.

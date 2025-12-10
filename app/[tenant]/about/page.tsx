@@ -19,21 +19,28 @@ export async function generateMetadata({
     .eq("subdomain", subdomain)
     .single()
 
+  const { data: aboutContent } = await supabase
+    .from("about_content")
+    .select("page_title")
+    .eq("tenant_id", (await supabase.from("tenants").select("id").eq("subdomain", subdomain).single()).data?.id)
+    .single()
+
   if (!tenant) {
     return { title: "About - Not Found" }
   }
 
   const baseUrl = `https://${subdomain}.tektonstable.com`
   const description = tenant.bio || `Learn more about ${tenant.full_name}'s ministry and mission`
+  const pageTitle = aboutContent?.page_title || `About ${tenant.full_name}`
 
   return {
-    title: `About ${tenant.full_name}`,
+    title: pageTitle,
     description,
     alternates: {
       canonical: `${baseUrl}/about`,
     },
     openGraph: {
-      title: `About ${tenant.full_name}`,
+      title: pageTitle,
       description,
       url: `${baseUrl}/about`,
       siteName: tenant.full_name,
@@ -71,6 +78,8 @@ export default async function TenantAboutPage({
 
   const baseUrl = `https://${subdomain}.tektonstable.com`
 
+  const pageTitle = aboutContent?.page_title || `About ${tenant.full_name}`
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Added Person structured data for about page */}
@@ -82,7 +91,7 @@ export default async function TenantAboutPage({
         description={tenant.bio}
       />
 
-      <h1 className="text-4xl font-bold mb-6">About {tenant.full_name}</h1>
+      <h1 className="text-4xl font-bold mb-6">{pageTitle}</h1>
 
       <div className="space-y-8">
         {/* Mission Section */}

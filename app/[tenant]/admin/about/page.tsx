@@ -32,7 +32,12 @@ export default async function EditAboutPage({ params }: { params: Promise<{ tena
         <p className="text-muted-foreground">Customize your about page content, images, and sections</p>
       </div>
 
-      <AboutPageEditor tenantId={tenant.id} initialContent={aboutContent} tenantSlug={tenantSlug} />
+      <AboutPageEditor
+        tenantId={tenant.id}
+        initialContent={aboutContent}
+        tenantSlug={tenantSlug}
+        tenantName={tenant.full_name}
+      />
     </div>
   )
 }

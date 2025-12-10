@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, TrendingUp, Maximize2 } from "lucide-react"
+import { ChevronDown, ChevronUp, TrendingUp, X, Heart } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/donation-tiers"
 import { cn } from "@/lib/utils"
@@ -32,7 +32,8 @@ export function GivingWidget({
   compact = false,
 }: GivingWidgetProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const [currentRaised, setCurrentRaised] = useState(0)
   const [currentCount, setCurrentCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -43,6 +44,21 @@ export function GivingWidget({
   const count = Number(currentCount) || 0
 
   const progressPercent = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      // On desktop, start expanded. On mobile, start minimized.
+      if (!mobile) {
+        setIsMinimized(false)
+      }
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -81,6 +97,15 @@ export function GivingWidget({
   }, [subdomain, hasLoadedOnce])
 
   if (isLoading && !hasLoadedOnce) {
+    if (isMobile) {
+      return (
+        <div className="fixed top-20 right-4 z-50">
+          <div className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg animate-pulse">
+            <Heart className="h-5 w-5" />
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="sticky top-4 w-full">
         <Card className={cn("overflow-hidden border-2 shadow-lg", compact ? "p-4" : "p-6")}>
@@ -92,7 +117,23 @@ export function GivingWidget({
     )
   }
 
-  if (isMinimized) {
+  if (isMinimized && isMobile) {
+    return (
+      <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+        <Button
+          onClick={() => setIsMinimized(false)}
+          size="lg"
+          className="shadow-xl gap-2 rounded-full px-4 py-6 bg-primary hover:bg-primary/90"
+          aria-label="Expand giving widget"
+        >
+          <Heart className="h-5 w-5 fill-current" />
+          <span className="font-semibold">{Math.round(progressPercent)}% funded</span>
+        </Button>
+      </div>
+    )
+  }
+
+  if (isMinimized && !isMobile) {
     return (
       <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
         <Button
@@ -101,13 +142,100 @@ export function GivingWidget({
           className="shadow-lg gap-2"
           aria-label="Expand giving widget"
         >
-          <Maximize2 className="h-4 w-4" />
+          <Heart className="h-4 w-4 fill-current" />
           <span className="font-semibold">{Math.round(progressPercent)}% funded</span>
         </Button>
       </div>
     )
   }
 
+  if (isMobile && !isMinimized) {
+    return (
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
+          onClick={() => setIsMinimized(true)}
+        />
+
+        {/* Widget Card */}
+        <div className="fixed inset-x-4 bottom-4 z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <Card className="overflow-hidden border-2 shadow-2xl">
+            {/* Close button */}
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="absolute top-3 right-3 z-10 p-2 rounded-full bg-muted/80 hover:bg-muted transition-colors"
+              aria-label="Close widget"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="p-5 space-y-4">
+              {/* Progress circle */}
+              <div className="flex justify-center">
+                <div className="relative w-20 h-20">
+                  <svg className="transform -rotate-90 w-20 h-20">
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="32"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      fill="none"
+                      className="text-muted"
+                    />
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="32"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 32}`}
+                      strokeDashoffset={`${2 * Math.PI * 32 * (1 - progressPercent / 100)}`}
+                      className="text-primary transition-all duration-500"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl font-bold">{Math.round(progressPercent)}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="text-center space-y-1">
+                <h3 className="text-xl font-bold">{formatCurrency(raised * 100)} raised</h3>
+                <p className="text-sm text-muted-foreground">
+                  {formatCurrency(goal * 100)} goal · {count} {count === 1 ? "donation" : "donations"}
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="space-y-2">
+                <Button asChild size="lg" className="w-full font-semibold">
+                  <Link href="/giving">Donate now</Link>
+                </Button>
+                <Button asChild size="lg" variant="secondary" className="w-full">
+                  <Link href="/about">Learn More</Link>
+                </Button>
+              </div>
+
+              {/* Recent activity */}
+              {count > 0 && (
+                <div className="flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950 rounded-lg p-2 text-sm">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="font-medium">{count} people have donated</span>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </>
+    )
+  }
+
+  // Desktop expanded view (original)
   return (
     <div className="sticky top-4 w-full animate-in slide-in-from-right-4 duration-300">
       <Card className={cn("overflow-hidden border-2 shadow-lg", compact && "text-sm")}>

@@ -142,6 +142,31 @@ function EditBlogPostClient({ id }: { id: string }) {
     }
   }
 
+  const handleContentImageUpload = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file")
+      return null
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB")
+      return null
+    }
+
+    toast.loading("Uploading image...", { id: "content-image-upload" })
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const result = await uploadPlatformBlogImage(formData)
+      toast.success("Image uploaded", { id: "content-image-upload" })
+      return result.url
+    } catch (error) {
+      console.error("Failed to upload image:", error)
+      toast.error("Failed to upload image", { id: "content-image-upload" })
+      return null
+    }
+  }
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -607,7 +632,12 @@ function EditBlogPostClient({ id }: { id: string }) {
           <CardTitle>Content *</CardTitle>
         </CardHeader>
         <CardContent>
-          <TiptapEditor initialContent={content} onChange={setContent} placeholder="Start writing your blog post..." />
+          <TiptapEditor
+            initialContent={content}
+            onChange={setContent}
+            placeholder="Start writing your blog post..."
+            onImageUpload={handleContentImageUpload}
+          />
           <p className="text-xs text-muted-foreground mt-2">
             Use the formatting toolbar to add headings, lists, images, quotes, and more.
           </p>

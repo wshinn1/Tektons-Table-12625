@@ -109,6 +109,71 @@ async function uploadWithRetry(
   return { success: false, error: lastError?.message || "Upload failed after retries" }
 }
 
+const handleContentImageUpload = async (file: File): Promise<string | null> => {
+  let processedFile = file
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+  const fileName = file.name.toLowerCase()
+  const fileType = file.type.toLowerCase()
+  const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
+  const hasHeicMimeType = fileType === "image/heic" || fileType === "image/heif"
+  const hasEmptyOrGenericType = fileType === "" || fileType === "application/octet-stream"
+  const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
+
+  if (isHeic) {
+    toast.loading("Converting image format...", { id: "content-image-upload" })
+    try {
+      const heic2any = (await import("heic2any")).default
+      const convertedBlob = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.85,
+      })
+      const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
+      processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+        type: "image/jpeg",
+      })
+      toast.dismiss("content-image-upload")
+    } catch {
+      toast.error("Could not convert image format", { id: "content-image-upload" })
+      return null
+    }
+  }
+
+  if (!processedFile.type.startsWith("image/")) {
+    toast.error("Please select an image file")
+    return null
+  }
+
+  // Compress large images on mobile
+  if (isMobile && processedFile.size > 2 * 1024 * 1024) {
+    try {
+      processedFile = await compressImage(processedFile, 1920, 0.85)
+    } catch {
+      // Continue with original file
+    }
+  }
+
+  toast.loading("Uploading image...", { id: "content-image-upload" })
+  try {
+    const formData = new FormData()
+    formData.append("file", processedFile)
+
+    const result = await uploadWithRetry(formData, isMobile ? 3 : 1)
+
+    if (result.success && result.url) {
+      toast.success("Image uploaded", { id: "content-image-upload" })
+      return result.url
+    } else {
+      toast.error(result.error || "Failed to upload image", { id: "content-image-upload" })
+      return null
+    }
+  } catch {
+    toast.error("Failed to upload image", { id: "content-image-upload" })
+    return null
+  }
+}
+
 export default function TenantEditBlogPostPage({ params }: Props) {
   const { tenant, id } = use(params)
   const router = useRouter()
@@ -242,7 +307,6 @@ export default function TenantEditBlogPostPage({ params }: Props) {
     const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
     const hasHeicMimeType = fileType === "image/heic" || fileType === "image/heif"
     const hasEmptyOrGenericType = fileType === "" || fileType === "application/octet-stream"
-
     const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
 
     if (isHeic) {
@@ -592,6 +656,7 @@ export default function TenantEditBlogPostPage({ params }: Props) {
               initialContent={content}
               onChange={setContent}
               placeholder="Start writing your blog post..."
+              onImageUpload={handleContentImageUpload}
             />
           </CardContent>
         </Card>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -17,6 +17,7 @@ interface AdditionalSection {
 }
 
 interface AboutContent {
+  page_title: string
   mission_title: string
   mission_content: string
   mission_image?: string
@@ -32,16 +33,19 @@ export function AboutPageEditor({
   tenantId,
   initialContent,
   tenantSlug,
+  tenantName,
 }: {
   tenantId: string
   initialContent: any
   tenantSlug: string
+  tenantName?: string
 }) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState<string | null>(null)
 
   const [content, setContent] = useState<AboutContent>({
+    page_title: initialContent?.page_title || "",
     mission_title: initialContent?.mission_title || "Our Mission",
     mission_content: initialContent?.mission_content || "",
     mission_image: initialContent?.mission_image || "",
@@ -152,6 +156,28 @@ export function AboutPageEditor({
 
   return (
     <div className="space-y-6">
+      {/* Page Title Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Page Title</CardTitle>
+          <CardDescription>Customize the main heading that appears at the top of your About page</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label htmlFor="page-title">About Page Title</Label>
+            <Input
+              id="page-title"
+              placeholder={`About ${tenantName || "Your Name"}`}
+              value={content.page_title}
+              onChange={(e) => setContent({ ...content, page_title: e.target.value })}
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Leave blank to use default: "About {tenantName || "Your Name"}"
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Mission Section */}
       <Card>
         <CardHeader>
