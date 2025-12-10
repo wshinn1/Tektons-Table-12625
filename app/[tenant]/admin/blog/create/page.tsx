@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner"
 import { Upload, X, Plus, Loader2 } from "lucide-react"
 import { createBrowserClient } from "@/lib/supabase/client"
+import heic2any from "heic2any"
 
 const TiptapEditor = dynamic(() => import("@/components/admin/blog/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
@@ -165,18 +166,49 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         return null
       }
 
-      // Check file type - handle HEIC from iPhones
-      const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]
-      const isValidType = validTypes.includes(file.type.toLowerCase()) || file.type.startsWith("image/")
+      let processedFile = file
+      const isHeic =
+        file.type === "image/heic" ||
+        file.type === "image/heif" ||
+        file.name.toLowerCase().endsWith(".heic") ||
+        file.name.toLowerCase().endsWith(".heif")
+
+      if (isHeic) {
+        toast.loading("Converting image format...", { id: "image-upload" })
+        try {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: "image/jpeg",
+            quality: 0.85,
+          })
+          // heic2any can return an array for multi-image HEIC, take the first
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
+          processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+            type: "image/jpeg",
+          })
+          console.log("[v0] HEIC converted on client, new size:", processedFile.size)
+        } catch (conversionError) {
+          console.error("[v0] Client-side HEIC conversion failed:", conversionError)
+          toast.error("Could not convert image. Please try a different photo or convert to JPEG first.", {
+            id: "image-upload",
+          })
+          return null
+        }
+      }
+
+      // Check file type - after potential HEIC conversion
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+      const isValidType =
+        validTypes.includes(processedFile.type.toLowerCase()) || processedFile.type.startsWith("image/")
 
       if (!isValidType) {
-        toast.error("Unsupported image format. Please use JPEG, PNG, GIF, WebP, or HEIC.")
+        toast.error("Unsupported image format. Please use JPEG, PNG, GIF, or WebP.")
         return null
       }
 
       // Check file size - 10MB limit for mobile photos
       const maxSize = 10 * 1024 * 1024
-      if (file.size > maxSize) {
+      if (processedFile.size > maxSize) {
         toast.error("Image must be less than 10MB. Try a smaller image or compress it.")
         return null
       }
@@ -186,7 +218,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
       try {
         const formData = new FormData()
-        formData.append("file", file)
+        formData.append("file", processedFile)
         formData.append("tenantId", tenantId)
 
         const result = await uploadBlogImage(formData)

@@ -19,6 +19,7 @@ import { toast } from "sonner"
 import { ArrowLeft, Loader2, Upload, X, Plus } from "lucide-react"
 import Link from "next/link"
 import { createBrowserClient } from "@/lib/supabase/client"
+import heic2any from "heic2any"
 
 const TiptapEditor = dynamic(() => import("@/components/admin/blog/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
@@ -167,14 +168,43 @@ export default function EditBlogPostPage({ params }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const isValidType = file.type.startsWith("image/") || file.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)
+    let processedFile = file
+    const isHeic =
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      file.name.toLowerCase().endsWith(".heic") ||
+      file.name.toLowerCase().endsWith(".heif")
+
+    if (isHeic) {
+      toast.loading("Converting image format...", { id: "image-upload" })
+      try {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+          quality: 0.85,
+        })
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
+        processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+          type: "image/jpeg",
+        })
+        console.log("[v0] HEIC converted on client, new size:", processedFile.size)
+      } catch (conversionError) {
+        console.error("[v0] Client-side HEIC conversion failed:", conversionError)
+        toast.error("Could not convert image. Please try a different photo or convert to JPEG first.", {
+          id: "image-upload",
+        })
+        return
+      }
+    }
+
+    const isValidType = processedFile.type.startsWith("image/")
 
     if (!isValidType) {
       toast.error("Please upload an image file (JPEG, PNG, GIF, WebP, or HEIC)")
       return
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (processedFile.size > 10 * 1024 * 1024) {
       toast.error("Image must be less than 10MB")
       return
     }
@@ -183,7 +213,7 @@ export default function EditBlogPostPage({ params }: Props) {
     toast.loading("Uploading image...", { id: "image-upload" })
     try {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", processedFile)
       const result = await uploadBlogImage(formData)
       if (result.success && result.url) {
         setFeaturedImage(result.url)
