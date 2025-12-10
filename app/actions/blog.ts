@@ -127,6 +127,7 @@ export async function createBlogPost(data: {
       title: post.title,
       excerpt: post.excerpt,
       slug: post.slug,
+      featuredImage: data.featuredImage || data.featuredImageUrl,
     }).catch((err) => {
       console.error("[v0] Failed to notify tenants of premium post:", err)
     })
@@ -282,6 +283,7 @@ export async function updateBlogPost(
         title: post.title,
         excerpt: post.excerpt,
         slug: post.slug,
+        featuredImage: data.featuredImage || data.featuredImageUrl,
       }).catch((err) => {
         console.error("[v0] Failed to notify tenants of premium post:", err)
       })
@@ -856,6 +858,7 @@ async function notifyTenantsOfPremiumPost(post: {
   title: string
   excerpt?: string
   slug: string
+  featuredImage?: string
 }) {
   try {
     const supabase = createAdminClient()
@@ -895,6 +898,7 @@ async function notifyTenantsOfPremiumPost(post: {
           title: post.title,
           excerpt: post.excerpt || "",
           slug: post.slug,
+          featuredImage: post.featuredImage,
         })
       } catch (err) {
         console.error(`[v0] Failed to send premium post notification to ${email}:`, err)

@@ -413,8 +413,17 @@ export async function sendNewPremiumPostEmail(
     title: string
     excerpt: string
     slug: string
+    featuredImage?: string
   },
 ) {
+  const featuredImageHtml = post.featuredImage
+    ? `
+      <div style="margin: 20px 0;">
+        <img src="${post.featuredImage}" alt="${post.title}" style="width: 100%; max-width: 540px; height: auto; border-radius: 8px; display: block;" />
+      </div>
+    `
+    : ""
+
   const content = `
     <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
       Hi ${tenantName},
@@ -422,6 +431,7 @@ export async function sendNewPremiumPostEmail(
     <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0 0 20px 0;">
       We just published a new premium resource that we think you'll find valuable:
     </p>
+    ${featuredImageHtml}
     <div style="background-color: #f5f3ff; border-left: 4px solid ${PURPLE}; padding: 20px; margin: 20px 0;">
       <h2 style="color: #333333; font-size: 20px; margin: 0 0 10px 0;">${post.title}</h2>
       <p style="color: #666666; font-size: 14px; line-height: 22px; margin: 0;">

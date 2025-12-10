@@ -84,6 +84,14 @@ export async function sendPostNotificationEmails(postId: string, tenantId: strin
   // Reply-to email
   const replyToEmail = tenant.personal_reply_email || tenant.email
 
+  const featuredImageHtml = post.featured_image_url
+    ? `
+      <div style="margin-bottom: 24px;">
+        <img src="${post.featured_image_url}" alt="${post.title}" style="width: 100%; max-width: 560px; height: auto; border-radius: 8px; display: block;" />
+      </div>
+    `
+    : ""
+
   // Send emails
   const emailPromises = recipients.map(async (recipient) => {
     try {
@@ -110,6 +118,8 @@ export async function sendPostNotificationEmails(postId: string, tenantId: strin
                 <p style="font-size: 16px; color: #374151; margin-bottom: 30px;">
                   ${tenant.full_name} just published a new post you might enjoy:
                 </p>
+                
+                ${featuredImageHtml}
                 
                 <div style="background: #f9fafb; padding: 24px; border-left: 4px solid #667eea; border-radius: 4px; margin-bottom: 30px;">
                   <h2 style="color: #111827; margin: 0 0 12px 0; font-size: 22px; font-weight: 600;">${post.title}</h2>

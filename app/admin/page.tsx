@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
-import { isSuperAdmin } from "@/lib/supabase/admin"
+import { isSuperAdmin, createAdminClient } from "@/lib/supabase/admin"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -35,31 +35,67 @@ async function getPlatformRevenueStats() {
   }
 }
 
-async function getPremiumSubscriptionStats(supabase: any) {
+async function getPremiumSubscriptionStats() {
   try {
-    // Get all premium subscriptions
-    const { data: subscriptions, error } = await supabase
+    const adminClient = createAdminClient()
+
+    // Get all premium subscriptions using admin client to bypass RLS
+    const { data: subscriptions, error } = await adminClient
       .from("premium_subscriptions")
-      .select("*, users:user_id(email)")
+      .select("*")
       .order("created_at", { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error("[v0] Premium subscriptions query error:", error)
+      throw error
+    }
 
     const activeSubscriptions = subscriptions?.filter((s: any) => s.status === "active") || []
 
-    // Calculate monthly recurring revenue from premium subscriptions
-    // Assuming $10/month for premium (adjust based on your actual price)
-    const premiumMonthlyRate = 10
+    // Get the actual premium price from Stripe
+    let premiumMonthlyRate = 4.99 // Default fallback
+    try {
+      const priceId = process.env.STRIPE_PREMIUM_PRICE_ID
+      if (priceId) {
+        const price = await stripe.prices.retrieve(priceId)
+        if (price.unit_amount) {
+          premiumMonthlyRate = price.unit_amount / 100
+        }
+      }
+    } catch (priceError) {
+      console.error("[v0] Error fetching Stripe price:", priceError)
+    }
+
     const premiumMRR = activeSubscriptions.length * premiumMonthlyRate
+
+    // Get user emails from auth.users via admin client
+    const userEmails = new Map<string, string>()
+    if (subscriptions && subscriptions.length > 0) {
+      for (const sub of subscriptions) {
+        if (sub.user_id) {
+          const { data: userData } = await adminClient.auth.admin.getUserById(sub.user_id)
+          if (userData?.user?.email) {
+            userEmails.set(sub.user_id, userData.user.email)
+          }
+        }
+      }
+    }
+
+    // Attach emails to subscriptions
+    const subscriptionsWithEmails =
+      subscriptions?.map((sub: any) => ({
+        ...sub,
+        email: userEmails.get(sub.user_id) || null,
+      })) || []
 
     return {
       totalSubscribers: subscriptions?.length || 0,
       activeSubscribers: activeSubscriptions.length,
       premiumMRR,
-      subscriptions: subscriptions || [],
+      subscriptions: subscriptionsWithEmails,
     }
   } catch (error) {
-    console.error("Error fetching premium stats:", error)
+    console.error("[v0] Error fetching premium stats:", error)
     return { totalSubscribers: 0, activeSubscribers: 0, premiumMRR: 0, subscriptions: [] }
   }
 }
@@ -82,7 +118,7 @@ export default async function AdminDashboard() {
       .select("id", { count: "exact", head: true })
       .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
     getPlatformRevenueStats(),
-    getPremiumSubscriptionStats(supabase),
+    getPremiumSubscriptionStats(),
   ])
 
   // Get user emails for premium subscribers
@@ -198,7 +234,7 @@ export default async function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User ID</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Current Period</TableHead>
                     <TableHead>Subscribed Since</TableHead>
@@ -207,7 +243,13 @@ export default async function AdminDashboard() {
                 <TableBody>
                   {premiumStats.subscriptions.slice(0, 10).map((sub: any) => (
                     <TableRow key={sub.id}>
-                      <TableCell className="font-mono text-xs">{sub.user_id?.substring(0, 8)}...</TableCell>
+                      <TableCell className="text-sm">
+                        {sub.email || (
+                          <span className="text-muted-foreground font-mono text-xs">
+                            {sub.user_id?.substring(0, 8)}...
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={sub.status === "active" ? "default" : "secondary"}
