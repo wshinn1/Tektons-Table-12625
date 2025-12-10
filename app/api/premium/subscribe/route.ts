@@ -4,7 +4,24 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { PREMIUM_RESOURCES_PRICE_ID, TENANT_TRIAL_DAYS } from "@/lib/stripe-premium"
 
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const returnUrl = url.searchParams.get("returnUrl") || "/resources"
+
+  return createCheckoutSession(returnUrl)
+}
+
 export async function POST(req: Request) {
+  try {
+    const { returnUrl } = await req.json()
+    return createCheckoutSession(returnUrl || "/resources")
+  } catch (error: any) {
+    console.error("[v0] Error creating premium subscription checkout:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+async function createCheckoutSession(returnUrl: string) {
   try {
     const supabase = await createClient()
     const {
@@ -12,10 +29,10 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      // Not logged in - redirect to login with return URL
+      const loginUrl = `/auth/login?redirect=${encodeURIComponent(`/api/premium/subscribe?returnUrl=${encodeURIComponent(returnUrl)}`)}`
+      return NextResponse.redirect(new URL(loginUrl, process.env.NEXT_PUBLIC_APP_URL || "https://tektonstable.com"))
     }
-
-    const { successUrl, cancelUrl } = await req.json()
 
     const supabaseAdmin = createAdminClient()
 
@@ -27,7 +44,8 @@ export async function POST(req: Request) {
       .single()
 
     if (existingSubscription?.status === "active" || existingSubscription?.status === "trialing") {
-      return NextResponse.json({ error: "Already subscribed" }, { status: 400 })
+      // Already subscribed - redirect to the content
+      return NextResponse.redirect(new URL(returnUrl, process.env.NEXT_PUBLIC_APP_URL || "https://tektonstable.com"))
     }
 
     // Check if user is a tenant (for free trial eligibility)
@@ -36,7 +54,7 @@ export async function POST(req: Request) {
     const isTenant = !!tenant
 
     // Get or create Stripe customer
-    let stripeCustomerId = existingSubscription?.stripe_subscription_id ? undefined : undefined
+    let stripeCustomerId: string
 
     // Look up existing customer by email
     const customers = await stripe.customers.list({
@@ -58,6 +76,8 @@ export async function POST(req: Request) {
       stripeCustomerId = customer.id
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tektonstable.com"
+
     // Create checkout session
     const sessionConfig: any = {
       customer: stripeCustomerId,
@@ -69,10 +89,8 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url:
-        successUrl || `${process.env.NEXT_PUBLIC_APP_URL || "https://tektonstable.com"}/resources?subscribed=true`,
-      cancel_url:
-        cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL || "https://tektonstable.com"}/resources?canceled=true`,
+      success_url: `${baseUrl}${returnUrl}?subscribed=true`,
+      cancel_url: `${baseUrl}${returnUrl}?canceled=true`,
       metadata: {
         user_id: user.id,
         subscription_type: "premium_resources",
@@ -94,7 +112,8 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create(sessionConfig)
 
-    return NextResponse.json({ url: session.url })
+    // Redirect to Stripe checkout
+    return NextResponse.redirect(session.url!)
   } catch (error: any) {
     console.error("[v0] Error creating premium subscription checkout:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

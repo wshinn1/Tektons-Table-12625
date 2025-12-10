@@ -63,6 +63,15 @@ export const EMAIL_TEMPLATES = {
                 <a href="https://${tenantSlug}.tektonstable.com/giving" style="display: inline-block; background-color: #f59e0b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">Give Now</a>
               </div>
               
+              <!-- Updated Tekton's Table introduction to focus on long-term sustainable fundraising -->
+              <div style="background-color: #f3f4f6; border-radius: 8px; padding: 20px; margin: 24px 0;">
+                <p style="margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #374151;">About Tekton's Table</p>
+                <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.5; color: #4b5563;">
+                  Tekton's Table is a platform dedicated to building long-term, sustainable fundraising for people working to reach their goals and accomplish their calling to positively impact the world. We provide the tools and community to help turn vision into lasting change.
+                </p>
+                <a href="https://tektonstable.com" style="display: inline-block; background-color: #1e3a5f; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">Learn More About Tekton's Table</a>
+              </div>
+              
               <p style="margin: 24px 0 0; font-size: 14px; line-height: 1.6; color: #6b7280;">
                 You can reply directly to this email to reach ${tenantName}.
               </p>

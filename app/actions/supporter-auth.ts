@@ -284,8 +284,8 @@ export async function subscribeToTenant({
     console.error("[v0] Error adding to tenant_followers:", followerError)
   }
 
-  // Send welcome email (only for new users)
-  if (!isExistingUser && receiveEmails) {
+  // Send welcome email (for both new and existing users)
+  if (receiveEmails) {
     try {
       const { data: latestPost } = await supabase
         .from("blog_posts")
@@ -296,7 +296,6 @@ export async function subscribeToTenant({
         .limit(1)
         .single()
 
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
       const tenantUrl = `https://${tenantSlug}.tektonstable.com`
       const latestPostUrl = latestPost ? `${tenantUrl}/blog/${latestPost.slug}` : undefined
 
@@ -362,10 +361,10 @@ export async function loginAndFollowTenant({
 
   const userId = authData.user.id
 
-  // Get tenant info
+  // Get tenant info including email for reply-to
   const { data: tenant, error: tenantError } = await supabase
     .from("tenants")
-    .select("id, full_name")
+    .select("id, full_name, email")
     .eq("subdomain", tenantSlug)
     .single()
 
@@ -444,6 +443,39 @@ export async function loginAndFollowTenant({
 
   if (followerError) {
     console.error("[v0] Error adding to tenant_followers:", followerError)
+  }
+
+  // Send welcome email after successfully following
+  if (receiveEmails) {
+    try {
+      const { data: latestPost } = await supabase
+        .from("blog_posts")
+        .select("title, slug")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(1)
+        .single()
+
+      const fullName = anyProfile?.full_name || authData.user.user_metadata?.full_name || email.split("@")[0]
+      const tenantUrl = `https://${tenantSlug}.tektonstable.com`
+      const latestPostUrl = latestPost ? `${tenantUrl}/blog/${latestPost.slug}` : undefined
+
+      await sendEmail({
+        to: email,
+        from: `${tenant.full_name || tenantSlug} via TektonsTable <${SUBSCRIBE_EMAIL}>`,
+        replyTo: tenant.email || undefined,
+        ...EMAIL_TEMPLATES.welcomeSubscriber({
+          subscriberName: fullName,
+          tenantName: tenant.full_name || tenantSlug,
+          tenantSlug,
+          latestPostTitle: latestPost?.title,
+          latestPostUrl,
+        }),
+      })
+    } catch (emailError) {
+      console.error("[v0] Failed to send welcome email:", emailError)
+    }
   }
 
   revalidatePath("/", "layout")

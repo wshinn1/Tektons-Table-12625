@@ -62,7 +62,7 @@ export function BlogPremiumPaywall({ post, isLoggedIn }: BlogPremiumPaywallProps
 
   const handleSubscribe = async () => {
     if (!isLoggedIn) {
-      router.push(`/auth/login?redirect=/blog/${post.slug}`)
+      router.push(`/auth/login?redirect=/api/premium/subscribe?returnUrl=${encodeURIComponent(`/blog/${post.slug}`)}`)
       return
     }
 

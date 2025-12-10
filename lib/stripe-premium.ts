@@ -1,6 +1,6 @@
 // Premium Resources Stripe configuration
-export const PREMIUM_RESOURCES_PRODUCT_ID = process.env.STRIPE_PREMIUM_PRODUCT_ID || "prod_TZgIoiEDNgNNXd"
-export const PREMIUM_RESOURCES_PRICE_ID = process.env.STRIPE_PREMIUM_PRICE_ID || "price_1ScWwpAw1QCH9rr9me2PNeuT"
+export const PREMIUM_RESOURCES_PRODUCT_ID = process.env.STRIPE_PREMIUM_PRODUCT_ID || "prod_TZglRqimBlJX3B"
+export const PREMIUM_RESOURCES_PRICE_ID = process.env.STRIPE_PREMIUM_PRICE_ID || "price_1ScXNxBBMG3jeaJnAqITsVpg"
 export const PREMIUM_RESOURCES_AMOUNT = 499 // in cents
 export const PREMIUM_RESOURCES_CURRENCY = "usd"
 
