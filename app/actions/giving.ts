@@ -27,7 +27,6 @@ export async function updateGivingSettings(
     fundraising_target_goal?: number
     show_donor_names?: boolean
     show_progress_widget?: boolean
-    show_progress?: boolean
     homepage_widget_preference?: "giving" | "campaign" | "none"
   },
 ) {
@@ -66,7 +65,6 @@ export async function updateGivingSettings(
     updateData.homepage_widget_preference = settings.homepage_widget_preference
     updateData.show_progress_widget = settings.homepage_widget_preference === "giving"
   }
-  if (settings.show_progress !== undefined) updateData.show_progress = settings.show_progress
 
   console.log("[v0] Updating giving settings for tenant:", tenantId)
   console.log("[v0] Update data:", JSON.stringify(updateData, null, 2))
