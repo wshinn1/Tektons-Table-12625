@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
@@ -7,7 +9,7 @@ import Link from "@tiptap/extension-link"
 import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
 import Youtube from "@tiptap/extension-youtube"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   Bold,
   Italic,
@@ -25,6 +27,7 @@ import {
   LinkIcon,
   ImageIcon,
   Video,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toggle } from "@/components/ui/toggle"
@@ -33,12 +36,18 @@ import { MediaLibraryModal } from "@/components/admin/media-library-modal"
 
 interface TiptapEditorProps {
   initialContent?: string
+  content?: string // Support both prop names for compatibility
   onChange?: (content: string) => void
   placeholder?: string
+  onImageUpload?: (file: File) => Promise<string | null> // Add image upload callback
 }
 
-export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEditorProps) {
+export function TiptapEditor({ initialContent, content, onChange, placeholder, onImageUpload }: TiptapEditorProps) {
   const [showMediaModal, setShowMediaModal] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const startingContent = initialContent || content || ""
 
   const editor = useEditor({
     extensions: [
@@ -47,7 +56,6 @@ export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEd
           levels: [1, 2, 3],
         },
         codeBlock: true,
-        // Disable link in StarterKit since we're adding it separately with custom config
         link: false,
       }),
       Underline,
@@ -63,7 +71,11 @@ export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEd
         placeholder: placeholder || "Start writing...",
       }),
     ],
-    content: initialContent ? JSON.parse(initialContent) : "",
+    content: startingContent
+      ? typeof startingContent === "string" && startingContent.startsWith("{")
+        ? JSON.parse(startingContent)
+        : startingContent
+      : "",
     editorProps: {
       attributes: {
         class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[400px] max-w-none p-4",
@@ -76,19 +88,22 @@ export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEd
   })
 
   useEffect(() => {
-    if (editor && initialContent) {
+    const contentToUse = initialContent || content
+    if (editor && contentToUse) {
       try {
-        const content = JSON.parse(initialContent)
-        editor.commands.setContent(content)
+        const parsedContent =
+          typeof contentToUse === "string" && contentToUse.startsWith("{") ? JSON.parse(contentToUse) : contentToUse
+        editor.commands.setContent(parsedContent)
       } catch (e) {
         console.error("Failed to parse initial content:", e)
       }
     }
-  }, [editor, initialContent])
+  }, [editor, initialContent, content])
 
   if (!editor) {
     return (
       <div className="border rounded-lg p-4 bg-background min-h-[400px] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <p className="text-muted-foreground">Loading editor...</p>
       </div>
     )
@@ -102,7 +117,32 @@ export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEd
   }
 
   const addImage = () => {
-    setShowMediaModal(true)
+    if (onImageUpload) {
+      fileInputRef.current?.click()
+    } else {
+      setShowMediaModal(true)
+    }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !onImageUpload) return
+
+    setIsUploading(true)
+    try {
+      const url = await onImageUpload(file)
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run()
+      }
+    } catch (error) {
+      console.error("Image upload failed:", error)
+    } finally {
+      setIsUploading(false)
+      // Reset input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
   }
 
   const handleMediaSelect = (url: string) => {
@@ -215,8 +255,15 @@ export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEd
           <Button size="sm" variant="ghost" onClick={addLink} className="h-8 px-2" title="Add Link">
             <LinkIcon className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={addImage} className="h-8 px-2" title="Add Image">
-            <ImageIcon className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={addImage}
+            className="h-8 px-2"
+            title="Add Image"
+            disabled={isUploading}
+          >
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
           </Button>
           <Button size="sm" variant="ghost" onClick={addYouTube} className="h-8 px-2" title="Embed YouTube Video">
             <Video className="h-4 w-4" />
@@ -248,6 +295,8 @@ export function TiptapEditor({ initialContent, onChange, placeholder }: TiptapEd
         {/* Editor Content */}
         <EditorContent editor={editor} />
       </div>
+
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
       <MediaLibraryModal open={showMediaModal} onClose={() => setShowMediaModal(false)} onSelect={handleMediaSelect} />
     </>
