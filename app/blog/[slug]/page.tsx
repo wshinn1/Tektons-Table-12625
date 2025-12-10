@@ -196,7 +196,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
           <BlogEngagement postId={post.id} postTitle={post.title} postUrl={postUrl} />
 
-          {post.featured_image_url && (
+          {post.featured_image_url && post.show_featured_image !== false && (
             <figure className="-mx-5 my-10 sm:-mx-6 md:-mx-[calc((100vw-680px)/2)] md:my-12 lg:my-14">
               <img
                 src={post.featured_image_url || "/placeholder.svg"}

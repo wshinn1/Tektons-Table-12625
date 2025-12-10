@@ -85,6 +85,7 @@ function EditBlogPostClient({ id }: { id: string }) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [featuredImageUrl, setFeaturedImageUrl] = useState("")
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [showFeaturedImage, setShowFeaturedImage] = useState(true)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [resourceCategories, setResourceCategories] = useState<ResourceCategory[]>([])
@@ -180,6 +181,7 @@ function EditBlogPostClient({ id }: { id: string }) {
         setIsPremium(post.is_premium || false)
         setSelectedResourceCategoryId(post.resource_category_id || "none")
         setFeaturedImageUrl(post.featured_image_url || "")
+        setShowFeaturedImage(post.show_featured_image ?? true)
 
         const [categoriesRes, resourceCategoriesRes, tagsRes] = await Promise.all([
           fetch("/api/admin/blog/categories"),
@@ -297,6 +299,7 @@ function EditBlogPostClient({ id }: { id: string }) {
         resourceCategoryId: selectedResourceCategoryId !== "none" ? selectedResourceCategoryId : undefined,
         isPremium,
         featuredImageUrl: featuredImageUrl || undefined,
+        showFeaturedImage,
       })
 
       toast.success(newStatus === "published" ? "Blog post published!" : "Changes saved!")
@@ -460,6 +463,17 @@ function EditBlogPostClient({ id }: { id: string }) {
               >
                 <X className="h-3 w-3" />
               </Button>
+            </div>
+          )}
+          {featuredImageUrl && (
+            <div className="mt-4 flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="show-featured-image" className="text-sm font-medium">
+                  Show in Blog Post
+                </Label>
+                <p className="text-xs text-muted-foreground">Image will still appear in blog list thumbnails</p>
+              </div>
+              <Switch id="show-featured-image" checked={showFeaturedImage} onCheckedChange={setShowFeaturedImage} />
             </div>
           )}
         </div>
