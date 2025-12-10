@@ -431,7 +431,7 @@ export default async function TenantBlogPostPage({
           </div>
 
           {showCampaignWidget && campaignStats ? (
-            <aside className="hidden xl:block fixed right-8 top-32 w-72 z-10">
+            <aside className="fixed right-8 top-32 w-72 z-10">
               <CampaignWidget
                 campaign={campaignStats.campaign}
                 progressPercent={campaignStats.progressPercent}
@@ -440,7 +440,7 @@ export default async function TenantBlogPostPage({
               />
             </aside>
           ) : showGivingWidget && showWidget ? (
-            <aside className="hidden xl:block fixed right-8 top-32 w-72 z-10">
+            <aside className="fixed right-8 top-32 w-72 z-10">
               <GivingWidget
                 subdomain={tenant.subdomain}
                 raisedAmount={totalRaised}

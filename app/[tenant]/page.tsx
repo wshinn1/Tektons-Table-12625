@@ -429,7 +429,7 @@ export default async function TenantHomePage({
             {postsWithAuthors.length > 0 && <BlogGrid />}
           </div>
           {showAnyWidget && widgetData && (
-            <aside className="hidden xl:block fixed top-24 right-8 w-72 z-40">
+            <>
               {widgetData.type === "campaign" && widgetData.campaign ? (
                 <CampaignWidget
                   campaign={widgetData.campaign}
@@ -447,7 +447,7 @@ export default async function TenantHomePage({
                   recentDonors={widgetData.recentDonors}
                 />
               ) : null}
-            </aside>
+            </>
           )}
         </div>
         {sortedSections.map((section) => (
@@ -479,7 +479,7 @@ export default async function TenantHomePage({
           {postsWithAuthors.length > 0 && <BlogGrid />}
         </div>
         {showAnyWidget && widgetData && (
-          <aside className="hidden xl:block fixed top-24 right-8 w-72 z-40">
+          <>
             {widgetData.type === "campaign" && widgetData.campaign ? (
               <CampaignWidget
                 campaign={widgetData.campaign}
@@ -497,7 +497,7 @@ export default async function TenantHomePage({
                 recentDonors={widgetData.recentDonors}
               />
             ) : null}
-          </aside>
+          </>
         )}
       </div>
       <CollapsibleCTA />

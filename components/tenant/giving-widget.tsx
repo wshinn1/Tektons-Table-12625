@@ -47,9 +47,9 @@ export function GivingWidget({
 
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768
+      const mobile = window.innerWidth < 1280 // Changed from 768 to 1280 (xl breakpoint) to match when desktop widget hides
       setIsMobile(mobile)
-      // On desktop, start expanded. On mobile, start minimized.
+      // On desktop (xl+), start expanded. On smaller screens, start minimized.
       if (!mobile) {
         setIsMinimized(false)
       }
