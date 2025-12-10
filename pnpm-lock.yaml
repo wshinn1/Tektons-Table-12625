@@ -239,9 +239,18 @@ importers:
       grapesjs:
         specifier: latest
         version: 0.22.14
+      grapesjs-blocks-basic:
+        specifier: latest
+        version: 1.0.2
+      grapesjs-plugin-forms:
+        specifier: latest
+        version: 2.0.6
       grapesjs-preset-newsletter:
         specifier: latest
         version: 1.0.2
+      grapesjs-preset-webpage:
+        specifier: latest
+        version: 1.0.3
       heic-convert:
         specifier: latest
         version: 2.1.0
@@ -4102,8 +4111,17 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  grapesjs-blocks-basic@1.0.2:
+    resolution: {integrity: sha512-SsPKf/CvQkZ+kABOsN01auAPHXh/2J20g0AWYF7fHR3Gw3TZLtdIxT1mk90Qzi76u/7sUYi3CTI+i3ZaTtXHRA==}
+
+  grapesjs-plugin-forms@2.0.6:
+    resolution: {integrity: sha512-4rDob01NLiJWas5JW1FCpQc/4R4oS4wc/qr7pQwjGUiDzHNPKZLix10FqUKEv7hnzPmBaR2ejBL87sMwz11Tlw==}
+
   grapesjs-preset-newsletter@1.0.2:
     resolution: {integrity: sha512-z8KJ1ZrTXfASSJZ/tHOcnpcWu4AMr2F/ZfQit+QjimNi3UGowwl7+Yjefuh3R7lbDTrXMMaxhCannCaJo/kPJw==}
+
+  grapesjs-preset-webpage@1.0.3:
+    resolution: {integrity: sha512-C0VOKLAdhv0j1f81c6F2uk3JpJvxgXl5DeHUtDa5qGf/HZzaCmQxsvd8Re3Oh5Cah4uUCqoi9uB5FYx3hLND2w==}
 
   grapesjs@0.22.14:
     resolution: {integrity: sha512-UyHKGtB9YOQ4bmvhmwY3H7J6SO30qgIH4qRp1ucUlblS21btMxY90xwQuAVIi+EFGl0wi8v1NBEYvA52eIEfyg==}
@@ -10327,7 +10345,13 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  grapesjs-blocks-basic@1.0.2: {}
+
+  grapesjs-plugin-forms@2.0.6: {}
+
   grapesjs-preset-newsletter@1.0.2: {}
+
+  grapesjs-preset-webpage@1.0.3: {}
 
   grapesjs@0.22.14:
     dependencies:

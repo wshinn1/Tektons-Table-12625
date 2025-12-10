@@ -19,7 +19,6 @@ import { toast } from "sonner"
 import { ArrowLeft, Loader2, Upload, X, Plus } from "lucide-react"
 import Link from "next/link"
 import { createBrowserClient } from "@/lib/supabase/client"
-import heic2any from "heic2any"
 
 const TiptapEditor = dynamic(() => import("@/components/admin/blog/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
@@ -43,7 +42,74 @@ interface Props {
   }>
 }
 
-export default function EditBlogPostPage({ params }: Props) {
+async function compressImage(file: File, maxWidth = 1920, quality = 0.85): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      let { width, height } = img
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width
+        width = maxWidth
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      const ctx = canvas.getContext("2d")
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+              type: "image/jpeg",
+            })
+            resolve(compressedFile)
+          } else {
+            resolve(file)
+          }
+        },
+        "image/jpeg",
+        quality,
+      )
+    }
+    img.onerror = () => resolve(file)
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+async function uploadWithRetry(
+  formData: FormData,
+  maxRetries = 3,
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await uploadBlogImage(formData)
+      if (result.success) {
+        return result
+      }
+      lastError = new Error(result.error || "Upload failed")
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
+      }
+    }
+  }
+
+  return { success: false, error: lastError?.message || "Upload failed after retries" }
+}
+
+export default function TenantEditBlogPostPage({ params }: Props) {
   const { tenant, id } = use(params)
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -169,15 +235,20 @@ export default function EditBlogPostPage({ params }: Props) {
     if (!file) return
 
     let processedFile = file
-    const isHeic =
-      file.type === "image/heic" ||
-      file.type === "image/heif" ||
-      file.name.toLowerCase().endsWith(".heic") ||
-      file.name.toLowerCase().endsWith(".heif")
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+    const fileName = file.name.toLowerCase()
+    const fileType = file.type.toLowerCase()
+    const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
+    const hasHeicMimeType = fileType === "image/heic" || fileType === "image/heif"
+    const hasEmptyOrGenericType = fileType === "" || fileType === "application/octet-stream"
+
+    const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
 
     if (isHeic) {
       toast.loading("Converting image format...", { id: "image-upload" })
       try {
+        const heic2any = (await import("heic2any")).default
         const convertedBlob = await heic2any({
           blob: file,
           toType: "image/jpeg",
@@ -187,9 +258,8 @@ export default function EditBlogPostPage({ params }: Props) {
         processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
           type: "image/jpeg",
         })
-        console.log("[v0] HEIC converted on client, new size:", processedFile.size)
+        toast.dismiss("image-upload")
       } catch (conversionError) {
-        console.error("[v0] Client-side HEIC conversion failed:", conversionError)
         toast.error("Could not convert image. Please try a different photo or convert to JPEG first.", {
           id: "image-upload",
         })
@@ -200,7 +270,7 @@ export default function EditBlogPostPage({ params }: Props) {
     const isValidType = processedFile.type.startsWith("image/")
 
     if (!isValidType) {
-      toast.error("Please upload an image file (JPEG, PNG, GIF, WebP, or HEIC)")
+      toast.error("Unsupported image format. Please use JPEG, PNG, GIF, WebP, or HEIC.")
       return
     }
 
@@ -209,12 +279,24 @@ export default function EditBlogPostPage({ params }: Props) {
       return
     }
 
+    // Compress large images on mobile before upload
+    if (isMobile && processedFile.size > 2 * 1024 * 1024) {
+      toast.loading("Optimizing image for upload...", { id: "image-upload" })
+      try {
+        processedFile = await compressImage(processedFile, 1920, 0.85)
+      } catch (compressError) {
+        // Continue with original file if compression fails
+      }
+    }
+
     setIsUploadingImage(true)
     toast.loading("Uploading image...", { id: "image-upload" })
     try {
       const formData = new FormData()
       formData.append("file", processedFile)
-      const result = await uploadBlogImage(formData)
+
+      const result = await uploadWithRetry(formData, isMobile ? 3 : 1)
+
       if (result.success && result.url) {
         setFeaturedImage(result.url)
         toast.success("Image uploaded successfully", { id: "image-upload" })
@@ -222,8 +304,7 @@ export default function EditBlogPostPage({ params }: Props) {
         toast.error(result.error || "Failed to upload image", { id: "image-upload" })
       }
     } catch (error) {
-      console.error("Failed to upload image:", error)
-      toast.error("Failed to upload image", { id: "image-upload" })
+      toast.error("Failed to upload image. Check your connection and try again.", { id: "image-upload" })
     } finally {
       setIsUploadingImage(false)
     }

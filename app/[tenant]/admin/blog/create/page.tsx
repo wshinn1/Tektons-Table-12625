@@ -77,7 +77,6 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.85): Promi
             const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
               type: "image/jpeg",
             })
-            console.log("[v0] Compressed from", file.size, "to", compressedFile.size)
             resolve(compressedFile)
           } else {
             resolve(file)
@@ -100,14 +99,12 @@ async function uploadWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`[v0] Upload attempt ${attempt}/${maxRetries}`)
       const result = await uploadBlogImage(formData)
       if (result.success) {
         return result
       }
       lastError = new Error(result.error || "Upload failed")
     } catch (error) {
-      console.log(`[v0] Attempt ${attempt} failed:`, error)
       lastError = error as Error
 
       // Wait before retry (exponential backoff)
@@ -233,12 +230,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
   const handleImageUpload = useCallback(
     async (file: File) => {
-      console.log("[v0] handleImageUpload called")
-      console.log("[v0] File name:", file.name)
-      console.log("[v0] File type:", file.type)
-      console.log("[v0] File size:", file.size)
-      console.log("[v0] User agent:", navigator.userAgent)
-
       if (!tenantId) {
         toast.error("Please wait for page to load")
         return null
@@ -247,7 +238,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
       let processedFile = file
 
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      console.log("[v0] Is mobile:", isMobile)
 
       const fileName = file.name.toLowerCase()
       const fileType = file.type.toLowerCase()
@@ -257,42 +247,28 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
       const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
 
-      console.log("[v0] Has HEIC extension:", hasHeicExtension)
-      console.log("[v0] Has HEIC MIME type:", hasHeicMimeType)
-      console.log("[v0] Has empty/generic type:", hasEmptyOrGenericType)
-      console.log("[v0] Is HEIC (final):", isHeic)
-
       if (isHeic) {
         toast.loading("Converting image format...", { id: "image-upload" })
-        console.log("[v0] Starting HEIC conversion process")
 
         try {
-          console.log("[v0] Attempting to import heic2any...")
           const heic2any = (await import("heic2any")).default
-          console.log("[v0] heic2any imported successfully")
 
-          console.log("[v0] Starting heic2any conversion...")
           const convertedBlob = await heic2any({
             blob: file,
             toType: "image/jpeg",
             quality: 0.85,
           })
-          console.log("[v0] heic2any conversion completed")
 
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob
-          console.log("[v0] Converted blob size:", blob.size)
 
           processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
             type: "image/jpeg",
           })
-          console.log("[v0] New file created, size:", processedFile.size)
           toast.dismiss("image-upload")
         } catch (conversionError) {
-          console.error("[v0] Client-side HEIC conversion failed:", conversionError)
           toast.dismiss("image-upload")
 
           toast.loading("Trying server conversion...", { id: "image-upload" })
-          console.log("[v0] Attempting server-side HEIC conversion")
 
           try {
             const formData = new FormData()
@@ -300,7 +276,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
             formData.append("tenantId", tenantId)
 
             const result = await uploadWithRetry(formData)
-            console.log("[v0] Server upload result:", result)
 
             if (result.success && result.url) {
               toast.success("Image uploaded!", { id: "image-upload" })
@@ -310,7 +285,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
               throw new Error(result.error || "Server conversion failed")
             }
           } catch (serverError) {
-            console.error("[v0] Server-side HEIC conversion also failed:", serverError)
             toast.error(
               "Could not process this image. Please open the photo in your Photos app, take a screenshot, and upload the screenshot instead.",
               { id: "image-upload", duration: 8000 },
@@ -335,14 +309,13 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         return null
       }
 
+      // Compress large images on mobile before upload
       if (isMobile && processedFile.size > 2 * 1024 * 1024) {
-        console.log("[v0] Large file on mobile, compressing before upload...")
         toast.loading("Optimizing image for upload...", { id: "image-upload" })
         try {
           processedFile = await compressImage(processedFile, 1920, 0.85)
-          console.log("[v0] Compression complete, new size:", processedFile.size)
         } catch (compressError) {
-          console.log("[v0] Compression failed, using original:", compressError)
+          // Continue with original file if compression fails
         }
       }
 
@@ -354,7 +327,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         formData.append("file", processedFile)
         formData.append("tenantId", tenantId)
 
-        console.log("[v0] Starting upload, file size:", processedFile.size)
         const result = await uploadWithRetry(formData, isMobile ? 3 : 1)
 
         if (result.success && result.url) {
@@ -365,7 +337,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           return null
         }
       } catch (error) {
-        console.error("[v0] Image upload error:", error)
         toast.error("Failed to upload image. Check your connection and try again.", { id: "image-upload" })
         return null
       } finally {
