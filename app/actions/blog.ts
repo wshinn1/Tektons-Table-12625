@@ -185,7 +185,7 @@ export async function updateBlogPost(
 
     const { data: existingPost, error: fetchError } = await supabase
       .from("blog_posts")
-      .select("status, tenant_id")
+      .select("status, tenant_id, is_premium")
       .eq("id", id)
       .single()
 
@@ -199,9 +199,15 @@ export async function updateBlogPost(
       throw new Error("Post not found")
     }
 
-    console.log("[v0] updateBlogPost: Found existing post for tenant:", existingPost.tenant_id)
+    console.log(
+      "[v0] updateBlogPost: Found existing post for tenant:",
+      existingPost.tenant_id,
+      "is_premium:",
+      existingPost.is_premium,
+    )
 
     const isBeingPublished = existingPost?.status === "draft" && data.status === "published"
+    const isBeingMarkedPremium = !existingPost?.is_premium && data.isPremium === true
 
     const updateData: any = {}
     if (data.title !== undefined) updateData.title = data.title
@@ -276,14 +282,25 @@ export async function updateBlogPost(
       })
     }
 
-    if (isBeingPublished && data.isPremium && (!existingPost?.tenant_id || existingPost.tenant_id === "platform")) {
-      console.log("[v0] Premium platform post being published, notifying tenants...")
+    const isPlatformPost = !existingPost?.tenant_id || existingPost.tenant_id === "platform"
+    const shouldNotifyTenants =
+      isPlatformPost &&
+      ((isBeingPublished && data.isPremium) ||
+        (isBeingMarkedPremium && (data.status === "published" || existingPost.status === "published")))
+
+    if (shouldNotifyTenants) {
+      console.log(
+        "[v0] Premium platform post notification triggered - isBeingPublished:",
+        isBeingPublished,
+        "isBeingMarkedPremium:",
+        isBeingMarkedPremium,
+      )
       notifyTenantsOfPremiumPost({
         id: post.id,
         title: post.title,
         excerpt: post.excerpt,
         slug: post.slug,
-        featuredImage: data.featuredImage || data.featuredImageUrl,
+        featuredImage: data.featuredImage || data.featuredImageUrl || post.featured_image_url,
       }).catch((err) => {
         console.error("[v0] Failed to notify tenants of premium post:", err)
       })
