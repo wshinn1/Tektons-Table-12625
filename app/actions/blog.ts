@@ -863,16 +863,12 @@ async function notifyTenantsOfPremiumPost(post: {
   try {
     const supabase = createAdminClient()
 
-    // Get all tenants with their user emails
     const { data: tenants, error } = await supabase
       .from("tenants")
       .select(`
         id,
         full_name,
-        user_id,
-        users:user_id (
-          email
-        )
+        email
       `)
       .eq("is_active", true)
 
@@ -890,8 +886,11 @@ async function notifyTenantsOfPremiumPost(post: {
 
     // Send emails to all tenants
     const emailPromises = tenants.map(async (tenant) => {
-      const email = (tenant.users as any)?.email
-      if (!email) return
+      const email = tenant.email
+      if (!email) {
+        console.log(`[v0] Tenant ${tenant.id} has no email, skipping`)
+        return
+      }
 
       try {
         await sendNewPremiumPostEmail(email, tenant.full_name || "there", {
@@ -900,6 +899,7 @@ async function notifyTenantsOfPremiumPost(post: {
           slug: post.slug,
           featuredImage: post.featuredImage,
         })
+        console.log(`[v0] Sent premium post notification to ${email}`)
       } catch (err) {
         console.error(`[v0] Failed to send premium post notification to ${email}:`, err)
       }
