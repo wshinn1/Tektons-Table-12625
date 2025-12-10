@@ -1,8 +1,8 @@
 import type React from "react"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import Link from "next/link"
-import { CreditCard } from "lucide-react"
+import { MarketingNav } from "@/components/marketing-nav"
+import { MarketingFooter } from "@/components/marketing-footer"
 
 export default async function AccountLayout({
   children,
@@ -19,21 +19,12 @@ export default async function AccountLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b">
-        <div className="container max-w-6xl py-4">
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/account/subscription"
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <CreditCard className="h-4 w-4" />
-              Subscription
-            </Link>
-          </nav>
-        </div>
-      </div>
-      {children}
+    <div className="min-h-screen bg-background flex flex-col">
+      <MarketingNav />
+
+      <main className="flex-1">{children}</main>
+
+      <MarketingFooter />
     </div>
   )
 }

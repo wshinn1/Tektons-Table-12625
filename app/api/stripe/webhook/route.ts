@@ -44,15 +44,142 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Webhook signature verification failed", details: err.message }, { status: 400 })
   }
 
-  const supabase = createAdminClient() // Use admin client instead of regular client
+  const supabase = createAdminClient()
   const resend = getResend()
 
   try {
     switch (event.type) {
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription
+        const metadata = subscription.metadata
+
+        console.log("[v0] Subscription event:", event.type)
+        console.log("[v0] Subscription metadata:", metadata)
+
+        // Check if this is a premium resources subscription
+        if (metadata?.subscription_type === "premium_resources") {
+          const userId = metadata.user_id
+
+          if (!userId) {
+            console.log("[v0] No user_id in subscription metadata")
+            return NextResponse.json({ error: "Missing user_id" }, { status: 400 })
+          }
+
+          console.log("[v0] Processing premium subscription for user:", userId)
+
+          const subscriptionData = {
+            user_id: userId,
+            stripe_subscription_id: subscription.id,
+            stripe_customer_id: subscription.customer as string,
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+            trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+            trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+            updated_at: new Date().toISOString(),
+          }
+
+          // Upsert the subscription record
+          const { error: upsertError } = await supabase.from("premium_subscriptions").upsert(subscriptionData, {
+            onConflict: "user_id",
+          })
+
+          if (upsertError) {
+            console.error("[v0] Error upserting premium subscription:", upsertError)
+            throw upsertError
+          }
+
+          console.log("[v0] Premium subscription saved successfully")
+
+          // Revalidate pages
+          revalidatePath("/resources", "page")
+          revalidatePath("/blog", "page")
+          revalidatePath("/account/subscription", "page")
+        }
+
+        break
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription
+        const metadata = subscription.metadata
+
+        if (metadata?.subscription_type === "premium_resources") {
+          const userId = metadata.user_id
+
+          if (userId) {
+            console.log("[v0] Canceling premium subscription for user:", userId)
+
+            const { error } = await supabase
+              .from("premium_subscriptions")
+              .update({
+                status: "canceled",
+                canceled_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", userId)
+
+            if (error) {
+              console.error("[v0] Error canceling premium subscription:", error)
+            }
+
+            revalidatePath("/resources", "page")
+            revalidatePath("/blog", "page")
+            revalidatePath("/account/subscription", "page")
+          }
+        }
+
+        break
+      }
+
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
 
         const metadata = session.metadata
+
+        if (metadata?.subscription_type === "premium_resources") {
+          console.log("[v0] Premium subscription checkout completed")
+          console.log("[v0] User ID:", metadata.user_id)
+          console.log("[v0] Subscription ID:", session.subscription)
+
+          // The subscription.created event will handle the database update
+          // But we can also handle it here for immediate effect
+          if (session.subscription && metadata.user_id) {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+
+            const subscriptionData = {
+              user_id: metadata.user_id,
+              stripe_subscription_id: subscription.id,
+              stripe_customer_id: subscription.customer as string,
+              status: subscription.status,
+              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              canceled_at: null,
+              trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+              trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+              updated_at: new Date().toISOString(),
+            }
+
+            const { error: upsertError } = await supabase.from("premium_subscriptions").upsert(subscriptionData, {
+              onConflict: "user_id",
+            })
+
+            if (upsertError) {
+              console.error("[v0] Error saving premium subscription from checkout:", upsertError)
+            } else {
+              console.log("[v0] Premium subscription saved from checkout session")
+            }
+
+            revalidatePath("/resources", "page")
+            revalidatePath("/blog", "page")
+            revalidatePath("/account/subscription", "page")
+          }
+
+          return NextResponse.json({ received: true })
+        }
+
         const tenantId = metadata?.tenant_id
         const campaignId = metadata?.campaign_id
         const donorEmail = session.customer_email || session.customer_details?.email
@@ -60,7 +187,9 @@ export async function POST(req: Request) {
         const authenticatedUserId = metadata?.authenticated_user_id
 
         if (!tenantId) {
-          return NextResponse.json({ error: "Missing tenant_id" }, { status: 400 })
+          // Not a tenant donation and not a premium subscription - skip
+          console.log("[v0] Checkout completed but no tenant_id or subscription_type - skipping")
+          return NextResponse.json({ received: true })
         }
 
         const { data: tenant, error: tenantError } = await supabase

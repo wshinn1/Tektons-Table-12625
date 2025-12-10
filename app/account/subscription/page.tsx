@@ -42,13 +42,11 @@ export default async function SubscriptionPage() {
     .single()
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl py-12 px-4">
-        <h1 className="text-3xl font-bold mb-2">Subscription</h1>
-        <p className="text-muted-foreground mb-8">Manage your Premium Resources subscription and billing</p>
+    <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-bold mb-2">Subscription</h1>
+      <p className="text-muted-foreground mb-8">Manage your Premium Resources subscription and billing</p>
 
-        <SubscriptionDashboard user={user} subscription={subscription} compedAccess={compedAccess} tenant={tenant} />
-      </div>
+      <SubscriptionDashboard user={user} subscription={subscription} compedAccess={compedAccess} tenant={tenant} />
     </div>
   )
 }
