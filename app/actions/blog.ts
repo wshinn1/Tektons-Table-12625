@@ -162,109 +162,133 @@ export async function updateBlogPost(
     isPremium?: boolean
   },
 ) {
-  const supabase = await createServerClient()
+  try {
+    const supabase = await createServerClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) {
-    throw new Error("Unauthorized")
-  }
-
-  const { data: existingPost } = await supabase.from("blog_posts").select("status, tenant_id").eq("id", id).single()
-
-  const isBeingPublished = existingPost?.status === "draft" && data.status === "published"
-
-  const updateData: any = {}
-  if (data.title !== undefined) updateData.title = data.title
-  if (data.subtitle !== undefined) updateData.subtitle = data.subtitle
-  if (data.slug !== undefined) updateData.slug = data.slug
-  if (data.content !== undefined) updateData.content = data.content
-  if (data.excerpt !== undefined) updateData.excerpt = data.excerpt
-  if (data.readTime !== undefined) {
-    updateData.read_time_minutes = data.readTime
-  } else if (data.content !== undefined) {
-    const wordCount = JSON.stringify(data.content).split(/\s+/).length
-    updateData.read_time_minutes = Math.max(1, Math.ceil(wordCount / 200))
-  }
-  if (data.featuredImage !== undefined) updateData.featured_image_url = data.featuredImage
-  if (data.featuredImageUrl !== undefined) updateData.featured_image_url = data.featuredImageUrl
-  if (data.featuredImageCaption !== undefined) updateData.featured_image_caption = data.featuredImageCaption
-  if (data.authorName !== undefined) updateData.author_name = data.authorName
-  if (data.metaDescription !== undefined) updateData.meta_description = data.metaDescription
-  if (data.allowComments !== undefined) updateData.allow_comments = data.allowComments
-  if (data.followersOnly !== undefined) updateData.followers_only = data.followersOnly
-  if (data.status !== undefined) {
-    updateData.status = data.status
-    if (data.status === "published") {
-      updateData.published_at = new Date().toISOString()
+    if (!user) {
+      console.error("[v0] updateBlogPost: Unauthorized - no user")
+      throw new Error("Unauthorized")
     }
-  }
-  if (data.showFeaturedImage !== undefined) updateData.show_featured_image = data.showFeaturedImage
-  if (data.navbarVisible !== undefined) updateData.navbar_visible = data.navbarVisible
-  if (data.isPremium !== undefined) updateData.is_premium = data.isPremium
-  if (data.resourceCategoryId !== undefined) updateData.resource_category_id = data.resourceCategoryId || null
 
-  console.log("[v0] Updating blog post:", id, "with data:", updateData)
+    console.log("[v0] updateBlogPost: User authenticated:", user.id)
 
-  const { data: post, error } = await supabase.from("blog_posts").update(updateData).eq("id", id).select().single()
+    const { data: existingPost, error: fetchError } = await supabase
+      .from("blog_posts")
+      .select("status, tenant_id")
+      .eq("id", id)
+      .single()
 
-  if (error) {
-    console.error("Failed to update blog post:", error)
-    throw new Error("Failed to update blog post")
-  }
-
-  console.log("[v0] Blog post updated successfully:", post.id)
-
-  // Update categories if provided
-  if (data.categoryIds !== undefined) {
-    await supabase.from("blog_post_categories").delete().eq("post_id", id)
-    if (data.categoryIds.length > 0) {
-      const categoryInserts = data.categoryIds.map((categoryId) => ({
-        post_id: id,
-        category_id: categoryId,
-      }))
-      await supabase.from("blog_post_categories").insert(categoryInserts)
+    if (fetchError) {
+      console.error("[v0] updateBlogPost: Failed to fetch existing post:", fetchError)
+      throw new Error(`Failed to fetch post: ${fetchError.message}`)
     }
-  }
 
-  // Update tags if provided
-  if (data.tagIds !== undefined) {
-    await supabase.from("blog_post_tags").delete().eq("post_id", id)
-    if (data.tagIds.length > 0) {
-      const tagInserts = data.tagIds.map((tagId) => ({
-        post_id: id,
-        tag_id: tagId,
-      }))
-      await supabase.from("blog_post_tags").insert(tagInserts)
+    if (!existingPost) {
+      console.error("[v0] updateBlogPost: Post not found:", id)
+      throw new Error("Post not found")
     }
-  }
 
-  // Draft being published, sending notifications...
-  if (isBeingPublished && existingPost?.tenant_id && existingPost.tenant_id !== "platform") {
-    console.log("[v0] Draft being published, sending notifications...")
-    sendPostNotificationEmails(post.id, existingPost.tenant_id).catch((err) => {
-      console.error("[v0] Failed to send post notifications:", err)
-    })
-  }
+    console.log("[v0] updateBlogPost: Found existing post for tenant:", existingPost.tenant_id)
 
-  if (isBeingPublished && data.isPremium && (!existingPost?.tenant_id || existingPost.tenant_id === "platform")) {
-    console.log("[v0] Premium platform post being published, notifying tenants...")
-    notifyTenantsOfPremiumPost({
-      id: post.id,
-      title: post.title,
-      excerpt: post.excerpt,
-      slug: post.slug,
-    }).catch((err) => {
-      console.error("[v0] Failed to notify tenants of premium post:", err)
-    })
-  }
+    const isBeingPublished = existingPost?.status === "draft" && data.status === "published"
 
-  revalidatePath("/admin/blog")
-  revalidatePath(`/blog/${post.slug}`)
-  revalidatePath("/resources")
-  return post
+    const updateData: any = {}
+    if (data.title !== undefined) updateData.title = data.title
+    if (data.subtitle !== undefined) updateData.subtitle = data.subtitle
+    if (data.slug !== undefined) updateData.slug = data.slug
+    if (data.content !== undefined) updateData.content = data.content
+    if (data.excerpt !== undefined) updateData.excerpt = data.excerpt
+    if (data.readTime !== undefined) {
+      updateData.read_time_minutes = data.readTime
+    } else if (data.content !== undefined) {
+      const wordCount = JSON.stringify(data.content).split(/\s+/).length
+      updateData.read_time_minutes = Math.max(1, Math.ceil(wordCount / 200))
+    }
+    if (data.featuredImage !== undefined) updateData.featured_image_url = data.featuredImage
+    if (data.featuredImageUrl !== undefined) updateData.featured_image_url = data.featuredImageUrl
+    if (data.featuredImageCaption !== undefined) updateData.featured_image_caption = data.featuredImageCaption
+    if (data.authorName !== undefined) updateData.author_name = data.authorName
+    if (data.metaDescription !== undefined) updateData.meta_description = data.metaDescription
+    if (data.allowComments !== undefined) updateData.allow_comments = data.allowComments
+    if (data.followersOnly !== undefined) updateData.followers_only = data.followersOnly
+    if (data.status !== undefined) {
+      updateData.status = data.status
+      if (data.status === "published") {
+        updateData.published_at = new Date().toISOString()
+      }
+    }
+    if (data.showFeaturedImage !== undefined) updateData.show_featured_image = data.showFeaturedImage
+    if (data.navbarVisible !== undefined) updateData.navbar_visible = data.navbarVisible
+    if (data.isPremium !== undefined) updateData.is_premium = data.isPremium
+    if (data.resourceCategoryId !== undefined) updateData.resource_category_id = data.resourceCategoryId || null
+
+    console.log("[v0] updateBlogPost: Updating with keys:", Object.keys(updateData))
+
+    const { data: post, error } = await supabase.from("blog_posts").update(updateData).eq("id", id).select().single()
+
+    if (error) {
+      console.error("[v0] updateBlogPost: Supabase update error:", error)
+      throw new Error(`Failed to update blog post: ${error.message}`)
+    }
+
+    console.log("[v0] Blog post updated successfully:", post.id)
+
+    // Update categories if provided
+    if (data.categoryIds !== undefined) {
+      await supabase.from("blog_post_categories").delete().eq("post_id", id)
+      if (data.categoryIds.length > 0) {
+        const categoryInserts = data.categoryIds.map((categoryId) => ({
+          post_id: id,
+          category_id: categoryId,
+        }))
+        await supabase.from("blog_post_categories").insert(categoryInserts)
+      }
+    }
+
+    // Update tags if provided
+    if (data.tagIds !== undefined) {
+      await supabase.from("blog_post_tags").delete().eq("post_id", id)
+      if (data.tagIds.length > 0) {
+        const tagInserts = data.tagIds.map((tagId) => ({
+          post_id: id,
+          tag_id: tagId,
+        }))
+        await supabase.from("blog_post_tags").insert(tagInserts)
+      }
+    }
+
+    // Draft being published, sending notifications...
+    if (isBeingPublished && existingPost?.tenant_id && existingPost.tenant_id !== "platform") {
+      console.log("[v0] Draft being published, sending notifications...")
+      sendPostNotificationEmails(post.id, existingPost.tenant_id).catch((err) => {
+        console.error("[v0] Failed to send post notifications:", err)
+      })
+    }
+
+    if (isBeingPublished && data.isPremium && (!existingPost?.tenant_id || existingPost.tenant_id === "platform")) {
+      console.log("[v0] Premium platform post being published, notifying tenants...")
+      notifyTenantsOfPremiumPost({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        slug: post.slug,
+      }).catch((err) => {
+        console.error("[v0] Failed to notify tenants of premium post:", err)
+      })
+    }
+
+    revalidatePath("/admin/blog")
+    revalidatePath(`/blog/${post.slug}`)
+    revalidatePath("/resources")
+    return post
+  } catch (err) {
+    console.error("[v0] updateBlogPost: Caught error:", err)
+    throw err
+  }
 }
 
 export async function deleteBlogPost(id: string) {

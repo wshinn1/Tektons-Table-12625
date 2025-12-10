@@ -382,7 +382,14 @@ export default function TenantEditBlogPostPage({ params }: Props) {
 
     setIsSaving(true)
     try {
-      await updateBlogPost(id, {
+      console.log("[v0] Saving blog post:", {
+        id,
+        titleLength: title.length,
+        contentLength: content?.length || 0,
+        status: newStatus || status,
+      })
+
+      const result = await updateBlogPost(id, {
         title,
         subtitle: subtitle.trim() || undefined,
         slug,
@@ -401,11 +408,13 @@ export default function TenantEditBlogPostPage({ params }: Props) {
         navbarVisible,
       })
 
+      console.log("[v0] Blog post saved successfully:", result)
       toast.success(newStatus === "published" ? "Post published!" : "Changes saved!")
       router.push("/admin/blog")
     } catch (error) {
-      console.error(error)
-      toast.error("Failed to save changes")
+      console.error("[v0] Failed to save blog post:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error"
+      toast.error(`Failed to save changes: ${errorMessage}`)
     } finally {
       setIsSaving(false)
     }
