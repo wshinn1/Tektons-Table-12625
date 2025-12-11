@@ -728,8 +728,8 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 data-[active=true]:bg-white data-[active=true]:shadow-sm"
-            data-active="true"
+            className="h-8 w-8 data-[active=true]:bg-white data-[active=true]:shadow-sm"\
+            data-[active=true]:bg-white data-[active=true]:shadow-sm
             onClick={() => setDevice("Desktop")}
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4">
@@ -920,17 +920,11 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
             onValueChange={(v) => setLeftPanel(v as any)}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <TabsList className="w-full rounded-none border-b bg-transparent h-auto p-0">
-              <TabsTrigger
-                value="blocks"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
-              >
+            <TabsList className="w-full rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
+              <TabsTrigger value="blocks" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
                 Blocks
               </TabsTrigger>
-              <TabsTrigger
-                value="layers"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
-              >
+              <TabsTrigger value="layers" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
                 Layers
               </TabsTrigger>
             </TabsList>
@@ -995,17 +989,11 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
             onValueChange={(v) => setRightPanel(v as any)}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <TabsList className="w-full rounded-none border-b bg-transparent h-auto p-0">
-              <TabsTrigger
-                value="styles"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
-              >
+            <TabsList className="w-full rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
+              <TabsTrigger value="styles" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
                 Styles
               </TabsTrigger>
-              <TabsTrigger
-                value="properties"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
-              >
+              <TabsTrigger value="properties" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
                 Properties
               </TabsTrigger>
             </TabsList>
@@ -1041,7 +1029,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
                   )}
                 </div>
 
-                {/* Component name badge */}
+                {/* Component badge */}
                 {selectedComponent && (
                   <div className="mt-3 flex items-center gap-2">
                     <div className="bg-violet-600 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
@@ -1079,7 +1067,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
                   <svg viewBox="0 0 24 24" className="h-4 w-4 text-slate-500">
                     <path
                       fill="currentColor"
-                      d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+                      d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
                     />
                   </svg>
                   <span className="text-sm font-medium">Page Settings</span>
