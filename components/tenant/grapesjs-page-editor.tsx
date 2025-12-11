@@ -10,8 +10,8 @@ import { ArrowLeft, Save, Sparkles, X, Loader2, LayoutTemplate } from "lucide-re
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createTenantPage, updateTenantPage } from "@/app/actions/tenant-pages"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import Image from "next/image"
 
 interface Page {
   id: string
@@ -37,24 +37,13 @@ const PAGE_TEMPLATES = [
     id: "blank",
     name: "Blank Page",
     media: "/blank-white-page.jpg",
-    data: {
-      pages: [
-        {
-          name: "Blank Page",
-          component: '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
-        },
-      ],
-    },
+    content: '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
   },
   {
     id: "landing",
     name: "Landing Page",
     media: "/modern-landing-page-hero.jpg",
-    data: {
-      pages: [
-        {
-          name: "Landing Page",
-          component: `
+    content: `
             <section data-gjs-name="Hero" style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 60px 20px;">
               <div style="text-align: center; max-width: 800px;">
                 <h1 style="color: white; font-size: 48px; font-weight: 700; margin: 0 0 24px 0; line-height: 1.2;">Welcome to Our Ministry</h1>
@@ -83,19 +72,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "about",
     name: "About Us",
     media: "/about-us-team-page.jpg",
-    data: {
-      pages: [
-        {
-          name: "About Us",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: #f9fafb;">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: #1f2937; margin: 0 0 24px;">About Our Ministry</h1>
@@ -122,19 +104,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "events",
     name: "Events Page",
     media: "/events-calendar-page.jpg",
-    data: {
-      pages: [
-        {
-          name: "Events",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: white; margin: 0 0 16px;">Upcoming Events</h1>
@@ -170,19 +145,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "donate",
     name: "Donation Page",
     media: "/donation-giving-page.jpg",
-    data: {
-      pages: [
-        {
-          name: "Give",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: white; margin: 0 0 16px;">Support Our Mission</h1>
@@ -200,19 +168,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "contact",
     name: "Contact Page",
     media: "/contact-form-page.png",
-    data: {
-      pages: [
-        {
-          name: "Contact",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: #f9fafb;">
               <div style="max-width: 600px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: #1f2937; margin: 0 0 16px;">Get in Touch</h1>
@@ -239,19 +200,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "sermons",
     name: "Sermons Page",
     media: "/sermons-video-grid.jpg",
-    data: {
-      pages: [
-        {
-          name: "Sermons",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: #1f2937;">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: white; margin: 0 0 16px;">Sermons & Messages</h1>
@@ -279,19 +233,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "ministries",
     name: "Ministries Page",
     media: "/ministries-programs-cards.jpg",
-    data: {
-      pages: [
-        {
-          name: "Ministries",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: white; margin: 0 0 16px;">Our Ministries</h1>
@@ -324,19 +271,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "volunteer",
     name: "Volunteer Page",
     media: "/volunteer-signup-page.jpg",
-    data: {
-      pages: [
-        {
-          name: "Volunteer",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: white; margin: 0 0 16px;">Volunteer With Us</h1>
@@ -375,19 +315,12 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
   {
     id: "testimonials",
     name: "Testimonials Page",
     media: "/testimonials-quotes-page.jpg",
-    data: {
-      pages: [
-        {
-          name: "Testimonials",
-          component: `
+    content: `
             <section style="padding: 80px 20px; background: #f9fafb;">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: #1f2937; margin: 0 0 16px;">Stories of Transformation</h1>
@@ -421,9 +354,6 @@ const PAGE_TEMPLATES = [
               </div>
             </section>
           `,
-        },
-      ],
-    },
   },
 ]
 
@@ -435,14 +365,14 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
   const [pageSlug, setPageSlug] = useState(page?.slug || "untitled-page")
   const [isPublished, setIsPublished] = useState(page?.is_published || false)
   const [isSaving, setIsSaving] = useState(false)
-  const [editorReady, setEditorReady] = useState(false)
+  const [editorReady, setEditorReady] = useState(false) // Initialize to false
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [showAiAssistant, setShowAiAssistant] = useState(false)
   const [aiPrompt, setAiPrompt] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([])
 
-  const [showTemplatePicker, setShowTemplatePicker] = useState(!page?.id)
+  const [showTemplatePicker, setShowTemplatePicker] = useState(!page?.id) // Moved outside useEffect dependencies
 
   const generateSlug = (title: string) => {
     return title
@@ -456,10 +386,17 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
   const handleAiGenerate = async () => {
     console.log("[v0] AI Generate called with prompt:", aiPrompt)
     console.log("[v0] Editor instance:", editorInstanceRef.current)
+    console.log("[v0] Editor ready:", editorReady)
 
     if (!aiPrompt.trim()) {
       console.log("[v0] Empty prompt, returning")
       toast.error("Please enter a prompt")
+      return
+    }
+
+    if (!editorInstanceRef.current) {
+      console.log("[v0] Editor not ready yet")
+      toast.error("Please wait for the editor to finish loading")
       return
     }
 
@@ -490,37 +427,62 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
       if (data.html) {
         // Insert the generated HTML into the editor
         const editor = editorInstanceRef.current
-        console.log("[v0] Inserting HTML into editor")
+        console.log("[v0] Inserting HTML into editor, methods available:", {
+          addComponents: !!editor?.addComponents,
+          getWrapper: !!editor?.getWrapper,
+          setComponents: !!editor?.setComponents,
+          Components: !!editor?.Components,
+          DomComponents: !!editor?.DomComponents,
+        })
 
         if (editor) {
-          // Try different methods to add content
           try {
-            if (editor.addComponents) {
+            if (editor.Components?.addComponent) {
+              editor.Components.addComponent(data.html)
+              console.log("[v0] Added via Components.addComponent")
+            } else if (editor.DomComponents?.addComponent) {
+              editor.DomComponents.addComponent(data.html)
+              console.log("[v0] Added via DomComponents.addComponent")
+            } else if (editor.addComponents) {
               editor.addComponents(data.html)
               console.log("[v0] Added via addComponents")
             } else if (editor.getWrapper) {
               const wrapper = editor.getWrapper()
-              wrapper.append(data.html)
-              console.log("[v0] Added via wrapper.append")
+              if (wrapper?.append) {
+                wrapper.append(data.html)
+                console.log("[v0] Added via wrapper.append")
+              } else if (wrapper?.components) {
+                wrapper.components().add(data.html)
+                console.log("[v0] Added via wrapper.components().add")
+              }
             } else if (editor.setComponents) {
               const currentHtml = editor.getHtml?.() || ""
               editor.setComponents(currentHtml + data.html)
               console.log("[v0] Added via setComponents")
+            } else {
+              console.error("[v0] No method available to add content to editor")
+              toast.error("Unable to insert content - editor method not found")
             }
           } catch (insertError) {
             console.error("[v0] Error inserting content:", insertError)
+            toast.error("Error inserting content into editor")
           }
+        } else {
+          console.error("[v0] Editor is null/undefined after generation")
+          toast.error("Editor not available - please try again")
         }
+      }
 
-        setAiMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              data.message || "I've added the content to your page. You can now customize it using the visual editor.",
-          },
-        ])
-        toast.success("Content generated successfully!")
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            data.message || "I've added the content to your page. You can now customize it using the visual editor.",
+        },
+      ])
+      if (data.html && editorInstanceRef.current) {
+        toast.success("Content generated and added to page!")
       }
     } catch (error) {
       console.error("[v0] AI generation error:", error)
@@ -552,33 +514,33 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
         try {
           const sdkPlugins = await import("@grapesjs/studio-sdk-plugins")
 
-          // Only add plugins that exist and have an init method
           if (sdkPlugins.layoutSidebarButtons?.init) {
             plugins.push(
               sdkPlugins.layoutSidebarButtons.init({
+                licenseKey: GRAPESJS_LICENSE_KEY,
                 sidebarButtons: ({ sidebarButtons }: any) => sidebarButtons,
               }),
             )
           }
 
           if (sdkPlugins.flexColumns?.init) {
-            plugins.push(sdkPlugins.flexColumns.init({}))
+            plugins.push(sdkPlugins.flexColumns.init({ licenseKey: GRAPESJS_LICENSE_KEY }))
           }
 
           if (sdkPlugins.proseMirror?.init) {
-            plugins.push(sdkPlugins.proseMirror.init({}))
+            plugins.push(sdkPlugins.proseMirror.init({ licenseKey: GRAPESJS_LICENSE_KEY }))
           }
 
           if (sdkPlugins.fullSize?.init) {
-            plugins.push(sdkPlugins.fullSize.init({}))
+            plugins.push(sdkPlugins.fullSize.init({ licenseKey: GRAPESJS_LICENSE_KEY }))
           }
 
           if (sdkPlugins.lightGallery?.init) {
-            plugins.push(sdkPlugins.lightGallery.init({}))
+            plugins.push(sdkPlugins.lightGallery.init({ licenseKey: GRAPESJS_LICENSE_KEY }))
           }
 
           if (sdkPlugins.listPages?.init) {
-            plugins.push(sdkPlugins.listPages.init({}))
+            plugins.push(sdkPlugins.listPages.init({ licenseKey: GRAPESJS_LICENSE_KEY }))
           }
         } catch (pluginError) {
           console.warn("[v0] Some SDK plugins could not be loaded:", pluginError)
@@ -602,23 +564,12 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
 
         plugins.push((editor: any) => {
           editor.onReady(() => {
-            // Only show template dialog for new pages (no existing page)
-            if (!page?.id && showTemplatePicker) {
-              // Check showTemplatePicker state
-              editor.runCommand("studio:layoutToggle", {
-                id: "templates-panel",
-                header: false,
-                placer: { type: "dialog", title: "Choose a template for your page", size: "l" },
-                layout: {
-                  type: "panelTemplates",
-                  content: { itemsPerRow: 3 },
-                  onSelect: ({ loadTemplate, template }: any) => {
-                    loadTemplate(template)
-                    editor.runCommand("studio:layoutRemove", { id: "templates-panel" })
-                    setShowTemplatePicker(false) // Hide picker after selection
-                  },
-                },
-              })
+            console.log("[v0] Editor onReady fired, showTemplatePicker:", !page?.id)
+            // Only show template dialog for new pages
+            if (!page?.id) {
+              setTimeout(() => {
+                setShowTemplatePicker(true)
+              }, 500)
             }
           })
         })
@@ -960,7 +911,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
         editorInstanceRef.current = editor
         setEditorReady(true)
 
-        console.log("[v0] GrapesJS Studio SDK initialized successfully")
+        console.log("[v0] GrapesJS Studio SDK initialized successfully, editor stored:", !!editorInstanceRef.current)
       } catch (error) {
         console.error("[v0] Error initializing GrapesJS Studio SDK:", error)
         toast.error("Failed to initialize page editor")
@@ -975,7 +926,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
         editorInstanceRef.current = null
       }
     }
-  }, [page, pageTitle, showTemplatePicker]) // Added showTemplatePicker to dependency array
+  }, [page, pageTitle]) // Removed showTemplatePicker from dependencies
 
   // Handle save
   const handleSave = useCallback(async () => {
@@ -1046,6 +997,31 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
       setIsSaving(false)
     }
   }, [page, pageTitle, pageSlug, isPublished, tenantId, tenantSlug, router])
+
+  const handleSelectTemplate = (template: (typeof PAGE_TEMPLATES)[0]) => {
+    console.log("[v0] Template selected:", template.id)
+    const editor = editorInstanceRef.current
+
+    if (editor && template.content) {
+      try {
+        // Clear existing content and set template
+        if (editor.setComponents) {
+          editor.setComponents(template.content)
+          console.log("[v0] Template loaded via setComponents")
+        } else if (editor.DomComponents?.clear && editor.addComponents) {
+          editor.DomComponents.clear()
+          editor.addComponents(template.content)
+          console.log("[v0] Template loaded via clear + addComponents")
+        }
+        toast.success(`Template "${template.name}" loaded!`)
+      } catch (err) {
+        console.error("[v0] Error loading template:", err)
+        toast.error("Failed to load template")
+      }
+    }
+
+    setShowTemplatePicker(false)
+  }
 
   return (
     <div className="flex flex-col h-screen bg-white">
@@ -1203,62 +1179,39 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
       </Dialog>
 
       {/* Template Picker Modal */}
-      <Dialog open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
-        <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Choose a Template</DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Select a template to start with, or choose "Blank Page" to start from scratch.
-            </p>
-          </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-4">
-            {PAGE_TEMPLATES.map((template) => (
-              <Card
-                key={template.id}
-                className="cursor-pointer hover:border-violet-500 hover:shadow-md transition-all"
-                onClick={() => {
-                  // Load the template content into the editor
-                  const editor = editorInstanceRef.current
-                  if (editor && template.data?.pages?.[0]?.component) {
-                    try {
-                      // Clear existing content and add template
-                      if (editor.DomComponents) {
-                        const wrapper = editor.DomComponents.getWrapper()
-                        if (wrapper) {
-                          wrapper.components(template.data.pages[0].component)
-                        }
-                      } else if (editor.setComponents) {
-                        editor.setComponents(template.data.pages[0].component)
-                      }
-                      toast.success(`Template "${template.name}" loaded!`)
-                    } catch (err) {
-                      console.error("[v0] Error loading template:", err)
-                      toast.error("Failed to load template")
-                    }
-                  }
-                  setShowTemplatePicker(false)
-                }}
-              >
-                <div className="relative">
-                  <img
-                    src={template.media || "/placeholder.svg?height=150&width=300&query=page template"}
-                    alt={template.name}
-                    className="w-full h-32 object-cover rounded-t-lg bg-gray-100"
-                  />
-                </div>
-                <CardContent className="p-3">
-                  <h4 className="text-sm font-semibold text-center">{template.name}</h4>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowTemplatePicker(false)}>
-              Start Blank
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {showTemplatePicker && (
+        <Dialog open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Choose a Template</DialogTitle>
+              <DialogDescription>
+                Select a template to start with, or choose "Blank Page" to start from scratch.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1 pr-2">
+              <div className="grid grid-cols-3 gap-4 py-4">
+                {PAGE_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelectTemplate(template)}
+                    className="group relative aspect-[4/3] rounded-lg border-2 border-muted hover:border-primary transition-colors overflow-hidden text-left"
+                  >
+                    <Image
+                      src={template.media || "/placeholder.svg?height=200&width=300"}
+                      alt={template.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                      <p className="text-white font-medium text-sm">{template.name}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
