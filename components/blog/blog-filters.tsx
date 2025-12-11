@@ -60,13 +60,13 @@ export function BlogFilters({ categories, tags, basePath }: BlogFiltersProps) {
 
       {categories.length > 0 && (
         <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Categories</h3>
+          <h3 className="mb-3 text-base font-semibold uppercase tracking-wide text-muted-foreground">Categories</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <Badge
                 key={category.id}
                 variant={selectedCategory === category.slug ? "default" : "outline"}
-                className={`cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground ${
+                className={`cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground text-sm px-3 py-1.5 ${
                   category.is_premium && selectedCategory !== category.slug
                     ? "border-amber-500 text-amber-700 hover:bg-amber-500 hover:text-white"
                     : ""
@@ -83,13 +83,13 @@ export function BlogFilters({ categories, tags, basePath }: BlogFiltersProps) {
 
       {tags.length > 0 && (
         <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Tags</h3>
+          <h3 className="mb-3 text-base font-semibold uppercase tracking-wide text-muted-foreground">Tags</h3>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <Badge
                 key={tag.id}
                 variant={selectedTag === tag.slug ? "default" : "secondary"}
-                className="cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground"
+                className="cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground text-sm px-3 py-1.5"
                 onClick={() => updateFilters("tag", selectedTag === tag.slug ? null : tag.slug)}
               >
                 {tag.name}

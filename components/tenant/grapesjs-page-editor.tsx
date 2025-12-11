@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Save, Sparkles, X, Loader2, LayoutTemplate } from "lucide-react"
+import { ArrowLeft, Save, Sparkles, X, Loader2, LayoutTemplate, FileText } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createTenantPage, updateTenantPage } from "@/app/actions/tenant-pages"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import Image from "next/image"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface Page {
   id: string
@@ -71,7 +70,7 @@ const PAGE_TEMPLATES = [
                 </div>
               </div>
             </section>
-          `,
+            `,
   },
   {
     id: "about",
@@ -385,115 +384,88 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
 
   const handleAiGenerate = async () => {
     console.log("[v0] AI Generate called with prompt:", aiPrompt)
-    console.log("[v0] Editor instance:", editorInstanceRef.current)
-    console.log("[v0] Editor ready:", editorReady)
 
-    if (!aiPrompt.trim()) {
-      console.log("[v0] Empty prompt, returning")
-      toast.error("Please enter a prompt")
+    const editor = editorInstanceRef.current
+    console.log("[v0] Editor instance from ref:", !!editor)
+    console.log("[v0] Editor ready state:", editorReady)
+
+    if (!editor) {
+      toast.error("Editor not ready yet. Please wait a moment and try again.")
+      console.log("[v0] Editor not ready - ref is null")
       return
     }
 
-    if (!editorInstanceRef.current) {
-      console.log("[v0] Editor not ready yet")
-      toast.error("Please wait for the editor to finish loading")
+    if (!aiPrompt.trim()) {
+      toast.error("Please enter a prompt")
       return
     }
 
     setAiLoading(true)
     setAiMessages((prev) => [...prev, { role: "user", content: aiPrompt }])
-    const currentPrompt = aiPrompt
-    setAiPrompt("") // Clear immediately
 
     try {
-      console.log("[v0] Sending request to /api/ai/generate-page")
+      console.log("[v0] Calling AI API...")
       const response = await fetch("/api/ai/generate-page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: currentPrompt }),
+        body: JSON.stringify({ prompt: aiPrompt }),
       })
 
-      console.log("[v0] Response status:", response.status)
+      console.log("[v0] AI API response status:", response.status)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error("[v0] API error:", errorData)
         throw new Error(errorData.error || "Failed to generate content")
       }
 
       const data = await response.json()
-      console.log("[v0] Response data:", data)
+      console.log("[v0] AI API response data received, html length:", data.html?.length)
 
       if (data.html) {
-        // Insert the generated HTML into the editor
-        const editor = editorInstanceRef.current
-        console.log("[v0] Inserting HTML into editor, methods available:", {
-          addComponents: !!editor?.addComponents,
-          getWrapper: !!editor?.getWrapper,
-          setComponents: !!editor?.setComponents,
-          Components: !!editor?.Components,
-          DomComponents: !!editor?.DomComponents,
-        })
-
-        if (editor) {
-          try {
-            if (editor.Components?.addComponent) {
-              editor.Components.addComponent(data.html)
-              console.log("[v0] Added via Components.addComponent")
-            } else if (editor.DomComponents?.addComponent) {
-              editor.DomComponents.addComponent(data.html)
-              console.log("[v0] Added via DomComponents.addComponent")
-            } else if (editor.addComponents) {
-              editor.addComponents(data.html)
-              console.log("[v0] Added via addComponents")
-            } else if (editor.getWrapper) {
-              const wrapper = editor.getWrapper()
-              if (wrapper?.append) {
-                wrapper.append(data.html)
-                console.log("[v0] Added via wrapper.append")
-              } else if (wrapper?.components) {
-                wrapper.components().add(data.html)
-                console.log("[v0] Added via wrapper.components().add")
-              }
-            } else if (editor.setComponents) {
-              const currentHtml = editor.getHtml?.() || ""
-              editor.setComponents(currentHtml + data.html)
-              console.log("[v0] Added via setComponents")
-            } else {
-              console.error("[v0] No method available to add content to editor")
-              toast.error("Unable to insert content - editor method not found")
-            }
-          } catch (insertError) {
-            console.error("[v0] Error inserting content:", insertError)
-            toast.error("Error inserting content into editor")
+        // Try multiple methods to insert content
+        try {
+          // Method 1: addComponents
+          if (editor.addComponents) {
+            editor.addComponents(data.html)
+            console.log("[v0] Content inserted via addComponents")
           }
-        } else {
-          console.error("[v0] Editor is null/undefined after generation")
-          toast.error("Editor not available - please try again")
+          // Method 2: DomComponents
+          else if (editor.DomComponents?.addComponent) {
+            editor.DomComponents.addComponent(data.html)
+            console.log("[v0] Content inserted via DomComponents.addComponent")
+          }
+          // Method 3: Get wrapper and add
+          else if (editor.getWrapper) {
+            const wrapper = editor.getWrapper()
+            wrapper.append(data.html)
+            console.log("[v0] Content inserted via wrapper.append")
+          }
+
+          setAiMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "I've created a component for you. You can now customize it using the visual editor.",
+            },
+          ])
+          toast.success("Content generated successfully!")
+        } catch (insertError) {
+          console.error("[v0] Error inserting content:", insertError)
+          toast.error("Generated content but failed to insert it")
         }
       }
 
-      setAiMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            data.message || "I've added the content to your page. You can now customize it using the visual editor.",
-        },
-      ])
-      if (data.html && editorInstanceRef.current) {
-        toast.success("Content generated and added to page!")
-      }
+      setAiPrompt("")
     } catch (error) {
       console.error("[v0] AI generation error:", error)
       setAiMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+          content: `Error: ${error instanceof Error ? error.message : "Failed to generate content"}`,
         },
       ])
-      toast.error("Failed to generate content")
+      toast.error(error instanceof Error ? error.message : "Failed to generate content")
     } finally {
       setAiLoading(false)
     }
@@ -564,7 +536,12 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
 
         plugins.push((editor: any) => {
           editor.onReady(() => {
-            console.log("[v0] Editor onReady fired, showTemplatePicker:", !page?.id)
+            console.log("[v0] Editor onReady fired, storing editor instance")
+            // Store editor instance HERE since it's now fully ready
+            editorInstanceRef.current = editor
+            setEditorReady(true)
+            console.log("[v0] Editor stored in onReady, ref is set:", !!editorInstanceRef.current)
+
             // Only show template dialog for new pages
             if (!page?.id) {
               setTimeout(() => {
@@ -669,9 +646,9 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
                 id: "column2",
                 label: "2 Columns",
                 category: "Layout",
-                content: `<div data-gjs-type="row" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; width: 100%;">
-                  <div data-gjs-type="cell" style="flex: 1 1 45%; min-width: 200px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
-                  <div data-gjs-type="cell" style="flex: 1 1 45%; min-width: 200px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                content: `<div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; padding: 10px; width: 100%;">
+                  <div style="flex: 1; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Column 1</div>
+                  <div style="flex: 1; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Column 2</div>
                 </div>`,
                 media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h7v16H4zm9 0h7v16h-7z"/></svg>',
               },
@@ -679,21 +656,21 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
                 id: "column3",
                 label: "3 Columns",
                 category: "Layout",
-                content: `<div data-gjs-type="row" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; width: 100%;">
-                  <div data-gjs-type="cell" style="flex: 1 1 30%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
-                  <div data-gjs-type="cell" style="flex: 1 1 30%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
-                  <div data-gjs-type="cell" style="flex: 1 1 30%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                content: `<div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; padding: 10px; width: 100%;">
+                  <div style="flex: 1; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Column 1</div>
+                  <div style="flex: 1; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Column 2</div>
+                  <div style="flex: 1; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Column 3</div>
                 </div>`,
                 media:
-                  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h5v16H4zm6 0h4v16h-4zm6 0h4v16h-4z"/></svg>',
+                  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h4v16H4zm6 0h4v16h-4zm6 0h4v16h-4z"/></svg>',
               },
               {
-                id: "column37",
+                id: "column2-37",
                 label: "2 Columns 3/7",
                 category: "Layout",
-                content: `<div data-gjs-type="row" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; width: 100%;">
-                  <div data-gjs-type="cell" style="flex: 3 1 25%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
-                  <div data-gjs-type="cell" style="flex: 7 1 60%; min-width: 200px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                content: `<div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; padding: 10px; width: 100%;">
+                  <div style="flex: 3; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Sidebar</div>
+                  <div style="flex: 7; min-height: 75px; padding: 10px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;">Main Content</div>
                 </div>`,
                 media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h5v16H4zm7 0h9v16h-9z"/></svg>',
               },
@@ -908,10 +885,8 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
           },
         })
 
-        editorInstanceRef.current = editor
-        setEditorReady(true)
-
-        console.log("[v0] GrapesJS Studio SDK initialized successfully, editor stored:", !!editorInstanceRef.current)
+        // The createStudioEditor returns before onReady fires, so we store it in onReady instead
+        console.log("[v0] GrapesJS Studio SDK createStudioEditor completed")
       } catch (error) {
         console.error("[v0] Error initializing GrapesJS Studio SDK:", error)
         toast.error("Failed to initialize page editor")
@@ -1178,39 +1153,48 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
         </DialogContent>
       </Dialog>
 
-      {/* Template Picker Modal */}
       {showTemplatePicker && (
-        <Dialog open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Choose a Template</DialogTitle>
-              <DialogDescription>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-lg shadow-xl w-[90vw] max-w-4xl max-h-[85vh] flex flex-col">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Choose a Template</h2>
+              <p className="text-muted-foreground text-sm mt-1">
                 Select a template to start with, or choose "Blank Page" to start from scratch.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="overflow-y-auto flex-1 pr-2">
-              <div className="grid grid-cols-3 gap-4 py-4">
+              </p>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {PAGE_TEMPLATES.map((template) => (
                   <button
                     key={template.id}
                     onClick={() => handleSelectTemplate(template)}
-                    className="group relative aspect-[4/3] rounded-lg border-2 border-muted hover:border-primary transition-colors overflow-hidden text-left"
+                    className="group relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-all bg-muted"
                   >
-                    <Image
-                      src={template.media || "/placeholder.svg?height=200&width=300"}
-                      alt={template.name}
-                      fill
-                      className="object-cover"
-                    />
+                    {template.media ? (
+                      <img
+                        src={template.media || "/placeholder.svg"}
+                        alt={template.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                        <FileText className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                    )}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                      <p className="text-white font-medium text-sm">{template.name}</p>
+                      <span className="text-white font-medium text-sm">{template.name}</span>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+            <div className="p-4 border-t flex justify-end">
+              <Button variant="outline" onClick={() => setShowTemplatePicker(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

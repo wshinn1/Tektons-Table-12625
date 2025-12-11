@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: latest
-        version: 2.0.80(zod@3.25.76)
+        version: 2.0.84(zod@3.25.76)
       '@ai-sdk/react':
         specifier: latest
-        version: 2.0.112(react@19.2.0)(zod@3.25.76)
+        version: 2.0.114(react@19.2.0)(zod@3.25.76)
       '@blocknote/core':
         specifier: latest
         version: 0.44.2(@hocuspocus/provider@3.4.1(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27))(@tiptap/extensions@3.13.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))(@tiptap/pm@3.13.0))(@types/hast@3.0.4)(highlight.js@11.11.1)(lowlight@3.3.0)
@@ -29,6 +29,9 @@ importers:
       '@builder.io/sdk':
         specifier: latest
         version: 6.1.3
+      '@emotion/is-prop-valid':
+        specifier: latest
+        version: 1.4.0
       '@grapesjs/react':
         specifier: latest
         version: 2.0.0(grapesjs@0.22.14)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -205,7 +208,7 @@ importers:
         version: 2.0.0
       ai:
         specifier: latest
-        version: 5.0.110(zod@3.25.76)
+        version: 5.0.112(zod@3.25.76)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.0)
@@ -239,6 +242,9 @@ importers:
       embla-carousel-react:
         specifier: 8.5.1
         version: 8.5.1(react@19.2.0)
+      framer-motion:
+        specifier: latest
+        version: 12.23.26(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       fs:
         specifier: latest
         version: 0.0.1-security
@@ -353,7 +359,7 @@ importers:
     devDependencies:
       '@slicemachine/adapter-next':
         specifier: latest
-        version: 0.3.89(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+        version: 0.3.90(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       '@tailwindcss/postcss':
         specifier: ^4.1.9
         version: 4.1.9
@@ -371,7 +377,7 @@ importers:
         version: 8.5.0
       slice-machine-ui:
         specifier: latest
-        version: 2.20.2(zod@3.25.76)
+        version: 2.20.3(zod@3.25.76)
       tailwindcss:
         specifier: ^4.1.9
         version: 4.1.9
@@ -384,20 +390,20 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@2.0.19':
-    resolution: {integrity: sha512-cybb+k/3Kj9BX+Am1mun3dafZsHQLIzW2A4fu5FVTLSIGXXbcuXwXNNdYMGs+B0y6RYOQ8VHbf1QslMSDIxQMA==}
+  '@ai-sdk/gateway@2.0.21':
+    resolution: {integrity: sha512-BwV7DU/lAm3Xn6iyyvZdWgVxgLu3SNXzl5y57gMvkW4nGhAOV5269IrJzQwGt03bb107sa6H6uJwWxc77zXoGA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@2.0.80':
-    resolution: {integrity: sha512-tNHuraF11db+8xJEDBoU9E3vMcpnHFKRhnLQ3DQX2LnEzfPB9DksZ8rE+yVuDN1WRW9cm2OWAhgHFgVKs7ICuw==}
+  '@ai-sdk/openai@2.0.84':
+    resolution: {integrity: sha512-IPiavfcpB1lwf19HJmiipwwbPP5Y8+VIvBcqawIU7d4Fh9Rf3K/plhe+Xqg5zI4sRZfpXwHmSbAPoiXkdfdg7g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@3.0.18':
-    resolution: {integrity: sha512-ypv1xXMsgGcNKUP+hglKqtdDuMg68nWHucPPAhIENrbFAI+xCHiqPVN8Zllxyv1TNZwGWUghPxJXU+Mqps0YRQ==}
+  '@ai-sdk/provider-utils@3.0.19':
+    resolution: {integrity: sha512-W41Wc9/jbUVXVwCN/7bWa4IKe8MtxO3EyA0Hfhx6grnmiYlCvpI8neSYWFE0zScXJkgA/YK3BRybzgyiXuu6JA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -406,8 +412,8 @@ packages:
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@2.0.112':
-    resolution: {integrity: sha512-TiDEKzgfG58FfN0uKph+NjjRRF+/pRkpbvJDgqfLG2jy0+P5K8aFDi9ZJS51yjYt/a0ArBv0dmgif/eFOl0mIg==}
+  '@ai-sdk/react@2.0.114':
+    resolution: {integrity: sha512-CMv4PcoLlKwcaTTOOOQRW8lrIpEV/ESgIJYhDK2mGLhzSjsgbO9p9uSTs6hfux4A7pxVdux2Wtxs/CwSjSX43A==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -576,8 +582,14 @@ packages:
   '@emotion/hash@0.8.0':
     resolution: {integrity: sha512-kBJtf7PH6aWwZ6fka3zQ0p6SBYzx4fl1LoZXE2RrnYST9Xljm7WfKJrU4g/Xr3Beg72MLrp1AWNUmuYJTL7Cow==}
 
+  '@emotion/is-prop-valid@1.4.0':
+    resolution: {integrity: sha512-QgD4fyscGcbbKwJmqNvUMSE02OsHUa+lAWKdEUIJKgqe5IwRSKd7+KhibEWdaKwgjLj0DRSHA9biAIqGBk05lw==}
+
   '@emotion/memoize@0.7.4':
     resolution: {integrity: sha512-Ja/Vfqe3HpuzRsG1oBtWTHk2PGZ7GR+2Vz5iYGelAw8dx32K0y7PjVuxK6z1nMpZOqAFsRUPCkK1YjJ56qJlgw==}
+
+  '@emotion/memoize@0.9.0':
+    resolution: {integrity: sha512-30FAj7/EoJ5mwVPOWhAyCX+FPfMDrVecJAM+Iw9NRoSl4BBAQeqj4cApHHUXOVvIPgLVDsCFoz/hGD+5QQD1GQ==}
 
   '@emotion/serialize@0.11.16':
     resolution: {integrity: sha512-G3J4o8by0VRrO+PFeSc3js2myYNOXVJ3Ya+RGVxnshRYgsvErfAOglKAiy1Eo1vhzxqtUvjCyS5gtewzkmvSSg==}
@@ -2655,15 +2667,15 @@ packages:
   '@sideway/pinpoint@2.0.0':
     resolution: {integrity: sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==}
 
-  '@slicemachine/adapter-next@0.3.89':
-    resolution: {integrity: sha512-XlBZf+jJhoLy8Oc3jO4/u3rBZdBtf7CpdsCT0rq0rDEenkN0+hkhIdDlrQwKzLfBHbhyAeJtOSYFQ4P5nxc2ig==}
+  '@slicemachine/adapter-next@0.3.90':
+    resolution: {integrity: sha512-JMQhBKDCZf/PamnYvpbL3HZtKXwgXX4UxOm2uYOxsLUT6YyTq8Vs4mA7Mw1eTx8cgOtoAJN8MYMzcGJ6/06TBg==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
       next: ^11 || ^12 || ^13 || ^14 || ^15 || ^16.0.0-beta.0
       react: ^17 || ^18 || ^19.0.0-rc.0
 
-  '@slicemachine/manager@0.26.2':
-    resolution: {integrity: sha512-vtGb1+E9gj7/WoZDFSB6Ko4NMeLa+pnuMknLzf0ky+JOI/MlEODHbnpdiBAVk5vqvG5/KncjTCMjiDEB/pyDZQ==}
+  '@slicemachine/manager@0.26.3':
+    resolution: {integrity: sha512-33HHIv3I4HRnCByh+H03TJyGWNl/XUGkvCfctXvzsQzt4nuctGA+hRH4lF4n2Ts595mYPZKbwl08PJOcuLvDvw==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       msw: '>=1.1.0'
@@ -2671,8 +2683,8 @@ packages:
       msw:
         optional: true
 
-  '@slicemachine/plugin-kit@0.4.87':
-    resolution: {integrity: sha512-XfPVoMunjvzokYIgpmDLa8j0qvDGeDlewm8qYVEZdoZhqOk85N2NiV3uJZrJ6Fydhzit1vLOEnbLxeRDXBmKsg==}
+  '@slicemachine/plugin-kit@0.4.88':
+    resolution: {integrity: sha512-fEc88J0FfyTlyjITshJ2OcercCSmtgxCZMmWgGQlaQi4OWfmkrYRquVNLKt3/1Bw2q6glk2JBh9IFy33I2l/gQ==}
     engines: {node: '>=14.15.0'}
 
   '@stablelib/base64@1.0.1':
@@ -3255,8 +3267,8 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
 
-  ai@5.0.110:
-    resolution: {integrity: sha512-ZBq+5bvef4e5qoIG4U6NJ1UpCPWGjuaWERHXbHu2T2ND3c02nJ2zlnjm+N6zAAplQPxwqm7Sb16mrRX5uQNWtQ==}
+  ai@5.0.112:
+    resolution: {integrity: sha512-Y0dluYpe5wn81UkfHbZL78mH6CsceUfMiu4oPRaWZvjlmcoXSPdEAsPcYbOjvX8ZPvQc6m4kNZhkcEXmT2ln4w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4061,6 +4073,20 @@ packages:
 
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
+
+  framer-motion@12.23.26:
+    resolution: {integrity: sha512-cPcIhgR42xBn1Uj+PzOyheMtZ73H927+uWPDVhUMqxy8UHt6Okavb6xIz9J/phFUHUj0OncR6UvMfJTXoc/LKA==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   fresh@0.5.2:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
@@ -4922,6 +4948,12 @@ packages:
     resolution: {integrity: sha512-D5Ygd3oulEoAm3KuGO0eeJIrhFf1jlQIoEVV2DYsZUMz42j4tGxgct97Aq68+F8w4w4geEnwFa8HayTS/7lpKQ==}
     peerDependencies:
       fp-ts: ^2.5.0
+
+  motion-dom@12.23.23:
+    resolution: {integrity: sha512-n5yolOs0TQQBRUFImrRfs/+6X4p3Q4n1dUEqt/H58Vx7OW6RF+foWEgmTVDhIWJIMXOuNNL0apKH2S16en9eiA==}
+
+  motion-utils@12.23.6:
+    resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -5818,8 +5850,8 @@ packages:
   simple-swizzle@0.2.4:
     resolution: {integrity: sha512-nAu1WFPQSMNr2Zn9PGSZK9AGn4t/y97lEm+MXTtUDwfP0ksAIX4nO+6ruD9Jwut4C49SB1Ws+fbXsm/yScWOHw==}
 
-  slice-machine-ui@2.20.2:
-    resolution: {integrity: sha512-s5y3+hqReVLgAKckdYhhEw2VvC7DMvxdGD/CnZEpnKrcJWBpt6ycBq1XqFmy7yH+zIitZWPvAmXfxlbytWbcXQ==}
+  slice-machine-ui@2.20.3:
+    resolution: {integrity: sha512-iacBFbvtSbgAD/L+Rj0PeaWA+7kMPXJhKX1PD/tv1sKlxffd+au6pprDEYnG4AQUx3iCWxQETKoJQdizkOYw/w==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -5879,8 +5911,8 @@ packages:
     resolution: {integrity: sha512-WjlahMgHmCJpqzU8bIBy4qtsZdU9lRlcZE3Lvyej6t4tuOuv1vk57OW3MBrj6hXBFx/nNoC9MPMTcr5YA7NQbg==}
     engines: {node: '>=6'}
 
-  start-slicemachine@0.12.67:
-    resolution: {integrity: sha512-tliTThE+XkJ04IaAsaovjDJG1Jog5YElWK/ljK/spN/BjeWz7gpfz7NxTUGByAwGkUGGZiQXXu5KFOjH9inEuw==}
+  start-slicemachine@0.12.68:
+    resolution: {integrity: sha512-tUT/rfLoG1jxIFQwyNn8zJY7QXyZe34qflAz4nloeG2Hk84Hlx4c0Ma+WUsjPFuqyxb0edNVn0A04qZ1nvj/Tw==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -6165,8 +6197,8 @@ packages:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
 
-  unlayer-types@1.333.0:
-    resolution: {integrity: sha512-s/oLgeIQAXlq/n2ib4mfQOIrRFXP5ybk+le3Y7JyYXq0cU6fuXyk/3puRjdkmWwebALBA9Z8+wZmE8T+q7zxQA==}
+  unlayer-types@1.337.0:
+    resolution: {integrity: sha512-owqGE/rJopFXjcofnP1zT/weFVkZosMzPY2F5lze8sHkZgn4a5bChQsrNOwV8iG1+Z+jbRt4FzOZIJDbgkdyQw==}
 
   unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
@@ -6409,20 +6441,20 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@2.0.19(zod@3.25.76)':
+  '@ai-sdk/gateway@2.0.21(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
       '@vercel/oidc': 3.0.5
       zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.80(zod@3.25.76)':
+  '@ai-sdk/openai@2.0.84(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
       zod: 3.25.76
 
-  '@ai-sdk/provider-utils@3.0.18(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.19(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
@@ -6433,10 +6465,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.112(react@19.2.0)(zod@3.25.76)':
+  '@ai-sdk/react@2.0.114(react@19.2.0)(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
-      ai: 5.0.110(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
+      ai: 5.0.112(zod@3.25.76)
       react: 19.2.0
       swr: 2.3.7(react@19.2.0)
       throttleit: 2.1.0
@@ -6769,7 +6801,13 @@ snapshots:
 
   '@emotion/hash@0.8.0': {}
 
+  '@emotion/is-prop-valid@1.4.0':
+    dependencies:
+      '@emotion/memoize': 0.9.0
+
   '@emotion/memoize@0.7.4': {}
+
+  '@emotion/memoize@0.9.0': {}
 
   '@emotion/serialize@0.11.16':
     dependencies:
@@ -8866,11 +8904,11 @@ snapshots:
 
   '@sideway/pinpoint@2.0.0': {}
 
-  '@slicemachine/adapter-next@0.3.89(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)':
+  '@slicemachine/adapter-next@0.3.90(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@prismicio/simulator': 0.1.4
       '@prismicio/types-internal': 3.11.2(fp-ts@2.16.11)(io-ts-types@0.5.19(fp-ts@2.16.11)(io-ts@2.2.22(fp-ts@2.16.11))(monocle-ts@2.3.13(fp-ts@2.16.11))(newtype-ts@0.3.5(fp-ts@2.16.11)(monocle-ts@2.3.13(fp-ts@2.16.11))))(io-ts@2.2.22(fp-ts@2.16.11))
-      '@slicemachine/plugin-kit': 0.4.87
+      '@slicemachine/plugin-kit': 0.4.88
       common-tags: 1.8.2
       fp-ts: 2.16.11
       io-ts: 2.2.22(fp-ts@2.16.11)
@@ -8884,7 +8922,7 @@ snapshots:
     transitivePeerDependencies:
       - '@prismicio/types'
 
-  '@slicemachine/manager@0.26.2(zod@3.25.76)':
+  '@slicemachine/manager@0.26.3(zod@3.25.76)':
     dependencies:
       '@antfu/ni': 0.20.0
       '@anthropic-ai/claude-agent-sdk': 0.1.37(zod@3.25.76)
@@ -8893,7 +8931,7 @@ snapshots:
       '@prismicio/mocks': 2.14.0
       '@prismicio/types-internal': 3.11.2(fp-ts@2.16.11)(io-ts-types@0.5.19(fp-ts@2.16.11)(io-ts@2.2.22(fp-ts@2.16.11))(monocle-ts@2.3.13(fp-ts@2.16.11))(newtype-ts@0.3.5(fp-ts@2.16.11)(monocle-ts@2.3.13(fp-ts@2.16.11))))(io-ts@2.2.22(fp-ts@2.16.11))
       '@segment/analytics-node': 2.3.0
-      '@slicemachine/plugin-kit': 0.4.87
+      '@slicemachine/plugin-kit': 0.4.88
       cookie: 1.1.1
       cors: 2.8.5
       execa: 7.2.0
@@ -8918,7 +8956,7 @@ snapshots:
       - encoding
       - zod
 
-  '@slicemachine/plugin-kit@0.4.87':
+  '@slicemachine/plugin-kit@0.4.88':
     dependencies:
       '@prismicio/client': 7.17.0
       common-tags: 1.8.2
@@ -9540,11 +9578,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ai@5.0.110(zod@3.25.76):
+  ai@5.0.112(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 2.0.19(zod@3.25.76)
+      '@ai-sdk/gateway': 2.0.21(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
       zod: 3.25.76
 
@@ -10344,6 +10382,16 @@ snapshots:
   fp-ts@2.16.11: {}
 
   fraction.js@4.3.7: {}
+
+  framer-motion@12.23.26(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      motion-dom: 12.23.23
+      motion-utils: 12.23.6
+      tslib: 2.8.1
+    optionalDependencies:
+      '@emotion/is-prop-valid': 1.4.0
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
 
   fresh@0.5.2: {}
 
@@ -11397,6 +11445,12 @@ snapshots:
     dependencies:
       fp-ts: 2.16.11
 
+  motion-dom@12.23.23:
+    dependencies:
+      motion-utils: 12.23.6
+
+  motion-utils@12.23.6: {}
+
   mri@1.2.0: {}
 
   ms@2.0.0: {}
@@ -11922,7 +11976,7 @@ snapshots:
   react-email-editor@1.7.11(react@19.2.0):
     dependencies:
       react: 19.2.0
-      unlayer-types: 1.333.0
+      unlayer-types: 1.337.0
 
   react-final-form-arrays@3.1.4(final-form-arrays@3.1.0(final-form@4.20.10))(final-form@4.20.10)(react-final-form@7.0.0(final-form@4.20.10)(react@19.2.0))(react@19.2.0):
     dependencies:
@@ -12435,10 +12489,10 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.4
 
-  slice-machine-ui@2.20.2(zod@3.25.76):
+  slice-machine-ui@2.20.3(zod@3.25.76):
     dependencies:
-      '@slicemachine/manager': 0.26.2(zod@3.25.76)
-      start-slicemachine: 0.12.67(zod@3.25.76)
+      '@slicemachine/manager': 0.26.3(zod@3.25.76)
+      start-slicemachine: 0.12.68(zod@3.25.76)
     transitivePeerDependencies:
       - '@prismicio/types'
       - '@types/express'
@@ -12503,11 +12557,11 @@ snapshots:
     dependencies:
       type-fest: 0.7.1
 
-  start-slicemachine@0.12.67(zod@3.25.76):
+  start-slicemachine@0.12.68(zod@3.25.76):
     dependencies:
       '@prismicio/mocks': 2.14.0
       '@prismicio/types-internal': 3.11.2(fp-ts@2.16.11)(io-ts-types@0.5.19(fp-ts@2.16.11)(io-ts@2.2.22(fp-ts@2.16.11))(monocle-ts@2.3.13(fp-ts@2.16.11))(newtype-ts@0.3.5(fp-ts@2.16.11)(monocle-ts@2.3.13(fp-ts@2.16.11))))(io-ts@2.2.22(fp-ts@2.16.11))
-      '@slicemachine/manager': 0.26.2(zod@3.25.76)
+      '@slicemachine/manager': 0.26.3(zod@3.25.76)
       body-parser: 1.20.4
       chalk: 4.1.2
       cors: 2.8.5
@@ -12785,7 +12839,7 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  unlayer-types@1.333.0: {}
+  unlayer-types@1.337.0: {}
 
   unpipe@1.0.0: {}
 

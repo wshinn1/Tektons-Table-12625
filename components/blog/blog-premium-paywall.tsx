@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -25,30 +25,98 @@ const benefits = [
   "Cancel anytime",
 ]
 
-function getPreviewText(content: any): string {
+function getPreviewHtml(content: any): string {
   if (!content) return ""
 
   try {
     const parsed = typeof content === "string" ? JSON.parse(content) : content
 
-    // Extract text from TipTap JSON
-    let text = ""
-    function extractText(node: any) {
-      if (node.text) {
-        text += node.text + " "
+    // Convert TipTap JSON to HTML, limiting to first few nodes
+    let html = ""
+    let wordCount = 0
+    const maxWords = 150
+
+    function renderNode(node: any): string {
+      if (wordCount >= maxWords) return ""
+
+      if (node.type === "text") {
+        const words = (node.text || "").split(/\s+/)
+        const remainingWords = maxWords - wordCount
+        const textToUse = words.slice(0, remainingWords).join(" ")
+        wordCount += Math.min(words.length, remainingWords)
+
+        let text = textToUse
+        if (node.marks) {
+          node.marks.forEach((mark: any) => {
+            if (mark.type === "bold") text = `<strong>${text}</strong>`
+            if (mark.type === "italic") text = `<em>${text}</em>`
+            if (mark.type === "underline") text = `<u>${text}</u>`
+            if (mark.type === "link")
+              text = `<a href="${mark.attrs?.href || "#"}" class="text-primary underline">${text}</a>`
+          })
+        }
+        return text
       }
+
+      if (node.type === "paragraph") {
+        const content = node.content?.map(renderNode).join("") || ""
+        return content ? `<p class="mb-4 leading-relaxed">${content}</p>` : ""
+      }
+
+      if (node.type === "heading") {
+        const level = node.attrs?.level || 2
+        const content = node.content?.map(renderNode).join("") || ""
+        const sizes: Record<number, string> = {
+          1: "text-3xl font-bold mb-4",
+          2: "text-2xl font-bold mb-3",
+          3: "text-xl font-semibold mb-2",
+          4: "text-lg font-semibold mb-2",
+        }
+        return content ? `<h${level} class="${sizes[level] || sizes[2]}">${content}</h${level}>` : ""
+      }
+
+      if (node.type === "bulletList") {
+        const items = node.content?.map(renderNode).join("") || ""
+        return items ? `<ul class="list-disc pl-6 mb-4 space-y-1">${items}</ul>` : ""
+      }
+
+      if (node.type === "orderedList") {
+        const items = node.content?.map(renderNode).join("") || ""
+        return items ? `<ol class="list-decimal pl-6 mb-4 space-y-1">${items}</ol>` : ""
+      }
+
+      if (node.type === "listItem") {
+        const content = node.content?.map(renderNode).join("") || ""
+        return content ? `<li>${content.replace(/<\/?p[^>]*>/g, "")}</li>` : ""
+      }
+
+      if (node.type === "blockquote") {
+        const content = node.content?.map(renderNode).join("") || ""
+        return content
+          ? `<blockquote class="border-l-4 border-muted-foreground/30 pl-4 italic my-4">${content}</blockquote>`
+          : ""
+      }
+
+      if (node.type === "hardBreak") {
+        return "<br />"
+      }
+
+      // Recursively render children for other node types
       if (node.content) {
-        node.content.forEach(extractText)
+        return node.content.map(renderNode).join("")
       }
+
+      return ""
     }
 
     if (parsed.content) {
-      parsed.content.forEach(extractText)
+      for (const node of parsed.content) {
+        if (wordCount >= maxWords) break
+        html += renderNode(node)
+      }
     }
 
-    // Return first ~150 words as preview
-    const words = text.trim().split(/\s+/)
-    return words.slice(0, 150).join(" ") + (words.length > 150 ? "..." : "")
+    return html
   } catch {
     return ""
   }
@@ -58,7 +126,7 @@ export function BlogPremiumPaywall({ post, isLoggedIn }: BlogPremiumPaywallProps
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  const previewText = getPreviewText(post.content)
+  const previewHtml = useMemo(() => getPreviewHtml(post.content), [post.content])
 
   const handleSubscribe = async () => {
     if (!isLoggedIn) {
@@ -90,12 +158,13 @@ export function BlogPremiumPaywall({ post, isLoggedIn }: BlogPremiumPaywallProps
 
   return (
     <div className="relative">
-      {/* Preview Content */}
-      {previewText && (
+      {/* Preview Content - render as formatted HTML */}
+      {previewHtml && (
         <div className="relative">
-          <div className="prose prose-lg max-w-none text-foreground">
-            <p>{previewText}</p>
-          </div>
+          <div
+            className="prose prose-lg max-w-none text-foreground"
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
 
           {/* Gradient Fade */}
           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/90 to-transparent" />

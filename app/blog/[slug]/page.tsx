@@ -191,7 +191,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             subtitle={post.subtitle}
             authorId={post.author_id}
             publishedAt={post.published_at}
-            readTime={post.read_time}
+            readTime={post.read_time_minutes || 5}
           />
 
           <BlogEngagement postId={post.id} postTitle={post.title} postUrl={postUrl} />
