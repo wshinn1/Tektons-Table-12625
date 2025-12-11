@@ -2,36 +2,15 @@
 
 import { useRef, useState, useEffect } from "react"
 import type { Editor } from "grapesjs"
-import GjsEditor from "@grapesjs/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import {
-  Eye,
-  Code,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Save,
-  ArrowLeft,
-  Undo,
-  Redo,
-  Maximize,
-  Layers,
-  Layout,
-  Settings,
-  ChevronDown,
-  ChevronRight,
-  Tag,
-  Plus,
-} from "lucide-react"
+import { ArrowLeft, Save, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createTenantPage, updateTenantPage } from "@/app/actions/tenant-pages"
-
-import grapesjs from "grapesjs"
-import "grapesjs/dist/css/grapes.min.css"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface Page {
   id: string
@@ -67,24 +46,7 @@ const PAGE_TEMPLATES = {
       <section style="padding: 80px 20px; background: white;">
         <div style="max-width: 1200px; margin: 0 auto;">
           <h2 style="text-align: center; font-size: 36px; font-weight: 700; color: #1f2937; margin: 0 0 16px 0;">Our Mission</h2>
-          <p style="text-align: center; color: #6b7280; font-size: 18px; max-width: 600px; margin: 0 auto 60px auto;">We're dedicated to serving communities and spreading hope through practical ministry and compassionate outreach.</p>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;">
-            <div style="text-align: center; padding: 40px 24px; background: #f9fafb; border-radius: 12px;">
-              <div style="width: 64px; height: 64px; background: #667eea; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">❤</div>
-              <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px 0;">Community Support</h3>
-              <p style="color: #6b7280; font-size: 16px; margin: 0; line-height: 1.6;">Providing resources and support to families in need.</p>
-            </div>
-            <div style="text-align: center; padding: 40px 24px; background: #f9fafb; border-radius: 12px;">
-              <div style="width: 64px; height: 64px; background: #667eea; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">✦</div>
-              <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px 0;">Youth Programs</h3>
-              <p style="color: #6b7280; font-size: 16px; margin: 0; line-height: 1.6;">Empowering the next generation through mentorship.</p>
-            </div>
-            <div style="text-align: center; padding: 40px 24px; background: #f9fafb; border-radius: 12px;">
-              <div style="width: 64px; height: 64px; background: #667eea; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">★</div>
-              <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px 0;">Global Outreach</h3>
-              <p style="color: #6b7280; font-size: 16px; margin: 0; line-height: 1.6;">Extending our mission to communities worldwide.</p>
-            </div>
-          </div>
+          <p style="text-align: center; color: #6b7280; font-size: 18px; max-width: 600px; margin: 0 auto 60px auto;">We're dedicated to serving communities and spreading hope through practical ministry.</p>
         </div>
       </section>
     `,
@@ -98,1023 +60,924 @@ const PAGE_TEMPLATES = {
           <p style="color: #9ca3af; font-size: 18px; margin: 0;">Learn more about our story and mission</p>
         </div>
       </section>
-      <section style="padding: 80px 20px; background: white;">
-        <div style="max-width: 800px; margin: 0 auto;">
-          <h2 style="font-size: 32px; font-weight: 700; color: #1f2937; margin: 0 0 24px 0;">Our Story</h2>
-          <p style="color: #4b5563; font-size: 18px; line-height: 1.8; margin: 0 0 24px 0;">
-            Founded with a heart for service, our ministry began as a small group of dedicated individuals who saw a need in their community and decided to take action.
-          </p>
-          <p style="color: #4b5563; font-size: 18px; line-height: 1.8; margin: 0 0 40px 0;">
-            Over the years, we've grown into a thriving community of volunteers, supporters, and partners who share our vision of making a lasting impact in the lives of those we serve.
-          </p>
-          <img src="/ministry-team-working-together.jpg" alt="Our Team" style="width: 100%; height: auto; border-radius: 12px; margin-bottom: 40px;">
-          <h2 style="font-size: 32px; font-weight: 700; color: #1f2937; margin: 0 0 24px 0;">Our Values</h2>
-          <ul style="color: #4b5563; font-size: 18px; line-height: 2; padding-left: 24px;">
-            <li><strong>Faith:</strong> Everything we do is rooted in our faith and trust in God's provision.</li>
-            <li><strong>Compassion:</strong> We approach every person with love and understanding.</li>
-            <li><strong>Integrity:</strong> We operate with transparency and accountability.</li>
-            <li><strong>Excellence:</strong> We strive to do our best in all that we do.</li>
-          </ul>
-        </div>
-      </section>
     `,
   },
   contact: {
     name: "Contact Page",
     html: `
-      <section style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 80px 20px;">
-        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-          <h1 style="color: white; font-size: 48px; font-weight: 700; margin: 0 0 16px 0;">Contact Us</h1>
-          <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin: 0;">We'd love to hear from you</p>
-        </div>
-      </section>
-      <section style="padding: 80px 20px; background: #f9fafb;">
-        <div style="max-width: 600px; margin: 0 auto; background: white; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-          <form>
-            <div style="margin-bottom: 24px;">
-              <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Name</label>
-              <input type="text" placeholder="Your name" style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
-            </div>
-            <div style="margin-bottom: 24px;">
-              <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Email</label>
-              <input type="email" placeholder="your@email.com" style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
-            </div>
-            <div style="margin-bottom: 24px;">
-              <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Message</label>
-              <textarea rows="5" placeholder="Your message..." style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; resize: vertical; box-sizing: border-box;"></textarea>
-            </div>
-            <button type="submit" style="width: 100%; background: #3b82f6; color: white; padding: 14px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Send Message</button>
-          </form>
-        </div>
-      </section>
-      <section style="padding: 60px 20px; background: white;">
-        <div style="max-width: 800px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; text-align: center;">
-          <div>
-            <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin: 0 0 8px 0;">Email</h3>
-            <p style="color: #6b7280; margin: 0;">hello@example.com</p>
-          </div>
-          <div>
-            <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin: 0 0 8px 0;">Phone</h3>
-            <p style="color: #6b7280; margin: 0;">(555) 123-4567</p>
-          </div>
-          <div>
-            <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin: 0 0 8px 0;">Location</h3>
-            <p style="color: #6b7280; margin: 0;">City, State</p>
-          </div>
-        </div>
-      </section>
-    `,
-  },
-  gallery: {
-    name: "Gallery Page",
-    html: `
-      <section style="background: #111827; padding: 80px 20px;">
-        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-          <h1 style="color: white; font-size: 48px; font-weight: 700; margin: 0 0 16px 0;">Photo Gallery</h1>
-          <p style="color: #9ca3af; font-size: 18px; margin: 0;">Moments from our ministry</p>
-        </div>
-      </section>
-      <section style="padding: 60px 20px; background: white;">
-        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
-          <img src="/ministry-community-event.jpg" alt="Gallery 1" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px;">
-          <img src="/volunteer-team-helping.jpg" alt="Gallery 2" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px;">
-          <img src="/church-gathering-worship.jpg" alt="Gallery 3" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px;">
-          <img src="/youth-program-activities.jpg" alt="Gallery 4" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px;">
-          <img src="/community-outreach-food.jpg" alt="Gallery 5" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px;">
-          <img src="/mission-trip-international.jpg" alt="Gallery 6" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px;">
+      <section style="padding: 80px 20px; background: white;">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+          <h1 style="font-size: 36px; font-weight: 700; color: #1f2937; margin: 0 0 16px 0;">Contact Us</h1>
+          <p style="color: #6b7280; font-size: 18px; margin: 0 0 40px 0;">We'd love to hear from you</p>
         </div>
       </section>
     `,
   },
 }
 
-export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorProps) {
+function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorProps) {
   const router = useRouter()
   const editorRef = useRef<Editor | null>(null)
-  const [isPreview, setIsPreview] = useState(false)
-  const [showCode, setShowCode] = useState(false)
-  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop")
-  const [isSaving, setIsSaving] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [webpagePlugin, setWebpagePlugin] = useState<any>(null)
-  const [blocksBasicPlugin, setBlocksBasicPlugin] = useState<any>(null)
-  const [formsPlugin, setFormsPlugin] = useState<any>(null)
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true)
-  const [rightPanelOpen, setRightPanelOpen] = useState(true)
-  const [rightTab, setRightTab] = useState<"styles" | "settings">("styles")
-  const [selectedComponent, setSelectedComponent] = useState<any>(null)
-  const [selectedComponentName, setSelectedComponentName] = useState<string>("")
-
-  // Page metadata
-  const [title, setTitle] = useState(page?.title || "")
-  const [slug, setSlug] = useState(page?.slug || "")
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [pageTitle, setPageTitle] = useState(page?.title || "Untitled Page")
+  const [pageSlug, setPageSlug] = useState(page?.slug || "untitled-page")
   const [isPublished, setIsPublished] = useState(page?.is_published || false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [editorLoaded, setEditorLoaded] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("blank")
 
+  // Generate slug from title
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim()
+  }
+
+  // Initialize GrapesJS
   useEffect(() => {
-    const loadPlugins = async () => {
-      try {
-        const [webpageModule, blocksModule, formsModule] = await Promise.all([
-          import("grapesjs-preset-webpage"),
-          import("grapesjs-blocks-basic"),
-          import("grapesjs-plugin-forms"),
-        ])
+    if (!containerRef.current || editorLoaded) return
 
-        setWebpagePlugin(() => webpageModule.default || webpageModule)
-        setBlocksBasicPlugin(() => blocksModule.default || blocksModule)
-        setFormsPlugin(() => formsModule.default || formsModule)
-      } catch (error) {
-        console.error("Failed to load GrapesJS plugins:", error)
-      } finally {
-        setIsLoading(false)
+    const initEditor = async () => {
+      // Dynamically import GrapesJS and plugins
+      const grapesjs = (await import("grapesjs")).default
+      const gjsBlocksBasic = (await import("grapesjs-blocks-basic")).default
+      const gjsPresetWebpage = (await import("grapesjs-preset-webpage")).default
+      const gjsBlocksFlexbox = (await import("grapesjs-blocks-flexbox")).default
+      const gjsStyleBg = (await import("grapesjs-style-bg")).default
+
+      // Load CSS
+      await import("grapesjs/dist/css/grapes.min.css")
+
+      const editor = grapesjs.init({
+        container: containerRef.current!,
+        height: "100%",
+        width: "auto",
+        fromElement: false,
+        storageManager: false,
+
+        // Use the preset-webpage for full demo-like experience
+        plugins: [gjsBlocksBasic, gjsPresetWebpage, gjsBlocksFlexbox, gjsStyleBg],
+        pluginsOpts: {
+          [gjsBlocksBasic as any]: {
+            flexGrid: true,
+            stylePrefix: "gjs-",
+          },
+          [gjsPresetWebpage as any]: {
+            modalImportTitle: "Import Template",
+            modalImportButton: "Import",
+            modalImportLabel: "Paste your HTML/CSS here",
+            textCleanCanvas: "Are you sure you want to clear the canvas?",
+            showStylesOnChange: true,
+            useCustomTheme: true,
+          },
+          [gjsBlocksFlexbox as any]: {
+            flexboxBlock: {},
+          },
+          [gjsStyleBg as any]: {},
+        },
+
+        // Canvas configuration
+        canvas: {
+          styles: ["https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"],
+        },
+
+        // Device manager for responsive design
+        deviceManager: {
+          devices: [
+            { name: "Desktop", width: "" },
+            { name: "Tablet", width: "768px", widthMedia: "992px" },
+            { name: "Mobile", width: "320px", widthMedia: "480px" },
+          ],
+        },
+
+        // Panels configuration - matching the demo layout
+        panels: {
+          defaults: [
+            {
+              id: "panel-switcher",
+              el: ".panel__switcher",
+              buttons: [
+                {
+                  id: "show-layers",
+                  active: true,
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>`,
+                  command: "show-layers",
+                  togglable: false,
+                },
+                {
+                  id: "show-style",
+                  active: true,
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 3h18v18H3V3zm16 16V5H5v14h14z"></path></svg>`,
+                  command: "show-styles",
+                  togglable: false,
+                },
+                {
+                  id: "show-traits",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 8a4 4 0 100 8 4 4 0 000-8zm0-6a10 10 0 100 20 10 10 0 000-20z"></path></svg>`,
+                  command: "show-traits",
+                  togglable: false,
+                },
+                {
+                  id: "show-blocks",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"></path></svg>`,
+                  command: "show-blocks",
+                  togglable: false,
+                },
+              ],
+            },
+            {
+              id: "panel-devices",
+              el: ".panel__devices",
+              buttons: [
+                {
+                  id: "device-desktop",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"></path></svg>`,
+                  command: "set-device-desktop",
+                  active: true,
+                  togglable: false,
+                },
+                {
+                  id: "device-tablet",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18.5 0h-14C3.12 0 2 1.12 2 2.5v19C2 22.88 3.12 24 4.5 24h14c1.38 0 2.5-1.12 2.5-2.5v-19C21 1.12 19.88 0 18.5 0zm-7 23c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm7.5-4H4V3h15v16z"></path></svg>`,
+                  command: "set-device-tablet",
+                  togglable: false,
+                },
+                {
+                  id: "device-mobile",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M15.5 1h-8C6.12 1 5 2.12 5 3.5v17C5 21.88 6.12 23 7.5 23h8c1.38 0 2.5-1.12 2.5-2.5v-17C18 2.12 16.88 1 15.5 1zm-4 21c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5-4H7V4h9v14z"></path></svg>`,
+                  command: "set-device-mobile",
+                  togglable: false,
+                },
+              ],
+            },
+            {
+              id: "layers",
+              el: ".panel__layers",
+              resizable: {
+                maxDim: 350,
+                minDim: 200,
+                tc: false,
+                cl: false,
+                cr: true,
+                bc: false,
+                keyWidth: "flex-basis",
+              },
+            },
+            {
+              id: "panel-top",
+              el: ".panel__top",
+            },
+            {
+              id: "basic-actions",
+              el: ".panel__basic-actions",
+              buttons: [
+                {
+                  id: "visibility",
+                  active: true,
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg>`,
+                  command: "sw-visibility",
+                },
+                {
+                  id: "fullscreen",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path></svg>`,
+                  command: "fullscreen",
+                },
+                {
+                  id: "export",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"></path></svg>`,
+                  command: "export-template",
+                },
+                {
+                  id: "show-json",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"></path></svg>`,
+                  command: "gjs-open-import-webpage",
+                },
+                {
+                  id: "undo",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"></path></svg>`,
+                  command: "core:undo",
+                },
+                {
+                  id: "redo",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"></path></svg>`,
+                  command: "core:redo",
+                },
+                {
+                  id: "canvas-clear",
+                  label: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>`,
+                  command: "canvas-clear",
+                },
+              ],
+            },
+            {
+              id: "styles",
+              el: ".panel__styles",
+              resizable: {
+                maxDim: 400,
+                minDim: 250,
+                tc: false,
+                cl: true,
+                cr: false,
+                bc: false,
+                keyWidth: "flex-basis",
+              },
+            },
+          ],
+        },
+
+        // Selector manager
+        selectorManager: {
+          appendTo: ".styles-container",
+        },
+
+        // Style manager with all sectors like the demo
+        styleManager: {
+          appendTo: ".styles-container",
+          sectors: [
+            {
+              name: "General",
+              open: false,
+              buildProps: ["float", "display", "position", "top", "right", "left", "bottom"],
+            },
+            {
+              name: "Layout",
+              open: false,
+              buildProps: [
+                "flex-direction",
+                "flex-wrap",
+                "justify-content",
+                "align-items",
+                "align-content",
+                "order",
+                "flex-basis",
+                "flex-grow",
+                "flex-shrink",
+                "align-self",
+                "gap",
+              ],
+            },
+            {
+              name: "Size",
+              open: false,
+              buildProps: ["width", "height", "max-width", "min-height", "margin", "padding"],
+            },
+            {
+              name: "Typography",
+              open: false,
+              buildProps: [
+                "font-family",
+                "font-size",
+                "font-weight",
+                "letter-spacing",
+                "color",
+                "line-height",
+                "text-align",
+                "text-decoration",
+                "text-shadow",
+              ],
+            },
+            {
+              name: "Decorations",
+              open: false,
+              buildProps: ["background-color", "border-radius", "border", "box-shadow"],
+            },
+            {
+              name: "Extra",
+              open: false,
+              buildProps: ["opacity", "transition", "transform"],
+            },
+          ],
+        },
+
+        // Trait manager
+        traitManager: {
+          appendTo: ".traits-container",
+        },
+
+        // Layer manager
+        layerManager: {
+          appendTo: ".layers-container",
+        },
+
+        // Block manager
+        blockManager: {
+          appendTo: ".blocks-container",
+        },
+      })
+
+      // Add custom commands
+      editor.Commands.add("show-layers", {
+        getRowEl(editor: Editor) {
+          return editor.getContainer().closest(".editor-row")
+        },
+        getLayersEl(row: Element | null) {
+          return row?.querySelector(".editor-clm")
+        },
+        run(editor: Editor) {
+          const lmEl = this.getLayersEl(this.getRowEl(editor))
+          if (lmEl) (lmEl as HTMLElement).style.display = ""
+        },
+        stop(editor: Editor) {
+          const lmEl = this.getLayersEl(this.getRowEl(editor))
+          if (lmEl) (lmEl as HTMLElement).style.display = "none"
+        },
+      })
+
+      editor.Commands.add("show-styles", {
+        getRowEl(editor: Editor) {
+          return editor.getContainer().closest(".editor-row")
+        },
+        getStyleEl(row: Element | null) {
+          return row?.querySelector(".styles-container")
+        },
+        run(editor: Editor) {
+          const smEl = this.getStyleEl(this.getRowEl(editor))
+          if (smEl) (smEl as HTMLElement).style.display = ""
+        },
+        stop(editor: Editor) {
+          const smEl = this.getStyleEl(this.getRowEl(editor))
+          if (smEl) (smEl as HTMLElement).style.display = "none"
+        },
+      })
+
+      editor.Commands.add("show-traits", {
+        getRowEl(editor: Editor) {
+          return editor.getContainer().closest(".editor-row")
+        },
+        getTraitsEl(row: Element | null) {
+          return row?.querySelector(".traits-container")
+        },
+        run(editor: Editor) {
+          const trEl = this.getTraitsEl(this.getRowEl(editor))
+          if (trEl) (trEl as HTMLElement).style.display = ""
+        },
+        stop(editor: Editor) {
+          const trEl = this.getTraitsEl(this.getRowEl(editor))
+          if (trEl) (trEl as HTMLElement).style.display = "none"
+        },
+      })
+
+      editor.Commands.add("show-blocks", {
+        getRowEl(editor: Editor) {
+          return editor.getContainer().closest(".editor-row")
+        },
+        getBlocksEl(row: Element | null) {
+          return row?.querySelector(".blocks-container")
+        },
+        run(editor: Editor) {
+          const blEl = this.getBlocksEl(this.getRowEl(editor))
+          if (blEl) (blEl as HTMLElement).style.display = ""
+        },
+        stop(editor: Editor) {
+          const blEl = this.getBlocksEl(this.getRowEl(editor))
+          if (blEl) (blEl as HTMLElement).style.display = "none"
+        },
+      })
+
+      editor.Commands.add("set-device-desktop", {
+        run: (editor: Editor) => editor.setDevice("Desktop"),
+      })
+
+      editor.Commands.add("set-device-tablet", {
+        run: (editor: Editor) => editor.setDevice("Tablet"),
+      })
+
+      editor.Commands.add("set-device-mobile", {
+        run: (editor: Editor) => editor.setDevice("Mobile"),
+      })
+
+      editor.Commands.add("fullscreen", {
+        run() {
+          const el = document.documentElement
+          if (el.requestFullscreen) el.requestFullscreen()
+        },
+        stop() {
+          if (document.exitFullscreen) document.exitFullscreen()
+        },
+      })
+
+      editor.Commands.add("export-template", {
+        run(editor: Editor) {
+          const html = editor.getHtml()
+          const css = editor.getCss()
+          const modal = editor.Modal
+          modal.setTitle("Export")
+          modal.setContent(`
+            <div style="padding: 20px;">
+              <h4 style="margin-bottom: 10px;">HTML:</h4>
+              <textarea style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">${html}</textarea>
+              <h4 style="margin: 20px 0 10px;">CSS:</h4>
+              <textarea style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">${css}</textarea>
+            </div>
+          `)
+          modal.open()
+        },
+      })
+
+      // Load existing content or template
+      if (page?.design_json) {
+        editor.loadProjectData(page.design_json)
+      } else if (page?.content) {
+        editor.setComponents(page.content)
+      } else {
+        editor.setComponents(PAGE_TEMPLATES.landing.html)
       }
+
+      editorRef.current = editor
+      setEditorLoaded(true)
     }
 
-    loadPlugins()
-  }, [])
+    initEditor()
 
-  const onEditor = (editor: Editor) => {
-    editorRef.current = editor
-
-    editor.on("load", () => {
-      const style = document.createElement("style")
-      style.innerHTML = `
-        /* Main background colors - lighter like demo */
-        .gjs-one-bg { background-color: #f5f5f5 !important; }
-        .gjs-two-color { color: #444 !important; }
-        .gjs-three-bg { background-color: #fff !important; }
-        .gjs-four-color, .gjs-four-color-h:hover { color: #7c3aed !important; }
-        
-        /* Panel buttons */
-        .gjs-pn-btn { color: #666 !important; }
-        .gjs-pn-btn:hover { color: #7c3aed !important; }
-        .gjs-pn-btn.gjs-pn-active { color: #7c3aed !important; }
-        
-        /* Blocks styling */
-        .gjs-block { 
-          background-color: #fff !important; 
-          border: 1px solid #e5e5e5 !important;
-          border-radius: 8px !important;
-          min-height: 70px !important;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-          transition: all 0.15s ease !important;
-        }
-        .gjs-block:hover { 
-          border-color: #7c3aed !important;
-          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15) !important;
-          transform: translateY(-1px) !important;
-        }
-        .gjs-block-label {
-          color: #444 !important;
-          font-size: 11px !important;
-          font-weight: 500 !important;
-        }
-        .gjs-block svg {
-          fill: #666 !important;
-        }
-        .gjs-block:hover svg {
-          fill: #7c3aed !important;
-        }
-        
-        /* Blocks container grid */
-        .gjs-blocks-c {
-          display: grid !important;
-          grid-template-columns: repeat(2, 1fr) !important;
-          gap: 8px !important;
-          padding: 12px !important;
-          background: #fafafa !important;
-        }
-        
-        /* Category titles */
-        .gjs-block-category .gjs-title {
-          background-color: #fff !important;
-          color: #333 !important;
-          border-bottom: 1px solid #e5e5e5 !important;
-          padding: 12px 14px !important;
-          font-weight: 600 !important;
-          font-size: 12px !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.5px !important;
-        }
-        .gjs-block-category .gjs-title:hover {
-          background-color: #f9f9f9 !important;
-        }
-        
-        /* Style Manager sectors - collapsible with indicators */
-        .gjs-sm-sector {
-          border-bottom: 1px solid #e5e5e5 !important;
-          background: #fff !important;
-        }
-        .gjs-sm-sector-title {
-          background-color: #fff !important;
-          color: #333 !important;
-          border: none !important;
-          padding: 12px 14px !important;
-          font-weight: 500 !important;
-          font-size: 13px !important;
-          display: flex !important;
-          align-items: center !important;
-          cursor: pointer !important;
-        }
-        .gjs-sm-sector-title:hover {
-          background-color: #f9f9f9 !important;
-        }
-        
-        /* Active sector indicator (green dot like demo) */
-        .gjs-sm-sector.gjs-sm-open .gjs-sm-sector-title::after {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background: #22c55e;
-          border-radius: 50%;
-          margin-left: auto;
-        }
-        
-        /* Form fields */
-        .gjs-field {
-          background-color: #fff !important;
-          border: 1px solid #e5e5e5 !important;
-          color: #333 !important;
-          border-radius: 6px !important;
-        }
-        .gjs-field:focus-within {
-          border-color: #7c3aed !important;
-          box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1) !important;
-        }
-        .gjs-field input, .gjs-field select {
-          color: #333 !important;
-        }
-        
-        /* Selector/Class manager */
-        .gjs-clm-tags {
-          background-color: #fff !important;
-          padding: 10px !important;
-          border-radius: 6px !important;
-          border: 1px solid #e5e5e5 !important;
-        }
-        #gjs-clm-tags-field {
-          color: #333 !important;
-        }
-        .gjs-clm-tag {
-          background-color: #7c3aed !important;
-          color: white !important;
-          border-radius: 4px !important;
-          padding: 2px 8px !important;
-          font-size: 11px !important;
-        }
-        .gjs-clm-tag-close {
-          color: white !important;
-        }
-        
-        /* Style properties container */
-        .gjs-sm-properties {
-          background-color: #fafafa !important;
-          padding: 12px !important;
-        }
-        
-        /* Layer manager */
-        .gjs-layers {
-          background: #fff !important;
-        }
-        .gjs-layer {
-          background-color: #fff !important;
-          border-radius: 4px !important;
-          margin: 2px 6px !important;
-          border: 1px solid #e5e5e5 !important;
-        }
-        .gjs-layer:hover {
-          background-color: #f5f5f5 !important;
-          border-color: #d5d5d5 !important;
-        }
-        .gjs-layer.gjs-selected {
-          background-color: #f0e7ff !important;
-          border-color: #7c3aed !important;
-        }
-        .gjs-layer-name {
-          color: #333 !important;
-        }
-        .gjs-layer.gjs-selected .gjs-layer-name {
-          color: #7c3aed !important;
-          font-weight: 500 !important;
-        }
-        
-        /* Trait manager (properties) */
-        .gjs-trt-traits {
-          padding: 12px !important;
-          background: #fafafa !important;
-        }
-        .gjs-trt-trait {
-          padding: 8px 0 !important;
-          border-bottom: 1px solid #e5e5e5 !important;
-        }
-        .gjs-trt-trait:last-child {
-          border-bottom: none !important;
-        }
-        .gjs-trt-trait__wrp-title {
-          color: #666 !important;
-          font-size: 11px !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.3px !important;
-          margin-bottom: 4px !important;
-        }
-        
-        /* Canvas area */
-        .gjs-cv-canvas {
-          background-color: #e5e5e5 !important;
-        }
-        .gjs-frame-wrapper {
-          background: white !important;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
-          border-radius: 4px !important;
-        }
-        
-        /* Radio buttons (display options) */
-        .gjs-radio-item input:checked + .gjs-radio-item-label {
-          background-color: #7c3aed !important;
-          color: white !important;
-        }
-        .gjs-radio-item-label {
-          border-radius: 4px !important;
-        }
-        
-        /* Selection highlight */
-        .gjs-selected {
-          outline: 2px solid #7c3aed !important;
-          outline-offset: -2px !important;
-        }
-        
-        /* Toolbar on selected component */
-        .gjs-toolbar {
-          background: #7c3aed !important;
-          border-radius: 4px !important;
-        }
-        .gjs-toolbar-item {
-          color: white !important;
-        }
-        
-        /* Resizer */
-        .gjs-resizer-h {
-          border-color: #7c3aed !important;
-        }
-        
-        /* Label for properties */
-        .gjs-sm-label {
-          color: #666 !important;
-          font-size: 11px !important;
-        }
-        
-        /* Property icons */
-        .gjs-sm-icon {
-          color: #999 !important;
-        }
-      `
-      document.head.appendChild(style)
-    })
-
-    editor.on("component:selected", (component: any) => {
-      setSelectedComponent(component)
-      setSelectedComponentName(component?.getName?.() || component?.get?.("tagName") || "Element")
-      // Force trait manager update
-      editor.TraitManager.select(component)
-    })
-
-    editor.on("component:deselected", () => {
-      setSelectedComponent(null)
-      setSelectedComponentName("")
-    })
-
-    // Configure asset manager for image uploads
-    editor.on("asset:upload:response", (response: any) => {
-      if (response?.url) {
-        editor.AssetManager.add({ src: response.url, type: "image" })
-        const target = editor.getSelected()
-        if (target && target.is("image")) {
-          target.set("src", response.url)
-        }
-        setTimeout(() => {
-          const modal = editor.Modal
-          if (modal?.isOpen?.()) modal.close()
-        }, 500)
+    return () => {
+      if (editorRef.current) {
+        editorRef.current.destroy()
+        editorRef.current = null
+        setEditorLoaded(false)
       }
-    })
+    }
+  }, [page])
 
-    // Load initial content
-    if (page?.design_json) {
-      try {
-        const json = typeof page.design_json === "string" ? JSON.parse(page.design_json) : page.design_json
-        editor.loadProjectData(json)
-      } catch {
-        if (page.content) {
-          editor.setComponents(page.content)
-        }
-      }
-    } else if (page?.content) {
-      editor.setComponents(page.content)
+  // Handle template change
+  const handleTemplateChange = (templateKey: string) => {
+    if (editorRef.current && PAGE_TEMPLATES[templateKey as keyof typeof PAGE_TEMPLATES]) {
+      const template = PAGE_TEMPLATES[templateKey as keyof typeof PAGE_TEMPLATES]
+      editorRef.current.setComponents(template.html)
+      setSelectedTemplate(templateKey)
     }
   }
 
+  // Handle save
   const handleSave = async () => {
     if (!editorRef.current) return
-    if (!title.trim()) {
-      toast.error("Please enter a page title")
-      return
-    }
-    if (!slug.trim()) {
-      toast.error("Please enter a page slug")
-      return
-    }
 
     setIsSaving(true)
     try {
-      const editor = editorRef.current
-      const html = editor.getHtml()
-      const css = editor.getCss()
-      const json = JSON.stringify(editor.getProjectData())
+      const html = editorRef.current.getHtml()
+      const css = editorRef.current.getCss()
+      const projectData = editorRef.current.getProjectData()
 
-      const fullHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>${css}</style>
-</head>
-<body>
-  ${html}
-</body>
-</html>
-      `.trim()
+      const fullContent = `<style>${css}</style>${html}`
 
       if (page?.id) {
         await updateTenantPage(page.id, {
-          title,
-          slug,
-          content: fullHtml,
-          design_json: json,
+          title: pageTitle,
+          slug: pageSlug,
+          content: fullContent,
+          design_json: projectData,
           is_published: isPublished,
         })
-        toast.success("Page updated successfully")
+        toast.success("Page saved successfully!")
       } else {
-        await createTenantPage({
+        const result = await createTenantPage({
           tenant_id: tenantId,
-          title,
-          slug,
-          content: fullHtml,
-          design_json: json,
+          title: pageTitle,
+          slug: pageSlug,
+          content: fullContent,
+          design_json: projectData,
           is_published: isPublished,
         })
-        toast.success("Page created successfully")
-        router.push(`/${tenantSlug}/admin/pages`)
+        if (result.data) {
+          toast.success("Page created successfully!")
+          router.push(`/${tenantSlug}/admin/pages/${result.data.id}/edit`)
+        }
       }
     } catch (error) {
-      console.error("Error saving page:", error)
+      console.error("Save error:", error)
       toast.error("Failed to save page")
     } finally {
       setIsSaving(false)
     }
   }
 
-  const togglePreview = () => {
-    if (!editorRef.current) return
-    const editor = editorRef.current
-    if (isPreview) {
-      editor.stopCommand("preview")
-    } else {
-      editor.runCommand("preview")
-    }
-    setIsPreview(!isPreview)
-  }
-
-  const toggleCode = () => {
-    if (!editorRef.current) return
-    const editor = editorRef.current
-    if (showCode) {
-      editor.stopCommand("export-template")
-    } else {
-      editor.runCommand("export-template")
-    }
-    setShowCode(!showCode)
-  }
-
-  const changeDevice = (newDevice: "desktop" | "tablet" | "mobile") => {
-    if (!editorRef.current) return
-    editorRef.current.Devices.select(newDevice)
-    setDevice(newDevice)
-  }
-
-  const handleUndo = () => editorRef.current?.UndoManager.undo()
-  const handleRedo = () => editorRef.current?.UndoManager.redo()
-
-  const loadTemplate = (templateKey: keyof typeof PAGE_TEMPLATES) => {
-    if (!editorRef.current) return
-    const template = PAGE_TEMPLATES[templateKey]
-    editorRef.current.setComponents(template.html)
-    toast.success(`Loaded "${template.name}" template`)
-  }
-
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-violet-600 border-r-transparent" />
-          <p className="mt-4 text-sm text-gray-500">Loading page builder...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const plugins = [webpagePlugin, blocksBasicPlugin, formsPlugin].filter(Boolean)
-
   return (
-    <div className="h-screen flex flex-col bg-gray-100 text-gray-800">
-      {/* Top Toolbar - Light theme matching demo */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
+    <div className="grapesjs-editor-wrapper h-screen flex flex-col bg-white">
+      {/* Top header bar */}
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-white z-50">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/${tenantSlug}/admin/pages`)}
-            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantSlug}/admin/pages`)} className="gap-1">
+            <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
 
-          <div className="w-px h-5 bg-gray-200" />
+          <div className="panel__basic-actions flex items-center" />
 
-          {/* Undo/Redo */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleUndo}
-            title="Undo"
-            className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <Undo className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRedo}
-            title="Redo"
-            className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <Redo className="h-4 w-4" />
-          </Button>
-
-          <div className="w-px h-5 bg-gray-200" />
-
-          {/* Template selector */}
-          <select
-            className="text-sm border border-gray-200 rounded-md px-3 py-1.5 bg-white text-gray-700 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
-            onChange={(e) => loadTemplate(e.target.value as keyof typeof PAGE_TEMPLATES)}
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Templates
-            </option>
-            {Object.entries(PAGE_TEMPLATES).map(([key, template]) => (
-              <option key={key} value={key}>
-                {template.name}
-              </option>
-            ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1 bg-transparent">
+                {PAGE_TEMPLATES[selectedTemplate as keyof typeof PAGE_TEMPLATES]?.name || "Select Template"}
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {Object.entries(PAGE_TEMPLATES).map(([key, template]) => (
+                <DropdownMenuItem key={key} onClick={() => handleTemplateChange(key)}>
+                  {template.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Center - Device selector */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => changeDevice("desktop")}
-            className={`h-8 w-8 rounded ${device === "desktop" ? "bg-white text-violet-600 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
-          >
-            <Monitor className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => changeDevice("tablet")}
-            className={`h-8 w-8 rounded ${device === "tablet" ? "bg-white text-violet-600 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
-          >
-            <Tablet className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => changeDevice("mobile")}
-            className={`h-8 w-8 rounded ${device === "mobile" ? "bg-white text-violet-600 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
-          >
-            <Smartphone className="h-4 w-4" />
-          </Button>
-        </div>
+        <div className="panel__devices flex items-center gap-1" />
 
-        {/* Right side buttons */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => editorRef.current?.runCommand("core:fullscreen")}
-            className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-            title="Fullscreen"
-          >
-            <Maximize className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleCode}
-            className={`h-8 w-8 ${showCode ? "bg-violet-100 text-violet-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}`}
-            title="View Code"
-          >
-            <Code className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={togglePreview}
-            className={`h-8 w-8 ${isPreview ? "bg-violet-100 text-violet-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}`}
-            title="Preview"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-
-          <div className="w-px h-5 bg-gray-200" />
-
+        <div className="flex items-center gap-3">
+          <div className="panel__switcher flex items-center" />
           <Button
             onClick={handleSave}
-            size="sm"
             disabled={isSaving}
-            className="bg-violet-600 hover:bg-violet-700 text-white font-medium"
+            size="sm"
+            className="gap-1 bg-violet-600 hover:bg-violet-700"
           >
-            <Save className="h-4 w-4 mr-1" />
+            <Save className="h-4 w-4" />
             {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Pages and Layers like demo */}
-        {leftPanelOpen && (
-          <div className="w-72 flex flex-col bg-white border-r border-gray-200">
-            {/* Pages section header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Layout className="h-4 w-4 text-gray-500" />
-                <span className="font-medium text-sm">Pages</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <Plus className="h-4 w-4 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            {/* Current page */}
-            <div className="px-4 py-2 border-b border-gray-200">
-              <div className="flex items-center gap-2 px-2 py-1.5 bg-violet-50 rounded text-violet-700 text-sm">
-                <span className="truncate">{title || "Untitled Page"}</span>
-              </div>
-            </div>
-
-            {/* Layers section */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
-                <Layers className="h-4 w-4 text-gray-500" />
-                <span className="font-medium text-sm">Layers</span>
-              </div>
-              <div id="layers-container" className="flex-1 overflow-y-auto" />
+      {/* Main editor area with native GrapesJS layout */}
+      <div className="editor-row flex flex-1 overflow-hidden">
+        {/* Left panel - Layers */}
+        <div className="editor-clm flex flex-col border-r bg-slate-50" style={{ flexBasis: "250px" }}>
+          {/* Pages section */}
+          <div className="p-3 border-b">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Pages</div>
+            <div className="bg-white rounded border px-3 py-2 text-sm font-medium truncate">
+              {pageTitle || "Untitled Page"}
             </div>
           </div>
-        )}
 
-        {/* Left panel toggle */}
-        <button
-          onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-r-md p-1 hover:bg-gray-50 shadow-sm"
-          style={{ left: leftPanelOpen ? "288px" : "0" }}
-        >
-          {leftPanelOpen ? (
-            <ChevronRight className="h-4 w-4 text-gray-400 rotate-180" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-gray-400" />
-          )}
-        </button>
-
-        {/* Main Canvas */}
-        <div className="flex-1 overflow-hidden bg-gray-200 relative">
-          {/* Removed canvas toolbar to simplify, kept it in original code for reference but commented out */}
-          {/* <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-[#373d49] rounded-lg p-1 shadow-lg border border-[#444]">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => editorRef.current?.runCommand("core:canvas-clear")}
-              className="h-7 w-7 text-gray-400 hover:text-red-400 hover:bg-[#404754]"
-              title="Clear Canvas"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-            <div className="w-px h-4 bg-[#555]" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-[#404754]"
-              title="Move Up"
-            >
-              <MoveUp className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-[#404754]"
-              title="Move Down"
-            >
-              <MoveDown className="h-3.5 w-3.5" />
-            </Button>
-            <div className="w-px h-4 bg-[#555]" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-[#404754]"
-              title="Duplicate"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-          </div> */}
-
-          <GjsEditor
-            grapesjs={grapesjs}
-            options={{
-              height: "100%",
-              width: "100%",
-              storageManager: false,
-              blockManager: {
-                appendTo: "#blocks-container",
-              },
-              styleManager: {
-                appendTo: "#styles-container",
-                sectors: [
-                  {
-                    name: "Layout",
-                    open: true,
-                    buildProps: ["display", "flex-direction", "justify-content", "align-items", "flex-wrap", "gap"],
-                  },
-                  {
-                    name: "Size",
-                    open: false,
-                    buildProps: ["width", "min-width", "max-width", "height", "min-height", "max-height"],
-                  },
-                  {
-                    name: "Space",
-                    open: false,
-                    buildProps: [
-                      "padding",
-                      "padding-top",
-                      "padding-right",
-                      "padding-bottom",
-                      "padding-left",
-                      "margin",
-                      "margin-top",
-                      "margin-right",
-                      "margin-bottom",
-                      "margin-left",
-                    ],
-                  },
-                  {
-                    name: "Position",
-                    open: false,
-                    buildProps: ["position", "top", "right", "bottom", "left", "z-index"],
-                  },
-                  {
-                    name: "Typography",
-                    open: false,
-                    buildProps: [
-                      "font-family",
-                      "font-size",
-                      "font-weight",
-                      "letter-spacing",
-                      "color",
-                      "text-align",
-                      "line-height",
-                      "text-decoration",
-                      "text-transform",
-                    ],
-                  },
-                  {
-                    name: "Background",
-                    open: false,
-                    buildProps: [
-                      "background-color",
-                      "background-image",
-                      "background-repeat",
-                      "background-position",
-                      "background-size",
-                    ],
-                  },
-                  {
-                    name: "Borders",
-                    open: false,
-                    buildProps: [
-                      "border-radius",
-                      "border-top-left-radius",
-                      "border-top-right-radius",
-                      "border-bottom-left-radius",
-                      "border-bottom-right-radius",
-                      "border",
-                      "border-width",
-                      "border-style",
-                      "border-color",
-                    ],
-                  },
-                  {
-                    name: "Effects",
-                    open: false,
-                    buildProps: ["opacity", "box-shadow", "transition"],
-                  },
-                ],
-              },
-              layerManager: {
-                appendTo: "#layers-container",
-              },
-              traitManager: {
-                appendTo: "#traits-container",
-              },
-              selectorManager: {
-                appendTo: "#selectors-container",
-              },
-              panels: { defaults: [] },
-              assetManager: {
-                upload: "/api/blob/upload-image",
-                uploadName: "file",
-                multiUpload: false,
-                autoAdd: false,
-              },
-              deviceManager: {
-                devices: [
-                  { name: "desktop", width: "" },
-                  { name: "tablet", width: "768px", widthMedia: "992px" },
-                  { name: "mobile", width: "375px", widthMedia: "480px" },
-                ],
-              },
-              plugins: plugins,
-              pluginsOpts: {
-                "grapesjs-preset-webpage": {
-                  blocksBasicOpts: { flexGrid: true },
-                  navbarOpts: false,
-                  countdownOpts: false,
-                  formsOpts: false,
-                },
-                "grapesjs-blocks-basic": {
-                  flexGrid: true,
-                  stylePrefix: "gjs-",
-                  blocks: ["column1", "column2", "column3", "column3-7", "text", "link", "image", "video", "map"],
-                },
-                "grapesjs-plugin-forms": {
-                  blocks: ["form", "input", "textarea", "select", "button", "label", "checkbox", "radio"],
-                },
-              },
-              canvas: {
-                styles: ["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"],
-              },
-            }}
-            onEditor={onEditor}
-          />
+          {/* Layers */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-3 border-b">
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Layers</div>
+            </div>
+            <div className="layers-container" />
+          </div>
         </div>
 
-        {/* Right panel toggle */}
-        <button
-          onClick={() => setRightPanelOpen(!rightPanelOpen)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-l-md p-1 hover:bg-gray-50 shadow-sm"
-          style={{ right: rightPanelOpen ? "320px" : "0" }}
-        >
-          {rightPanelOpen ? (
-            <ChevronRight className="h-4 w-4 text-gray-400" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-gray-400 rotate-180" />
-          )}
-        </button>
+        {/* Canvas */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="panel__top" />
+          <div ref={containerRef} className="flex-1 overflow-auto" />
+        </div>
 
-        {/* Right Sidebar - Styles and Properties combined like demo */}
-        {rightPanelOpen && (
-          <div className="w-80 flex flex-col bg-white border-l border-gray-200">
-            {/* Tab Headers */}
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => setRightTab("styles")}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-                  rightTab === "styles"
-                    ? "text-violet-600 border-b-2 border-violet-600 bg-violet-50/50"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                Styles
-              </button>
-              <button
-                onClick={() => setRightTab("settings")}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-                  rightTab === "settings"
-                    ? "text-violet-600 border-b-2 border-violet-600 bg-violet-50/50"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                Properties
-              </button>
-            </div>
+        {/* Right panel - Styles/Traits/Blocks */}
+        <div className="flex flex-col border-l bg-slate-50" style={{ flexBasis: "300px" }}>
+          {/* Panel tabs handled by GrapesJS */}
+          <div className="panel__styles" />
 
-            {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto">
-              {rightTab === "styles" && (
-                <div>
-                  {/* Selection info like demo */}
-                  <div className="p-4 border-b border-gray-200 bg-gray-50">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                      <Tag className="h-3 w-3" />
-                      Selection
-                    </div>
-                    <div id="selectors-container" />
-                  </div>
+          {/* Styles container */}
+          <div className="styles-container flex-1 overflow-auto" />
 
-                  {/* Blocks section - collapsible */}
-                  <details className="border-b border-gray-200" open>
-                    <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-gray-50 text-sm font-medium text-gray-700">
-                      <ChevronDown className="h-4 w-4 text-gray-400 details-chevron" />
-                      Blocks
-                    </summary>
-                    <div id="blocks-container" />
-                  </details>
+          {/* Traits container (hidden by default) */}
+          <div className="traits-container overflow-auto" style={{ display: "none" }} />
 
-                  {/* Style Manager */}
-                  <div id="styles-container" />
-                </div>
-              )}
-              {rightTab === "settings" && (
-                <div>
-                  {/* Selected component info */}
-                  {selectedComponent ? (
-                    <div className="p-4 border-b border-gray-200 bg-gray-50">
-                      <div className="text-xs text-gray-500 mb-1">Selected Element</div>
-                      <div className="font-medium text-gray-900">{selectedComponentName}</div>
-                    </div>
-                  ) : (
-                    <div className="p-4 border-b border-gray-200 bg-gray-50">
-                      <div className="text-sm text-gray-500">Select an element to edit its properties</div>
-                    </div>
-                  )}
+          {/* Blocks container (hidden by default) */}
+          <div className="blocks-container overflow-auto" style={{ display: "none" }} />
 
-                  {/* Traits/Properties */}
-                  <div id="traits-container" className="p-4" />
-
-                  {/* Page Settings */}
-                  <div className="border-t border-gray-200">
-                    <details open>
-                      <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-gray-50 text-sm font-medium text-gray-700">
-                        <Settings className="h-4 w-4 text-gray-400" />
-                        Page Settings
-                      </summary>
-                      <div className="px-4 pb-4 space-y-4">
-                        <div>
-                          <Label htmlFor="title" className="text-xs text-gray-500">
-                            Page Title
-                          </Label>
-                          <Input
-                            id="title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="My Page"
-                            className="mt-1.5"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="slug" className="text-xs text-gray-500">
-                            URL Slug
-                          </Label>
-                          <Input
-                            id="slug"
-                            value={slug}
-                            onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
-                            placeholder="my-page"
-                            className="mt-1.5"
-                          />
-                          <p className="text-xs text-gray-400 mt-1.5">
-                            /{tenantSlug}/p/{slug || "my-page"}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between pt-2">
-                          <Label htmlFor="published" className="text-sm text-gray-600">
-                            Published
-                          </Label>
-                          <Switch id="published" checked={isPublished} onCheckedChange={setIsPublished} />
-                        </div>
-                      </div>
-                    </details>
-                  </div>
-                </div>
-              )}
+          {/* Page Settings */}
+          <div className="border-t p-4 bg-white">
+            <div className="text-sm font-medium mb-3">Page Settings</div>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs text-slate-500">Page Title</Label>
+                <Input
+                  value={pageTitle}
+                  onChange={(e) => {
+                    setPageTitle(e.target.value)
+                    if (!page?.id) setPageSlug(generateSlug(e.target.value))
+                  }}
+                  className="mt-1 h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-slate-500">URL Slug</Label>
+                <Input
+                  value={pageSlug}
+                  onChange={(e) => setPageSlug(generateSlug(e.target.value))}
+                  className="mt-1 h-8 text-sm"
+                />
+                <span className="text-xs text-slate-400">
+                  /{tenantSlug}/p/{pageSlug}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Published</Label>
+                <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* GrapesJS custom styles */}
+      <style jsx global>{`
+        /* Override GrapesJS default styles to match demo */
+        .gjs-one-bg {
+          background-color: #f8fafc !important;
+        }
+        
+        .gjs-two-color {
+          color: #334155 !important;
+        }
+        
+        .gjs-three-bg {
+          background-color: #e2e8f0 !important;
+        }
+        
+        .gjs-four-color,
+        .gjs-four-color-h:hover {
+          color: #7c3aed !important;
+        }
+        
+        /* Panels */
+        .gjs-pn-panel {
+          padding: 0;
+        }
+        
+        .gjs-pn-buttons {
+          display: flex;
+          gap: 2px;
+        }
+        
+        .gjs-pn-btn {
+          padding: 8px;
+          border-radius: 4px;
+          min-height: auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .gjs-pn-btn:hover {
+          background-color: #e2e8f0;
+        }
+        
+        .gjs-pn-btn.gjs-pn-active {
+          background-color: #7c3aed !important;
+          color: white !important;
+        }
+        
+        .gjs-pn-btn.gjs-pn-active svg {
+          fill: white;
+        }
+        
+        /* Blocks */
+        .gjs-blocks-c {
+          padding: 10px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        
+        .gjs-block {
+          width: calc(50% - 4px) !important;
+          min-height: 60px !important;
+          border-radius: 8px;
+          padding: 10px;
+          margin: 0 !important;
+          border: 1px solid #e2e8f0;
+          background: white !important;
+          transition: all 0.15s ease;
+        }
+        
+        .gjs-block:hover {
+          border-color: #7c3aed;
+          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+        }
+        
+        .gjs-block__media {
+          margin-bottom: 8px;
+        }
+        
+        .gjs-block-label {
+          font-size: 11px !important;
+          font-weight: 500;
+          color: #64748b;
+        }
+        
+        /* Layers */
+        .gjs-layers {
+          background: transparent !important;
+        }
+        
+        .gjs-layer {
+          background: transparent;
+          padding: 0;
+        }
+        
+        .gjs-layer-title {
+          padding: 8px 10px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        
+        .gjs-layer-title:hover {
+          background: #e2e8f0;
+        }
+        
+        .gjs-layer.gjs-selected .gjs-layer-title {
+          background: #7c3aed !important;
+          color: white !important;
+        }
+        
+        .gjs-layer-children {
+          padding-left: 16px;
+        }
+        
+        /* Style Manager */
+        .gjs-sm-sector {
+          border: none !important;
+          margin-bottom: 4px;
+        }
+        
+        .gjs-sm-sector-title {
+          padding: 10px 12px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #334155;
+          background: white !important;
+          border-radius: 4px;
+          border: 1px solid #e2e8f0;
+        }
+        
+        .gjs-sm-sector-title:hover {
+          background: #f8fafc !important;
+        }
+        
+        .gjs-sm-properties {
+          padding: 12px;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-top: none;
+          border-radius: 0 0 4px 4px;
+        }
+        
+        .gjs-sm-property {
+          margin-bottom: 8px;
+        }
+        
+        .gjs-sm-label {
+          font-size: 11px;
+          color: #64748b;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+        
+        .gjs-field {
+          background: #f8fafc !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 4px !important;
+          padding: 6px 8px;
+        }
+        
+        .gjs-field:focus-within {
+          border-color: #7c3aed !important;
+          box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+        }
+        
+        .gjs-field input {
+          color: #334155 !important;
+          font-size: 12px;
+        }
+        
+        /* Selector Manager */
+        .gjs-clm-tags {
+          padding: 12px;
+          background: white;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .gjs-clm-tag {
+          background: #7c3aed !important;
+          color: white !important;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 11px;
+        }
+        
+        .gjs-clm-sels-info {
+          font-size: 11px;
+          color: #64748b;
+        }
+        
+        /* Canvas */
+        .gjs-cv-canvas {
+          background: #f1f5f9;
+        }
+        
+        .gjs-frame-wrapper {
+          background: white;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          border-radius: 4px;
+          overflow: hidden;
+        }
+        
+        /* Selected component highlight */
+        .gjs-selected {
+          outline: 2px solid #7c3aed !important;
+          outline-offset: -2px;
+        }
+        
+        /* Toolbar */
+        .gjs-toolbar {
+          background: #1e293b !important;
+          border-radius: 6px !important;
+          padding: 4px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .gjs-toolbar-item {
+          padding: 6px !important;
+          border-radius: 4px;
+          color: white !important;
+        }
+        
+        .gjs-toolbar-item:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Traits */
+        .gjs-trt-traits {
+          padding: 12px;
+        }
+        
+        .gjs-trt-trait {
+          margin-bottom: 10px;
+        }
+        
+        .gjs-trt-trait .gjs-label {
+          font-size: 11px;
+          color: #64748b;
+          font-weight: 500;
+        }
+        
+        /* Modal */
+        .gjs-mdl-dialog {
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        
+        .gjs-mdl-header {
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          padding: 16px 20px;
+        }
+        
+        .gjs-mdl-title {
+          font-weight: 600;
+          color: #1e293b;
+        }
+        
+        .gjs-mdl-content {
+          padding: 0;
+        }
+        
+        /* Resize handlers */
+        .gjs-resizer-h {
+          background: #7c3aed !important;
+          width: 8px !important;
+          border-radius: 4px;
+        }
+        
+        /* Component badge */
+        .gjs-badge {
+          background: #7c3aed !important;
+          color: white !important;
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 3px;
+        }
+        
+        /* Rich Text Editor */
+        .gjs-rte-toolbar {
+          background: #1e293b;
+          border-radius: 6px;
+          padding: 4px;
+        }
+        
+        .gjs-rte-action {
+          color: white;
+          padding: 6px;
+          border-radius: 4px;
+        }
+        
+        .gjs-rte-action:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .gjs-rte-active {
+          background: #7c3aed !important;
+        }
+      `}</style>
     </div>
   )
 }
+
+export { GrapesJSPageEditor }
+export default GrapesJSPageEditor
