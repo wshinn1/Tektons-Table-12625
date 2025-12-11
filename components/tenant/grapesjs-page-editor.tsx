@@ -120,6 +120,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
   const [isSaving, setIsSaving] = useState(false)
   const [editorLoaded, setEditorLoaded] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<string>("blank")
+  const [device, setDevice] = useState<string>("Desktop") // State to track current device
 
   const [leftPanel, setLeftPanel] = useState<"blocks" | "layers">("blocks")
   const [rightPanel, setRightPanel] = useState<"styles" | "properties">("styles")
@@ -653,7 +654,11 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
     editorRef.current?.runCommand(cmd)
   }
 
-  const setDevice = (device: string) => {
+  // State to track current device
+  const currentDevice = device
+
+  const setDeviceHandler = (device: string) => {
+    setDevice(device)
     editorRef.current?.setDevice(device)
   }
 
@@ -728,9 +733,9 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 data-[active=true]:bg-white data-[active=true]:shadow-sm"\
-            data-[active=true]:bg-white data-[active=true]:shadow-sm
-            onClick={() => setDevice("Desktop")}
+            className="h-8 w-8 data-[active=true]:bg-white data-[active=true]:shadow-sm"
+            data-active={device === "Desktop"}
+            onClick={() => setDeviceHandler("Desktop")}
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4">
               <path
@@ -739,7 +744,13 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
               />
             </svg>
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDevice("Tablet")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 data-[active=true]:bg-white data-[active=true]:shadow-sm"
+            data-active={device === "Tablet"}
+            onClick={() => setDeviceHandler("Tablet")}
+          >
             <svg viewBox="0 0 24 24" className="h-4 w-4">
               <path
                 fill="currentColor"
@@ -747,7 +758,13 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
               />
             </svg>
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDevice("Mobile")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 data-[active=true]:bg-white data-[active=true]:shadow-sm"
+            data-active={device === "Mobile"}
+            onClick={() => setDeviceHandler("Mobile")}
+          >
             <svg viewBox="0 0 24 24" className="h-4 w-4">
               <path
                 fill="currentColor"
@@ -921,10 +938,16 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
             className="flex-1 flex flex-col overflow-hidden"
           >
             <TabsList className="w-full rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
-              <TabsTrigger value="blocks" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
+              <TabsTrigger
+                value="blocks"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
+              >
                 Blocks
               </TabsTrigger>
-              <TabsTrigger value="layers" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
+              <TabsTrigger
+                value="layers"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
+              >
                 Layers
               </TabsTrigger>
             </TabsList>
@@ -990,10 +1013,16 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
             className="flex-1 flex flex-col overflow-hidden"
           >
             <TabsList className="w-full rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
-              <TabsTrigger value="styles" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
+              <TabsTrigger
+                value="styles"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
+              >
                 Styles
               </TabsTrigger>
-              <TabsTrigger value="properties" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm">
+              <TabsTrigger
+                value="properties"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-2 text-sm"
+              >
                 Properties
               </TabsTrigger>
             </TabsList>
