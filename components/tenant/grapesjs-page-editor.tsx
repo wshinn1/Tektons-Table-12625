@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Save, Sparkles, X, Loader2 } from "lucide-react"
+import { ArrowLeft, Save, Sparkles, X, Loader2, LayoutTemplate } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createTenantPage, updateTenantPage } from "@/app/actions/tenant-pages"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface Page {
   id: string
@@ -441,6 +442,8 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
   const [aiLoading, setAiLoading] = useState(false)
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([])
 
+  const [showTemplatePicker, setShowTemplatePicker] = useState(!page?.id)
+
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -451,30 +454,62 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
   }
 
   const handleAiGenerate = async () => {
-    if (!aiPrompt.trim() || !editorInstanceRef.current) return
+    console.log("[v0] AI Generate called with prompt:", aiPrompt)
+    console.log("[v0] Editor instance:", editorInstanceRef.current)
+
+    if (!aiPrompt.trim()) {
+      console.log("[v0] Empty prompt, returning")
+      toast.error("Please enter a prompt")
+      return
+    }
 
     setAiLoading(true)
     setAiMessages((prev) => [...prev, { role: "user", content: aiPrompt }])
+    const currentPrompt = aiPrompt
+    setAiPrompt("") // Clear immediately
 
     try {
+      console.log("[v0] Sending request to /api/ai/generate-page")
       const response = await fetch("/api/ai/generate-page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt }),
+        body: JSON.stringify({ prompt: currentPrompt }),
       })
 
-      if (!response.ok) throw new Error("Failed to generate content")
+      console.log("[v0] Response status:", response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("[v0] API error:", errorData)
+        throw new Error(errorData.error || "Failed to generate content")
+      }
 
       const data = await response.json()
+      console.log("[v0] Response data:", data)
 
       if (data.html) {
         // Insert the generated HTML into the editor
         const editor = editorInstanceRef.current
-        if (editor?.addComponents) {
-          editor.addComponents(data.html)
-        } else if (editor?.setComponents) {
-          const currentHtml = editor.getHtml?.() || ""
-          editor.setComponents(currentHtml + data.html)
+        console.log("[v0] Inserting HTML into editor")
+
+        if (editor) {
+          // Try different methods to add content
+          try {
+            if (editor.addComponents) {
+              editor.addComponents(data.html)
+              console.log("[v0] Added via addComponents")
+            } else if (editor.getWrapper) {
+              const wrapper = editor.getWrapper()
+              wrapper.append(data.html)
+              console.log("[v0] Added via wrapper.append")
+            } else if (editor.setComponents) {
+              const currentHtml = editor.getHtml?.() || ""
+              editor.setComponents(currentHtml + data.html)
+              console.log("[v0] Added via setComponents")
+            }
+          } catch (insertError) {
+            console.error("[v0] Error inserting content:", insertError)
+          }
         }
 
         setAiMessages((prev) => [
@@ -485,16 +520,20 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
               data.message || "I've added the content to your page. You can now customize it using the visual editor.",
           },
         ])
+        toast.success("Content generated successfully!")
       }
     } catch (error) {
       console.error("[v0] AI generation error:", error)
       setAiMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error generating the content. Please try again." },
+        {
+          role: "assistant",
+          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+        },
       ])
+      toast.error("Failed to generate content")
     } finally {
       setAiLoading(false)
-      setAiPrompt("")
     }
   }
 
@@ -564,7 +603,8 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
         plugins.push((editor: any) => {
           editor.onReady(() => {
             // Only show template dialog for new pages (no existing page)
-            if (!page?.id) {
+            if (!page?.id && showTemplatePicker) {
+              // Check showTemplatePicker state
               editor.runCommand("studio:layoutToggle", {
                 id: "templates-panel",
                 header: false,
@@ -575,6 +615,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
                   onSelect: ({ loadTemplate, template }: any) => {
                     loadTemplate(template)
                     editor.runCommand("studio:layoutRemove", { id: "templates-panel" })
+                    setShowTemplatePicker(false) // Hide picker after selection
                   },
                 },
               })
@@ -677,24 +718,32 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
                 id: "column2",
                 label: "2 Columns",
                 category: "Layout",
-                content:
-                  '<div style="display: flex; padding: 10px; gap: 10px;"><div style="flex: 1; padding: 10px; min-height: 75px;"></div><div style="flex: 1; padding: 10px; min-height: 75px;"></div></div>',
+                content: `<div data-gjs-type="row" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; width: 100%;">
+                  <div data-gjs-type="cell" style="flex: 1 1 45%; min-width: 200px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                  <div data-gjs-type="cell" style="flex: 1 1 45%; min-width: 200px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                </div>`,
                 media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h7v16H4zm9 0h7v16h-7z"/></svg>',
               },
               {
                 id: "column3",
                 label: "3 Columns",
                 category: "Layout",
-                content:
-                  '<div style="display: flex; padding: 10px; gap: 10px;"><div style="flex: 1; padding: 10px; min-height: 75px;"></div><div style="flex: 1; padding: 10px; min-height: 75px;"></div><div style="flex: 1; padding: 10px; min-height: 75px;"></div></div>',
-                media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h5v16H4zm7 0h9v16h-9z"/></svg>',
+                content: `<div data-gjs-type="row" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; width: 100%;">
+                  <div data-gjs-type="cell" style="flex: 1 1 30%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                  <div data-gjs-type="cell" style="flex: 1 1 30%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                  <div data-gjs-type="cell" style="flex: 1 1 30%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                </div>`,
+                media:
+                  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h5v16H4zm6 0h4v16h-4zm6 0h4v16h-4z"/></svg>',
               },
               {
                 id: "column37",
                 label: "2 Columns 3/7",
                 category: "Layout",
-                content:
-                  '<div style="display: flex; padding: 10px; gap: 10px;"><div style="flex: 3; padding: 10px; min-height: 75px;"></div><div style="flex: 7; padding: 10px; min-height: 75px;"></div></div>',
+                content: `<div data-gjs-type="row" style="display: flex; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; width: 100%;">
+                  <div data-gjs-type="cell" style="flex: 3 1 25%; min-width: 150px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                  <div data-gjs-type="cell" style="flex: 7 1 60%; min-width: 200px; padding: 10px; min-height: 75px; background: rgba(0,0,0,0.02); border: 1px dashed #ccc;"></div>
+                </div>`,
                 media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h5v16H4zm7 0h9v16h-9z"/></svg>',
               },
               // Component blocks
@@ -926,7 +975,7 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
         editorInstanceRef.current = null
       }
     }
-  }, [page, pageTitle])
+  }, [page, pageTitle, showTemplatePicker]) // Added showTemplatePicker to dependency array
 
   // Handle save
   const handleSave = useCallback(async () => {
@@ -1013,6 +1062,11 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
           <Button variant="outline" size="sm" onClick={() => setShowSettingsModal(true)}>
             Page Settings
           </Button>
+
+          <Button variant="outline" size="sm" onClick={() => setShowTemplatePicker(true)} className="gap-2">
+            <LayoutTemplate className="h-4 w-4" />
+            Templates
+          </Button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -1081,28 +1135,30 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
             </div>
 
             <div className="p-4 border-t">
-              <div className="flex gap-2">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log("[v0] Form submitted")
+                  handleAiGenerate()
+                }}
+                className="space-y-2"
+              >
                 <Textarea
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
                   placeholder="Describe what you want to create..."
                   className="resize-none"
                   rows={2}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleAiGenerate()
-                    }
-                  }}
                 />
-              </div>
-              <Button
-                onClick={handleAiGenerate}
-                disabled={aiLoading || !aiPrompt.trim()}
-                className="w-full mt-2 bg-violet-600 hover:bg-violet-700"
-              >
-                {aiLoading ? "Generating..." : "Generate"}
-              </Button>
+                <Button
+                  type="submit"
+                  disabled={aiLoading || !aiPrompt.trim()}
+                  className="w-full bg-violet-600 hover:bg-violet-700"
+                >
+                  {aiLoading ? "Generating..." : "Generate"}
+                </Button>
+              </form>
             </div>
           </div>
         )}
@@ -1142,6 +1198,64 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
           </div>
           <div className="flex justify-end">
             <Button onClick={() => setShowSettingsModal(false)}>Done</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Picker Modal */}
+      <Dialog open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
+        <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Choose a Template</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Select a template to start with, or choose "Blank Page" to start from scratch.
+            </p>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-4">
+            {PAGE_TEMPLATES.map((template) => (
+              <Card
+                key={template.id}
+                className="cursor-pointer hover:border-violet-500 hover:shadow-md transition-all"
+                onClick={() => {
+                  // Load the template content into the editor
+                  const editor = editorInstanceRef.current
+                  if (editor && template.data?.pages?.[0]?.component) {
+                    try {
+                      // Clear existing content and add template
+                      if (editor.DomComponents) {
+                        const wrapper = editor.DomComponents.getWrapper()
+                        if (wrapper) {
+                          wrapper.components(template.data.pages[0].component)
+                        }
+                      } else if (editor.setComponents) {
+                        editor.setComponents(template.data.pages[0].component)
+                      }
+                      toast.success(`Template "${template.name}" loaded!`)
+                    } catch (err) {
+                      console.error("[v0] Error loading template:", err)
+                      toast.error("Failed to load template")
+                    }
+                  }
+                  setShowTemplatePicker(false)
+                }}
+              >
+                <div className="relative">
+                  <img
+                    src={template.media || "/placeholder.svg?height=150&width=300&query=page template"}
+                    alt={template.name}
+                    className="w-full h-32 object-cover rounded-t-lg bg-gray-100"
+                  />
+                </div>
+                <CardContent className="p-3">
+                  <h4 className="text-sm font-semibold text-center">{template.name}</h4>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowTemplatePicker(false)}>
+              Start Blank
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

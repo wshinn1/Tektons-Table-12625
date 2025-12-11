@@ -68,9 +68,7 @@ export function TenantAdminMobileMenu({
     return pathname === href || pathname.startsWith(href + "/")
   }
 
-  const allItems = pageBuilderEnabled
-    ? [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
-    : adminNavItems
+  const allItems = [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
 
   // Find current page label
   const currentPage = allItems.find((item) => isActive(item.href))?.label || "Admin"
