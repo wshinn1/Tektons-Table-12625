@@ -504,13 +504,46 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
 
     const initStudioEditor = async () => {
       try {
-        // Dynamic import of Studio SDK and plugins
+        // Dynamic import of Studio SDK
         const { default: createStudioEditor } = await import("@grapesjs/studio-sdk")
         await import("@grapesjs/studio-sdk/style")
 
-        const { layoutSidebarButtons, flexColumns, proseMirror, fullSize, lightGallery, listPages } = await import(
-          "@grapesjs/studio-sdk-plugins"
-        )
+        const plugins: any[] = []
+
+        try {
+          const sdkPlugins = await import("@grapesjs/studio-sdk-plugins")
+
+          // Only add plugins that exist and have an init method
+          if (sdkPlugins.layoutSidebarButtons?.init) {
+            plugins.push(
+              sdkPlugins.layoutSidebarButtons.init({
+                sidebarButtons: ({ sidebarButtons }: any) => sidebarButtons,
+              }),
+            )
+          }
+
+          if (sdkPlugins.flexColumns?.init) {
+            plugins.push(sdkPlugins.flexColumns.init({}))
+          }
+
+          if (sdkPlugins.proseMirror?.init) {
+            plugins.push(sdkPlugins.proseMirror.init({}))
+          }
+
+          if (sdkPlugins.fullSize?.init) {
+            plugins.push(sdkPlugins.fullSize.init({}))
+          }
+
+          if (sdkPlugins.lightGallery?.init) {
+            plugins.push(sdkPlugins.lightGallery.init({}))
+          }
+
+          if (sdkPlugins.listPages?.init) {
+            plugins.push(sdkPlugins.listPages.init({}))
+          }
+        } catch (pluginError) {
+          console.warn("[v0] Some SDK plugins could not be loaded:", pluginError)
+        }
 
         // Get initial content
         let initialHtml = '<section style="min-height: 100vh; padding: 40px 20px;"></section>'
@@ -528,47 +561,33 @@ function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorPr
           initialHtml = page.content
         }
 
+        plugins.push((editor: any) => {
+          editor.onReady(() => {
+            // Only show template dialog for new pages (no existing page)
+            if (!page?.id) {
+              editor.runCommand("studio:layoutToggle", {
+                id: "templates-panel",
+                header: false,
+                placer: { type: "dialog", title: "Choose a template for your page", size: "l" },
+                layout: {
+                  type: "panelTemplates",
+                  content: { itemsPerRow: 3 },
+                  onSelect: ({ loadTemplate, template }: any) => {
+                    loadTemplate(template)
+                    editor.runCommand("studio:layoutRemove", { id: "templates-panel" })
+                  },
+                },
+              })
+            }
+          })
+        })
+
         // Create Studio Editor
         const editor = await createStudioEditor({
           root: editorContainerRef.current!,
           licenseKey: GRAPESJS_LICENSE_KEY,
 
-          plugins: [
-            // Sidebar with Blocks, Layers, Assets, Global Styles panels
-            layoutSidebarButtons.init({
-              sidebarButtons: ({ sidebarButtons }) => sidebarButtons,
-            }),
-            // Flex Columns - CSS Flexbox-based responsive columns with drag-resize
-            flexColumns.init({}),
-            // ProseMirror - Enhanced rich text editor with formatting options
-            proseMirror.init({}),
-            // Full Size - Full-size editing mode
-            fullSize.init({}),
-            // Light Gallery - Image gallery/lightbox support
-            lightGallery.init({}),
-            // List Pages - Page listing and management
-            listPages.init({}),
-            (editor: any) => {
-              editor.onReady(() => {
-                // Only show template dialog for new pages (no existing page)
-                if (!page?.id) {
-                  editor.runCommand("studio:layoutToggle", {
-                    id: "templates-panel",
-                    header: false,
-                    placer: { type: "dialog", title: "Choose a template for your page", size: "l" },
-                    layout: {
-                      type: "panelTemplates",
-                      content: { itemsPerRow: 3 },
-                      onSelect: ({ loadTemplate, template }: any) => {
-                        loadTemplate(template)
-                        editor.runCommand("studio:layoutRemove", { id: "templates-panel" })
-                      },
-                    },
-                  })
-                }
-              })
-            },
-          ],
+          plugins,
 
           // Project configuration
           project: {
