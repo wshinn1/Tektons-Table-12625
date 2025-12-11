@@ -18,6 +18,7 @@
     "@builder.io/sdk": "latest",
     "@grapesjs/react": "latest",
     "@grapesjs/studio-sdk": "latest",
+    "@grapesjs/studio-sdk-plugins": "latest",
     "@hocuspocus/provider": "latest",
     "@hookform/resolvers": "^3.10.0",
     "@mantine/core": "latest",

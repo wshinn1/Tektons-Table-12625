@@ -35,6 +35,9 @@ importers:
       '@grapesjs/studio-sdk':
         specifier: latest
         version: 1.0.56(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@grapesjs/studio-sdk-plugins':
+        specifier: latest
+        version: 1.0.31
       '@hocuspocus/provider':
         specifier: latest
         version: 3.4.1(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)
@@ -625,6 +628,9 @@ packages:
       grapesjs: ^0.22.5
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
+
+  '@grapesjs/studio-sdk-plugins@1.0.31':
+    resolution: {integrity: sha512-JF2kjbQ8HIEI6nLIByrGSrx8FNkCpmYc7GgVQ06HsRdIeQvdUBmwhJbo6iEBjNNHAqiW9+LRyo03HNtHK0oD0Q==}
 
   '@grapesjs/studio-sdk@1.0.56':
     resolution: {integrity: sha512-9Po/gWg+FsJbWbTBpOE7EPZjRAwgqfJ+/7nLuD1OfhMYt+F+0ck3ErTwl7Ri9/VT9NfOGDW//3NqlNzy5p0wtA==}
@@ -4153,6 +4159,11 @@ packages:
   h3@1.15.4:
     resolution: {integrity: sha512-z5cFQWDffyOe4vQ9xIqNfCZdV4p//vy6fBnr8Q1AWnVZ0teurKMG66rLj++TKwKPUP3u7iMUvrvKaEUiQw2QWQ==}
 
+  handlebars@4.7.8:
+    resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
+
   hard-rejection@2.1.0:
     resolution: {integrity: sha512-VIZB+ibDhx7ObhAe7OVtoEbuP4h/MuOTHJ+J8h/eBXotJYl0fBgR72xDFCKgIh22OJZIOVNxBMWuhAr10r8HdA==}
     engines: {node: '>=6'}
@@ -6108,6 +6119,11 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
+  uglify-js@3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+
   uncrypto@0.1.3:
     resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
 
@@ -6308,6 +6324,9 @@ packages:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
     hasBin: true
+
+  wordwrap@1.0.0:
+    resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
 
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
@@ -6804,6 +6823,19 @@ snapshots:
       grapesjs: 0.22.14
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
+
+  '@grapesjs/studio-sdk-plugins@1.0.31':
+    dependencies:
+      handlebars: 4.7.8
+      prosemirror-commands: 1.7.1
+      prosemirror-history: 1.5.0
+      prosemirror-inputrules: 1.5.1
+      prosemirror-keymap: 1.2.3
+      prosemirror-model: 1.25.4
+      prosemirror-schema-list: 1.5.1
+      prosemirror-state: 1.4.4
+      prosemirror-tables: 1.8.3
+      prosemirror-view: 1.41.4
 
   '@grapesjs/studio-sdk@1.0.56(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
@@ -10420,6 +10452,15 @@ snapshots:
       ufo: 1.6.1
       uncrypto: 0.1.3
 
+  handlebars@4.7.8:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
+
   hard-rejection@2.1.0: {}
 
   has-flag@4.0.0: {}
@@ -12689,6 +12730,9 @@ snapshots:
 
   ufo@1.6.1: {}
 
+  uglify-js@3.19.3:
+    optional: true
+
   uncrypto@0.1.3: {}
 
   underscore@1.13.1: {}
@@ -12920,6 +12964,8 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  wordwrap@1.0.0: {}
 
   wrap-ansi@7.0.0:
     dependencies:
