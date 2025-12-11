@@ -41,6 +41,7 @@ const navSections: NavSection[] = [
       { label: "Pricing Editor", href: "/admin/pricing-editor", icon: "💰" },
       { label: "Security Editor", href: "/admin/security-editor", icon: "🔒" },
       { label: "Help Editor", href: "/admin/help/manage", icon: "❓" },
+      { label: "Blog Page Editor", href: "/admin/blog-page-editor", icon: "📰" }, // Added Blog Page Editor to sidebar
     ],
   },
   {
