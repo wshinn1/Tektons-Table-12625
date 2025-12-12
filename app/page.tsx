@@ -14,7 +14,7 @@ const NewsletterSignup = dynamicImport(
   { ssr: true, loading: () => null },
 )
 
-export const dynamicRoute = "force-dynamic"
+export const revalidate = 60 // Revalidate every 60 seconds instead
 
 const iconMap: Record<string, any> = LucideIcons
 
@@ -66,20 +66,7 @@ export async function generateMetadata() {
 }
 
 export default async function LandingPage() {
-  const fetchWithTimeout = async (fn: () => Promise<any>, timeout = 800) => {
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
-    try {
-      return await Promise.race([fn(), timeoutPromise])
-    } catch (err) {
-      console.error("Content fetch timeout or error:", err)
-      return null
-    }
-  }
-
-  const [banner, sections] = await Promise.all([
-    fetchWithTimeout(() => getSiteContent("announcement_banner")),
-    fetchWithTimeout(() => getHomepageSections()),
-  ])
+  const [banner, sections] = await Promise.all([getSiteContent("announcement_banner"), getHomepageSections()])
 
   const heroSection = sections?.find((s: any) => s.section_type === "hero_section")
   const heroContent = heroSection?.content || {}

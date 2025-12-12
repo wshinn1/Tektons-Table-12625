@@ -76,27 +76,17 @@ export default function FullWidthVisualHeroDisplay1(props: FullWidthVisualHeroDi
   useEffect(() => {
     if (backgroundType !== "video") return
 
-    let triggered = false
     const loadVideo = () => {
-      if (triggered) return
-      triggered = true
-      setTimeout(() => setShouldLoadVideo(true), 15000)
+      if (document.readyState === "complete") {
+        setTimeout(() => setShouldLoadVideo(true), 3000)
+      }
     }
 
-    // Wait for user interaction
-    const events = ["scroll", "touchstart", "click", "mousemove"]
-    events.forEach((event) => {
-      window.addEventListener(event, loadVideo, { once: true, passive: true })
-    })
-
-    // Fallback after 15s
-    const timeout = setTimeout(loadVideo, 15000)
-
-    return () => {
-      clearTimeout(timeout)
-      events.forEach((event) => {
-        window.removeEventListener(event, loadVideo)
-      })
+    if (document.readyState === "complete") {
+      setTimeout(() => setShouldLoadVideo(true), 3000)
+    } else {
+      window.addEventListener("load", loadVideo, { once: true })
+      return () => window.removeEventListener("load", loadVideo)
     }
   }, [backgroundType])
 
@@ -145,7 +135,7 @@ export default function FullWidthVisualHeroDisplay1(props: FullWidthVisualHeroDi
           alt="Hero background"
           fill
           priority
-          quality={90}
+          quality={75}
           sizes="100vw"
           className="object-cover"
         />
@@ -172,7 +162,7 @@ export default function FullWidthVisualHeroDisplay1(props: FullWidthVisualHeroDi
         />
       )}
 
-      {backgroundType === "video" && !shouldLoadVideo && (
+      {backgroundType === "video" && !videoLoaded && (
         <div
           className="absolute inset-0"
           style={{

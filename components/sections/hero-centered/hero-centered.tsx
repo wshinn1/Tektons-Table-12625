@@ -92,28 +92,18 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
   useEffect(() => {
     if (!isVideo || !actualVideoUrl) return
 
-    let triggered = false
     const loadVideo = () => {
-      if (triggered) return
-      triggered = true
-      // Wait until after significant user interaction or 10s, whichever comes first
-      setTimeout(() => setShouldRenderVideo(true), 10000)
+      // Only load after page is fully interactive
+      if (document.readyState === "complete") {
+        setTimeout(() => setShouldRenderVideo(true), 2000)
+      }
     }
 
-    // Load on scroll or interaction
-    const events = ["scroll", "touchstart", "click", "mousemove"]
-    events.forEach((event) => {
-      window.addEventListener(event, loadVideo, { once: true, passive: true })
-    })
-
-    // Fallback after 10s
-    const timeout = setTimeout(loadVideo, 10000)
-
-    return () => {
-      clearTimeout(timeout)
-      events.forEach((event) => {
-        window.removeEventListener(event, loadVideo)
-      })
+    if (document.readyState === "complete") {
+      setTimeout(() => setShouldRenderVideo(true), 2000)
+    } else {
+      window.addEventListener("load", loadVideo, { once: true })
+      return () => window.removeEventListener("load", loadVideo)
     }
   }, [isVideo, actualVideoUrl])
 
@@ -204,13 +194,13 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
         minHeight,
       }}
     >
-      {isVideo && posterImage && (
+      {isVideo && posterImage && !videoLoaded && (
         <Image
           src={posterImage || "/placeholder.svg"}
           alt="Hero background"
           fill
           priority
-          quality={90}
+          quality={75}
           sizes="100vw"
           className="object-cover"
           style={{ zIndex: 0 }}
