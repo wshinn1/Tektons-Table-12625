@@ -9,6 +9,7 @@ const FeaturesGrid = dynamic(() => import("./features-grid/features-grid"))
 const PricingComparison = dynamic(() => import("./pricing-comparison/pricing-comparison"))
 const CtaSection = dynamic(() => import("./cta-section/cta-section"))
 const HeroCentered = dynamic(() => import("./hero-centered/hero-centered"))
+const Hero1 = dynamic(() => import("./hero-1/hero-1"))
 
 const SECTION_COMPONENTS: Record<string, any> = {
   "sections/hero-overlay": HeroOverlay,
@@ -18,6 +19,7 @@ const SECTION_COMPONENTS: Record<string, any> = {
   "sections/pricing-comparison": PricingComparison,
   "sections/cta-section": CtaSection,
   "sections/hero-centered": HeroCentered,
+  "sections/hero-1": Hero1,
 }
 
 interface SectionRendererProps {

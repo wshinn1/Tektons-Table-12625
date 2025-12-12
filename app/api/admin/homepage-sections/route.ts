@@ -108,3 +108,39 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const supabase = await createServerClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const sectionId = searchParams.get("id")
+
+    if (!sectionId) {
+      return NextResponse.json({ error: "Section ID required" }, { status: 400 })
+    }
+
+    // Mark section as inactive instead of deleting
+    const { error } = await supabase.from("homepage_sections").update({ is_active: false }).eq("id", sectionId)
+
+    if (error) {
+      console.error("Error deleting section:", error)
+      return NextResponse.json({ error: `Failed to delete section: ${error.message}` }, { status: 500 })
+    }
+
+    revalidatePath("/")
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error in delete section API:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}

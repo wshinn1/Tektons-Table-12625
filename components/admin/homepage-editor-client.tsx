@@ -20,8 +20,8 @@ import {
   Layout,
   Sparkles,
   Wand2,
-  Twitch as Switch,
 } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import {
   Dialog,
   DialogContent,
@@ -205,14 +205,50 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
     toast.success("Builder.io section added! Edit it in Builder.io, then save your changes.")
   }
 
-  const deleteSection = (index: number) => {
+  const deleteSection = async (index: number) => {
     if (!confirm("Are you sure you want to delete this section?")) return
 
-    setSections((prev) => {
-      const newSections = prev.filter((_, i) => i !== index)
-      return newSections.map((s, i) => ({ ...s, display_order: i }))
-    })
-    toast.success("Section deleted. Don't forget to save your changes.")
+    const sectionToDelete = sections[index]
+
+    // If it's a new section (not saved yet), just remove from state
+    if (String(sectionToDelete.id).startsWith("new-")) {
+      setSections((prev) => {
+        const newSections = prev.filter((_, i) => i !== index)
+        return newSections.map((s, i) => ({ ...s, display_order: i }))
+      })
+      toast.success("Section removed.")
+      return
+    }
+
+    // For existing sections, mark as inactive and save immediately
+    try {
+      const updatedSections = sections
+        .map((section, i) => {
+          if (i === index) {
+            return { ...section, is_active: false }
+          }
+          // Update display order for remaining sections
+          if (i > index) {
+            return { ...section, display_order: section.display_order - 1 }
+          }
+          return section
+        })
+        .filter((_, i) => i !== index) // Remove from local state
+
+      const response = await fetch("/api/admin/homepage-sections", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sections: updatedSections }),
+      })
+
+      if (!response.ok) throw new Error("Failed to delete section")
+
+      setSections(updatedSections)
+      toast.success("Section deleted successfully")
+    } catch (error) {
+      console.error("Error deleting section:", error)
+      toast.error("Failed to delete section")
+    }
   }
 
   const updateSection = (id: string, updates: Partial<HomepageSection>) => {
@@ -224,11 +260,13 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
     setSections((prev) =>
       prev.map((s) => {
         if (s.id === id) {
+          const processedValue =
+            typeof value === "string" && (value === "true" || value === "false") ? value === "true" : value
           return {
             ...s,
             content: {
               ...s.content,
-              [key]: value,
+              [key]: processedValue,
             },
           }
         }
@@ -544,15 +582,551 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
         </Card>
       )}
 
-      {sections.map((section, index) => {
-        const isExpanded = expandedSections[section.id]
-        const isUploading = uploadingSections[section.id]
-        const isBuilder = section.source_type === "builder_io"
-        const isScreenshot = section.source_type === "screenshot"
+      {sections
+        .filter((s) => s.is_active !== false)
+        .map((section, index) => {
+          const isExpanded = expandedSections[section.id]
+          const isUploading = uploadingSections[section.id]
+          const isBuilder = section.source_type === "builder_io"
+          const isScreenshot = section.source_type === "screenshot"
 
-        return (
-          <div key={section.id}>
-            {index === 0 && (
+          return (
+            <div key={section.id}>
+              {index === 0 && (
+                <div className="flex justify-center py-2">
+                  <AddSectionDialog
+                    triggerButton={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => setInsertAtIndex(0)}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Insert section here
+                      </Button>
+                    }
+                    atIndex={0}
+                  />
+                </div>
+              )}
+
+              <Card className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center gap-1 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => moveSection(index, "up")}
+                      disabled={index === 0}
+                      title="Move up"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => moveSection(index, "down")}
+                      disabled={index === sections.length - 1}
+                      title="Move down"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex-1">
+                    <button
+                      onClick={() => toggleSection(section.id)}
+                      className="w-full flex items-center justify-between mb-4"
+                    >
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
+                            {index + 1}
+                          </span>
+                          <h3 className="text-lg font-semibold">{section.title || section.section_key}</h3>
+                          {isBuilder ? (
+                            <Badge variant="secondary" className="text-xs">
+                              <Blocks className="w-3 h-3 mr-1" />
+                              Builder.io
+                            </Badge>
+                          ) : isScreenshot ? (
+                            <Badge variant="secondary" className="text-xs">
+                              <Wand2 className="w-3 h-3 mr-1" />
+                              Screenshot
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              <Layout className="w-3 h-3 mr-1" />
+                              Built-in
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{section.section_key}</p>
+                      </div>
+                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="space-y-6 mt-4">
+                        <div className="flex justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteSection(index)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Section
+                          </Button>
+                        </div>
+
+                        {isBuilder ? (
+                          <BuilderSectionEditor sectionId={section.builder_section_id || ""} onUpdate={() => {}} />
+                        ) : isScreenshot ? (
+                          <div>
+                            <Label>Code</Label>
+                            <Textarea
+                              value={section.content.code || ""}
+                              onChange={(e) => updateContent(section.id, "code", e.target.value)}
+                              rows={10}
+                              className="font-mono text-sm"
+                            />
+                            <Label className="mt-2">Preview</Label>
+                            <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
+                              <img
+                                src={section.content.preview || "/placeholder.svg"}
+                                alt="Screenshot preview"
+                                className="w-full h-32 object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/invalid-image.jpg"
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Built-in section editor (existing code) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <Label>Title</Label>
+                                <Input
+                                  value={section.title || ""}
+                                  onChange={(e) => updateSection(section.id, { title: e.target.value })}
+                                  placeholder="Section title"
+                                />
+                              </div>
+                              <div>
+                                <Label>Subtitle</Label>
+                                <Input
+                                  value={section.subtitle || ""}
+                                  onChange={(e) => updateSection(section.id, { subtitle: e.target.value })}
+                                  placeholder="Section subtitle"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <Label>Background Type</Label>
+                                  <select
+                                    value={section.background_type}
+                                    onChange={(e) => updateSection(section.id, { background_type: e.target.value })}
+                                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                                  >
+                                    <option value="color">Solid Color</option>
+                                    <option value="image">Image URL</option>
+                                    <option value="video">Video CDN URL</option>
+                                  </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                  <Label>
+                                    {section.background_type === "color"
+                                      ? "Background Color (hex)"
+                                      : section.background_type === "image"
+                                        ? "Image URL"
+                                        : "Video CDN URL"}
+                                  </Label>
+                                  <div className="flex gap-2">
+                                    <Input
+                                      value={section.background_value || ""}
+                                      onChange={(e) => updateSection(section.id, { background_value: e.target.value })}
+                                      placeholder={
+                                        section.background_type === "color"
+                                          ? "#f5f5f5"
+                                          : section.background_type === "image"
+                                            ? "https://example.com/image.jpg"
+                                            : "https://cdn.example.com/video.mp4"
+                                      }
+                                    />
+                                    {section.background_type === "image" && (
+                                      <Button type="button" variant="outline" size="sm" disabled={isUploading} asChild>
+                                        <label className="cursor-pointer">
+                                          <Upload className="w-4 h-4 mr-2" />
+                                          {isUploading ? "Uploading..." : "Upload"}
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0]
+                                              if (file) handleImageUpload(section.id, file)
+                                            }}
+                                            disabled={isUploading}
+                                          />
+                                        </label>
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {section.background_type === "image" && section.background_value && (
+                                <div className="mt-2">
+                                  <Label className="text-sm text-muted-foreground">Preview</Label>
+                                  <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
+                                    <img
+                                      src={section.background_value || "/placeholder.svg"}
+                                      alt="Background preview"
+                                      className="w-full h-32 object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.src = "/invalid-image.jpg"
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {section.section_templates?.field_schema?.fields && (
+                                <div className="space-y-4 border-t pt-4 mt-4">
+                                  <h4 className="font-medium text-sm text-muted-foreground">Template Fields</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {section.section_templates.field_schema.fields.map((field: any) => (
+                                      <div key={field.key} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                                        <Label>
+                                          {field.label}
+                                          {field.required && <span className="text-destructive ml-1">*</span>}
+                                        </Label>
+                                        {field.type === "text" && (
+                                          <Input
+                                            value={section.content?.[field.key] || ""}
+                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                            placeholder={field.label}
+                                          />
+                                        )}
+                                        {field.type === "textarea" && (
+                                          <Textarea
+                                            value={section.content?.[field.key] || ""}
+                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                            placeholder={field.label}
+                                            rows={3}
+                                          />
+                                        )}
+                                        {field.type === "url" && (
+                                          <Input
+                                            type="url"
+                                            value={section.content?.[field.key] || ""}
+                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                            placeholder="https://..."
+                                          />
+                                        )}
+                                        {field.type === "image" && (
+                                          <div className="space-y-2">
+                                            <Input
+                                              type="url"
+                                              value={section.content?.[field.key] || ""}
+                                              onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                              placeholder="Image URL"
+                                            />
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              disabled={isUploading}
+                                              asChild
+                                            >
+                                              <label className="cursor-pointer">
+                                                <Upload className="w-4 h-4 mr-2" />
+                                                {isUploading ? "Uploading..." : "Upload Image"}
+                                                <input
+                                                  type="file"
+                                                  accept="image/*"
+                                                  className="hidden"
+                                                  onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (file) handleFieldImageUpload(section.id, field.key, file)
+                                                  }}
+                                                  disabled={isUploading}
+                                                />
+                                              </label>
+                                            </Button>
+                                            {section.content?.[field.key] && (
+                                              <div className="mt-2">
+                                                <Label className="text-sm text-muted-foreground">Preview</Label>
+                                                <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
+                                                  <img
+                                                    src={section.content[field.key] || "/placeholder.svg"}
+                                                    alt="Field image preview"
+                                                    className="w-full h-32 object-cover"
+                                                    onError={(e) => {
+                                                      e.currentTarget.src = "/placeholder.svg?height=128&width=400"
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                        {field.type === "select" && field.options && (
+                                          <Select
+                                            value={section.content?.[field.key] || ""}
+                                            onValueChange={(value) => updateContent(section.id, field.key, value)}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder={`Select ${field.label}`} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {field.options.map((opt: any) => {
+                                                const value = typeof opt === "string" ? opt : opt.value
+                                                const label =
+                                                  typeof opt === "string"
+                                                    ? opt.charAt(0).toUpperCase() + opt.slice(1)
+                                                    : opt.label
+                                                return (
+                                                  <SelectItem key={value} value={value}>
+                                                    {label}
+                                                  </SelectItem>
+                                                )
+                                              })}
+                                            </SelectContent>
+                                          </Select>
+                                        )}
+                                        {field.type === "color" && (
+                                          <div className="flex items-center gap-2">
+                                            <input
+                                              type="color"
+                                              value={section.content?.[field.key] || field.defaultValue || "#000000"}
+                                              onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                              className="h-10 w-20 rounded border cursor-pointer"
+                                            />
+                                            <Input
+                                              value={section.content?.[field.key] || field.defaultValue || ""}
+                                              onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                              placeholder="#000000"
+                                              className="flex-1"
+                                            />
+                                          </div>
+                                        )}
+                                        {field.type === "number" && (
+                                          <div className="space-y-2">
+                                            <Input
+                                              type="number"
+                                              min={field.min}
+                                              max={field.max}
+                                              value={section.content?.[field.key] ?? field.defaultValue ?? ""}
+                                              onChange={(e) =>
+                                                updateContent(section.id, field.key, Number(e.target.value))
+                                              }
+                                              placeholder={field.defaultValue?.toString()}
+                                            />
+                                            {field.min !== undefined && field.max !== undefined && (
+                                              <input
+                                                type="range"
+                                                min={field.min}
+                                                max={field.max}
+                                                value={section.content?.[field.key] ?? field.defaultValue ?? field.min}
+                                                onChange={(e) =>
+                                                  updateContent(section.id, field.key, Number(e.target.value))
+                                                }
+                                                className="w-full"
+                                              />
+                                            )}
+                                          </div>
+                                        )}
+                                        {field.type === "boolean" && (
+                                          <div className="flex items-center gap-2 pt-2">
+                                            <Switch
+                                              checked={section.content?.[field.key] ?? field.defaultValue ?? false}
+                                              onCheckedChange={(checked) =>
+                                                updateContent(section.id, field.key, checked)
+                                              }
+                                            />
+                                            <span className="text-sm text-muted-foreground">
+                                              {(section.content?.[field.key] ?? field.defaultValue)
+                                                ? "Enabled"
+                                                : "Disabled"}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {section.section_type === "cta" && (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <Label>Button Text</Label>
+                                  <Input
+                                    value={section.button_text || ""}
+                                    onChange={(e) => updateSection(section.id, { button_text: e.target.value })}
+                                    placeholder="Get started for free"
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Button URL</Label>
+                                  <Input
+                                    value={section.button_url || ""}
+                                    onChange={(e) => updateSection(section.id, { button_url: e.target.value })}
+                                    placeholder="/auth/signup"
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Button Color (hex)</Label>
+                                  <Input
+                                    value={section.button_color || ""}
+                                    onChange={(e) => updateSection(section.id, { button_color: e.target.value })}
+                                    placeholder="#000000"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {section.section_type === "features_grid" && (
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-base">Features</Label>
+                                  <Button onClick={() => addFeature(section.id)} size="sm" variant="outline">
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Add Feature
+                                  </Button>
+                                </div>
+
+                                {section.content.features?.map((feature: any, featureIndex: number) => (
+                                  <Card key={featureIndex} className="p-4">
+                                    <div className="flex justify-between items-start mb-4">
+                                      <h4 className="font-medium">Feature {featureIndex + 1}</h4>
+                                      <Button
+                                        onClick={() => removeFeature(section.id, featureIndex)}
+                                        size="sm"
+                                        variant="ghost"
+                                        className="text-destructive"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+
+                                    <div className="grid gap-4">
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <Label>Icon (Lucide name)</Label>
+                                          <Input
+                                            value={feature.icon || ""}
+                                            onChange={(e) =>
+                                              updateFeature(section.id, featureIndex, { icon: e.target.value })
+                                            }
+                                            placeholder="mail"
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label>Title</Label>
+                                          <Input
+                                            value={feature.title || ""}
+                                            onChange={(e) =>
+                                              updateFeature(section.id, featureIndex, { title: e.target.value })
+                                            }
+                                            placeholder="Feature title"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <Label>Description</Label>
+                                        <Textarea
+                                          value={feature.description || ""}
+                                          onChange={(e) =>
+                                            updateFeature(section.id, featureIndex, { description: e.target.value })
+                                          }
+                                          placeholder="Feature description"
+                                          rows={2}
+                                        />
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <Label>Badge Text (optional)</Label>
+                                          <Input
+                                            value={feature.badge || ""}
+                                            onChange={(e) =>
+                                              updateFeature(section.id, featureIndex, { badge: e.target.value })
+                                            }
+                                            placeholder="Saves $240/year"
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label>Badge Color (hex)</Label>
+                                          <Input
+                                            value={feature.badgeColor || ""}
+                                            onChange={(e) =>
+                                              updateFeature(section.id, featureIndex, { badgeColor: e.target.value })
+                                            }
+                                            placeholder="#ef4444"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                ))}
+                              </div>
+                            )}
+
+                            {section.section_type === "cta" && section.content.supportingText && (
+                              <div>
+                                <Label>Supporting Text (below button)</Label>
+                                <Input
+                                  value={section.content.supportingText || ""}
+                                  onChange={(e) => updateContent(section.id, "supportingText", e.target.value)}
+                                  placeholder="No credit card required • Setup in 5 minutes"
+                                />
+                              </div>
+                            )}
+
+                            {(section.section_type === "pricing_comparison" ||
+                              section.section_type === "benefits_columns") && (
+                              <div>
+                                <Label>Content (JSON)</Label>
+                                <Textarea
+                                  value={JSON.stringify(section.content, null, 2)}
+                                  onChange={(e) => {
+                                    try {
+                                      const parsed = JSON.parse(e.target.value)
+                                      updateSection(section.id, { content: parsed })
+                                    } catch (err) {
+                                      // Invalid JSON, don't update
+                                    }
+                                  }}
+                                  rows={15}
+                                  className="font-mono text-sm"
+                                />
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Edit the JSON directly for this section type
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
               <div className="flex justify-center py-2">
                 <AddSectionDialog
                   triggerButton={
@@ -560,550 +1134,18 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                       variant="ghost"
                       size="sm"
                       className="text-muted-foreground hover:text-foreground"
-                      onClick={() => setInsertAtIndex(0)}
+                      onClick={() => setInsertAtIndex(index + 1)}
                     >
                       <Plus className="w-4 h-4 mr-1" />
                       Insert section here
                     </Button>
                   }
-                  atIndex={0}
+                  atIndex={index + 1}
                 />
               </div>
-            )}
-
-            <Card className="p-6">
-              <div className="flex items-start gap-3">
-                <div className="flex flex-col items-center gap-1 pt-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => moveSection(index, "up")}
-                    disabled={index === 0}
-                    title="Move up"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => moveSection(index, "down")}
-                    disabled={index === sections.length - 1}
-                    title="Move down"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="flex-1">
-                  <button
-                    onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center justify-between mb-4"
-                  >
-                    <div className="text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
-                          {index + 1}
-                        </span>
-                        <h3 className="text-lg font-semibold">{section.title || section.section_key}</h3>
-                        {isBuilder ? (
-                          <Badge variant="secondary" className="text-xs">
-                            <Blocks className="w-3 h-3 mr-1" />
-                            Builder.io
-                          </Badge>
-                        ) : isScreenshot ? (
-                          <Badge variant="secondary" className="text-xs">
-                            <Wand2 className="w-3 h-3 mr-1" />
-                            Screenshot
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            <Layout className="w-3 h-3 mr-1" />
-                            Built-in
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{section.section_key}</p>
-                    </div>
-                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </button>
-
-                  {isExpanded && (
-                    <div className="space-y-6 mt-4">
-                      <div className="flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => deleteSection(index)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete Section
-                        </Button>
-                      </div>
-
-                      {isBuilder ? (
-                        <BuilderSectionEditor sectionId={section.builder_section_id || ""} onUpdate={() => {}} />
-                      ) : isScreenshot ? (
-                        <div>
-                          <Label>Code</Label>
-                          <Textarea
-                            value={section.content.code || ""}
-                            onChange={(e) => updateContent(section.id, "code", e.target.value)}
-                            rows={10}
-                            className="font-mono text-sm"
-                          />
-                          <Label className="mt-2">Preview</Label>
-                          <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
-                            <img
-                              src={section.content.preview || "/placeholder.svg"}
-                              alt="Screenshot preview"
-                              className="w-full h-32 object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = "/invalid-image.jpg"
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {/* Built-in section editor (existing code) */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label>Title</Label>
-                              <Input
-                                value={section.title || ""}
-                                onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                                placeholder="Section title"
-                              />
-                            </div>
-                            <div>
-                              <Label>Subtitle</Label>
-                              <Input
-                                value={section.subtitle || ""}
-                                onChange={(e) => updateSection(section.id, { subtitle: e.target.value })}
-                                placeholder="Section subtitle"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <Label>Background Type</Label>
-                                <select
-                                  value={section.background_type}
-                                  onChange={(e) => updateSection(section.id, { background_type: e.target.value })}
-                                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                                >
-                                  <option value="color">Solid Color</option>
-                                  <option value="image">Image URL</option>
-                                  <option value="video">Video CDN URL</option>
-                                </select>
-                              </div>
-                              <div className="md:col-span-2">
-                                <Label>
-                                  {section.background_type === "color"
-                                    ? "Background Color (hex)"
-                                    : section.background_type === "image"
-                                      ? "Image URL"
-                                      : "Video CDN URL"}
-                                </Label>
-                                <div className="flex gap-2">
-                                  <Input
-                                    value={section.background_value || ""}
-                                    onChange={(e) => updateSection(section.id, { background_value: e.target.value })}
-                                    placeholder={
-                                      section.background_type === "color"
-                                        ? "#f5f5f5"
-                                        : section.background_type === "image"
-                                          ? "https://example.com/image.jpg"
-                                          : "https://cdn.example.com/video.mp4"
-                                    }
-                                  />
-                                  {section.background_type === "image" && (
-                                    <Button type="button" variant="outline" size="sm" disabled={isUploading} asChild>
-                                      <label className="cursor-pointer">
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        {isUploading ? "Uploading..." : "Upload"}
-                                        <input
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          onChange={(e) => {
-                                            const file = e.target.files?.[0]
-                                            if (file) handleImageUpload(section.id, file)
-                                          }}
-                                          disabled={isUploading}
-                                        />
-                                      </label>
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {section.background_type === "image" && section.background_value && (
-                              <div className="mt-2">
-                                <Label className="text-sm text-muted-foreground">Preview</Label>
-                                <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
-                                  <img
-                                    src={section.background_value || "/placeholder.svg"}
-                                    alt="Background preview"
-                                    className="w-full h-32 object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.src = "/invalid-image.jpg"
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {section.section_templates?.field_schema?.fields && (
-                              <div className="space-y-4 border-t pt-4 mt-4">
-                                <h4 className="font-medium text-sm text-muted-foreground">Template Fields</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {section.section_templates.field_schema.fields.map((field: any) => (
-                                    <div key={field.key} className={field.type === "textarea" ? "md:col-span-2" : ""}>
-                                      <Label>
-                                        {field.label}
-                                        {field.required && <span className="text-destructive ml-1">*</span>}
-                                      </Label>
-                                      {field.type === "text" && (
-                                        <Input
-                                          value={section.content?.[field.key] || ""}
-                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                          placeholder={field.label}
-                                        />
-                                      )}
-                                      {field.type === "textarea" && (
-                                        <Textarea
-                                          value={section.content?.[field.key] || ""}
-                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                          placeholder={field.label}
-                                          rows={3}
-                                        />
-                                      )}
-                                      {field.type === "url" && (
-                                        <Input
-                                          type="url"
-                                          value={section.content?.[field.key] || ""}
-                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                          placeholder="https://..."
-                                        />
-                                      )}
-                                      {field.type === "image" && (
-                                        <div className="space-y-2">
-                                          <Input
-                                            type="url"
-                                            value={section.content?.[field.key] || ""}
-                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                            placeholder="Image URL"
-                                          />
-                                          <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={isUploading}
-                                            asChild
-                                          >
-                                            <label className="cursor-pointer">
-                                              <Upload className="w-4 h-4 mr-2" />
-                                              {isUploading ? "Uploading..." : "Upload Image"}
-                                              <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                  const file = e.target.files?.[0]
-                                                  if (file) handleFieldImageUpload(section.id, field.key, file)
-                                                }}
-                                                disabled={isUploading}
-                                              />
-                                            </label>
-                                          </Button>
-                                          {section.content?.[field.key] && (
-                                            <div className="mt-2">
-                                              <Label className="text-sm text-muted-foreground">Preview</Label>
-                                              <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
-                                                <img
-                                                  src={section.content[field.key] || "/placeholder.svg"}
-                                                  alt="Field image preview"
-                                                  className="w-full h-32 object-cover"
-                                                  onError={(e) => {
-                                                    e.currentTarget.src = "/placeholder.svg?height=128&width=400"
-                                                  }}
-                                                />
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                      {field.type === "select" && field.options && (
-                                        <Select
-                                          value={section.content?.[field.key] || ""}
-                                          onValueChange={(value) => updateContent(section.id, field.key, value)}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder={`Select ${field.label}`} />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {field.options.map((opt: any) => {
-                                              const value = typeof opt === "string" ? opt : opt.value
-                                              const label =
-                                                typeof opt === "string"
-                                                  ? opt.charAt(0).toUpperCase() + opt.slice(1)
-                                                  : opt.label
-                                              return (
-                                                <SelectItem key={value} value={value}>
-                                                  {label}
-                                                </SelectItem>
-                                              )
-                                            })}
-                                          </SelectContent>
-                                        </Select>
-                                      )}
-                                      {field.type === "color" && (
-                                        <div className="flex items-center gap-2">
-                                          <input
-                                            type="color"
-                                            value={section.content?.[field.key] || field.defaultValue || "#000000"}
-                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                            className="h-10 w-20 rounded border cursor-pointer"
-                                          />
-                                          <Input
-                                            value={section.content?.[field.key] || field.defaultValue || ""}
-                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                            placeholder="#000000"
-                                            className="flex-1"
-                                          />
-                                        </div>
-                                      )}
-                                      {field.type === "number" && (
-                                        <div className="space-y-2">
-                                          <Input
-                                            type="number"
-                                            min={field.min}
-                                            max={field.max}
-                                            value={section.content?.[field.key] ?? field.defaultValue ?? ""}
-                                            onChange={(e) =>
-                                              updateContent(section.id, field.key, Number(e.target.value))
-                                            }
-                                            placeholder={field.defaultValue?.toString()}
-                                          />
-                                          {field.min !== undefined && field.max !== undefined && (
-                                            <input
-                                              type="range"
-                                              min={field.min}
-                                              max={field.max}
-                                              value={section.content?.[field.key] ?? field.defaultValue ?? field.min}
-                                              onChange={(e) =>
-                                                updateContent(section.id, field.key, Number(e.target.value))
-                                              }
-                                              className="w-full"
-                                            />
-                                          )}
-                                        </div>
-                                      )}
-                                      {field.type === "boolean" && (
-                                        <div className="flex items-center gap-2 pt-2">
-                                          <Switch
-                                            checked={section.content?.[field.key] ?? field.defaultValue ?? false}
-                                            onCheckedChange={(checked) => updateContent(section.id, field.key, checked)}
-                                          />
-                                          <span className="text-sm text-muted-foreground">
-                                            {(section.content?.[field.key] ?? field.defaultValue)
-                                              ? "Enabled"
-                                              : "Disabled"}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {section.section_type === "cta" && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <Label>Button Text</Label>
-                                <Input
-                                  value={section.button_text || ""}
-                                  onChange={(e) => updateSection(section.id, { button_text: e.target.value })}
-                                  placeholder="Get started for free"
-                                />
-                              </div>
-                              <div>
-                                <Label>Button URL</Label>
-                                <Input
-                                  value={section.button_url || ""}
-                                  onChange={(e) => updateSection(section.id, { button_url: e.target.value })}
-                                  placeholder="/auth/signup"
-                                />
-                              </div>
-                              <div>
-                                <Label>Button Color (hex)</Label>
-                                <Input
-                                  value={section.button_color || ""}
-                                  onChange={(e) => updateSection(section.id, { button_color: e.target.value })}
-                                  placeholder="#000000"
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {section.section_type === "features_grid" && (
-                            <div className="space-y-4">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-base">Features</Label>
-                                <Button onClick={() => addFeature(section.id)} size="sm" variant="outline">
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Add Feature
-                                </Button>
-                              </div>
-
-                              {section.content.features?.map((feature: any, featureIndex: number) => (
-                                <Card key={featureIndex} className="p-4">
-                                  <div className="flex justify-between items-start mb-4">
-                                    <h4 className="font-medium">Feature {featureIndex + 1}</h4>
-                                    <Button
-                                      onClick={() => removeFeature(section.id, featureIndex)}
-                                      size="sm"
-                                      variant="ghost"
-                                      className="text-destructive"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-
-                                  <div className="grid gap-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div>
-                                        <Label>Icon (Lucide name)</Label>
-                                        <Input
-                                          value={feature.icon || ""}
-                                          onChange={(e) =>
-                                            updateFeature(section.id, featureIndex, { icon: e.target.value })
-                                          }
-                                          placeholder="mail"
-                                        />
-                                      </div>
-                                      <div>
-                                        <Label>Title</Label>
-                                        <Input
-                                          value={feature.title || ""}
-                                          onChange={(e) =>
-                                            updateFeature(section.id, featureIndex, { title: e.target.value })
-                                          }
-                                          placeholder="Feature title"
-                                        />
-                                      </div>
-                                    </div>
-
-                                    <div>
-                                      <Label>Description</Label>
-                                      <Textarea
-                                        value={feature.description || ""}
-                                        onChange={(e) =>
-                                          updateFeature(section.id, featureIndex, { description: e.target.value })
-                                        }
-                                        placeholder="Feature description"
-                                        rows={2}
-                                      />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div>
-                                        <Label>Badge Text (optional)</Label>
-                                        <Input
-                                          value={feature.badge || ""}
-                                          onChange={(e) =>
-                                            updateFeature(section.id, featureIndex, { badge: e.target.value })
-                                          }
-                                          placeholder="Saves $240/year"
-                                        />
-                                      </div>
-                                      <div>
-                                        <Label>Badge Color (hex)</Label>
-                                        <Input
-                                          value={feature.badgeColor || ""}
-                                          onChange={(e) =>
-                                            updateFeature(section.id, featureIndex, { badgeColor: e.target.value })
-                                          }
-                                          placeholder="#ef4444"
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </Card>
-                              ))}
-                            </div>
-                          )}
-
-                          {section.section_type === "cta" && section.content.supportingText && (
-                            <div>
-                              <Label>Supporting Text (below button)</Label>
-                              <Input
-                                value={section.content.supportingText || ""}
-                                onChange={(e) => updateContent(section.id, "supportingText", e.target.value)}
-                                placeholder="No credit card required • Setup in 5 minutes"
-                              />
-                            </div>
-                          )}
-
-                          {(section.section_type === "pricing_comparison" ||
-                            section.section_type === "benefits_columns") && (
-                            <div>
-                              <Label>Content (JSON)</Label>
-                              <Textarea
-                                value={JSON.stringify(section.content, null, 2)}
-                                onChange={(e) => {
-                                  try {
-                                    const parsed = JSON.parse(e.target.value)
-                                    updateSection(section.id, { content: parsed })
-                                  } catch (err) {
-                                    // Invalid JSON, don't update
-                                  }
-                                }}
-                                rows={15}
-                                className="font-mono text-sm"
-                              />
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Edit the JSON directly for this section type
-                              </p>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            <div className="flex justify-center py-2">
-              <AddSectionDialog
-                triggerButton={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => setInsertAtIndex(index + 1)}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Insert section here
-                  </Button>
-                }
-                atIndex={index + 1}
-              />
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
     </div>
   )
 }
