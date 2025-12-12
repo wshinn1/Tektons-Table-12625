@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function GlobalSectionsPage() {
   return (
@@ -47,10 +48,12 @@ export default function GlobalSectionsPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                Edit
-              </Button>
-              <Button variant="outline" size="sm">
+              <Link href="/admin/settings/footer">
+                <Button variant="outline" size="sm">
+                  Edit
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" disabled>
                 Duplicate
               </Button>
             </div>
