@@ -29,28 +29,25 @@ export function HeroOverlay({
 }: HeroOverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
 
   useEffect(() => {
     if (backgroundType !== "video") return
 
-    const deferVideoLoad = () => {
-      setShouldLoadVideo(true)
+    const deferVideoRender = () => {
+      setShouldRenderVideo(true)
     }
 
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+      requestIdleCallback(deferVideoRender)
     } else {
-      setTimeout(deferVideoLoad, 1000)
+      setTimeout(deferVideoRender, 2000)
     }
   }, [backgroundType])
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video || backgroundType !== "video" || !shouldLoadVideo) return
-
-    video.src = backgroundUrl
-    video.load()
+    if (!video || !shouldRenderVideo) return
 
     const playVideo = async () => {
       try {
@@ -78,7 +75,7 @@ export function HeroOverlay({
     return () => {
       video.removeEventListener("canplay", playVideo)
     }
-  }, [backgroundType, backgroundUrl, shouldLoadVideo])
+  }, [shouldRenderVideo])
 
   return (
     <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
@@ -87,20 +84,20 @@ export function HeroOverlay({
         <>
           {/* Fallback background while video loads */}
           <div className="absolute inset-0 bg-neutral-900" style={{ zIndex: 0 }} />
-          {shouldLoadVideo && (
+          {shouldRenderVideo && (
             <video
               ref={videoRef}
               autoPlay
               loop
               muted
               playsInline
-              preload="none"
+              preload="auto"
               webkit-playsinline="true"
               x-webkit-airplay="allow"
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
               style={{ zIndex: 0 }}
             >
-              {/* Source added dynamically via useEffect */}
+              <source src={backgroundUrl} type="video/mp4" />
             </video>
           )}
         </>

@@ -19,6 +19,160 @@ export async function sendPostNotificationEmails(postId: string, tenantId: strin
     return { error: "Post not found" }
   }
 
+  const isPlatformPost = !tenantId || tenantId === "platform"
+
+  if (isPlatformPost) {
+    // Platform post - send to contacts and tenants
+    return await sendPlatformPostNotifications(post, supabase, resend)
+  }
+
+  // Tenant post - send to tenant's subscribers and supporters
+  return await sendTenantPostNotifications(post, tenantId, supabase, resend)
+}
+
+async function sendPlatformPostNotifications(post: any, supabase: any, resend: any) {
+  console.log("[v0] Sending platform post notifications to contacts and tenants")
+
+  // Get all contacts (platform subscribers)
+  const { data: contacts, error: contactsError } = await supabase.from("contacts").select("*")
+
+  // Get all active tenants (they're interested in platform content)
+  const { data: tenants, error: tenantsError } = await supabase.from("tenants").select("*").eq("is_active", true)
+
+  if ((contactsError && tenantsError) || (!contacts?.length && !tenants?.length)) {
+    console.log("[v0] No contacts or tenants found for platform post")
+    return { error: "No recipients found" }
+  }
+
+  // Combine and deduplicate recipients by email
+  const allRecipients = new Map<string, { email: string; name: string; id: string; type: string }>()
+
+  contacts?.forEach((contact) => {
+    if (contact.email && !allRecipients.has(contact.email)) {
+      allRecipients.set(contact.email, {
+        email: contact.email,
+        name: contact.first_name || contact.last_name || "Friend",
+        id: contact.id,
+        type: "contact",
+      })
+    }
+  })
+
+  tenants?.forEach((tenant) => {
+    if (tenant.email && !allRecipients.has(tenant.email)) {
+      allRecipients.set(tenant.email, {
+        email: tenant.email,
+        name: tenant.full_name || "Friend",
+        id: tenant.id,
+        type: "tenant",
+      })
+    }
+  })
+
+  const recipients = Array.from(allRecipients.values())
+  console.log("[v0] Sending to", recipients.length, "recipients for platform post")
+
+  // Post excerpt
+  const postExcerpt =
+    post.excerpt ||
+    (typeof post.content === "string" ? post.content.substring(0, 200) + "..." : "Check out this new post!")
+
+  // Platform post URL
+  const postUrl = `https://tektonstable.com/blog/${post.slug}`
+
+  const featuredImageHtml = post.featured_image_url
+    ? `
+      <div style="margin-bottom: 24px;">
+        <img src="${post.featured_image_url}" alt="${post.title}" style="width: 100%; max-width: 560px; height: auto; border-radius: 8px; display: block;" />
+      </div>
+    `
+    : ""
+
+  // Send emails
+  const emailPromises = recipients.map(async (recipient) => {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: recipient.email,
+        subject: `New post on Tekton's Table: ${post.title}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">New Post on Tekton's Table</h1>
+              </div>
+              
+              <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+                <p style="font-size: 16px; color: #6b7280; margin-bottom: 20px;">Hi ${recipient.name},</p>
+                
+                <p style="font-size: 16px; color: #374151; margin-bottom: 30px;">
+                  We just published a new post you might enjoy:
+                </p>
+                
+                ${featuredImageHtml}
+                
+                <div style="background: #f9fafb; padding: 24px; border-left: 4px solid #667eea; border-radius: 4px; margin-bottom: 30px;">
+                  <h2 style="color: #111827; margin: 0 0 12px 0; font-size: 22px; font-weight: 600;">${post.title}</h2>
+                  <p style="color: #6b7280; margin: 0; font-size: 15px; line-height: 1.6;">${postExcerpt}</p>
+                </div>
+                
+                <div style="text-align: center; margin: 40px 0;">
+                  <a href="${postUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Read the Full Post</a>
+                </div>
+                
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 24px; margin-top: 40px;">
+                  <p style="font-size: 14px; color: #6b7280; margin: 0 0 8px 0;">
+                    Thank you for being part of the Tekton's Table community!
+                  </p>
+                  <p style="font-size: 13px; color: #9ca3af; margin: 0;">
+                    You received this email because you're subscribed to updates from Tekton's Table. 
+                  </p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+      })
+
+      // Log the email send
+      await supabase.from("email_logs").insert({
+        tenant_id: "platform",
+        post_id: post.id,
+        email_type: "post_notification",
+        recipient_email: recipient.email,
+        subject: `New post on Tekton's Table: ${post.title}`,
+        resend_message_id: data?.id,
+        status: error ? "failed" : "sent",
+        error_message: error?.message,
+        sent_at: error ? null : new Date().toISOString(),
+      })
+
+      console.log("[v0] Email sent to:", recipient.email, error ? "FAILED" : "SUCCESS")
+      return { success: !error, email: recipient.email, error: error?.message }
+    } catch (err: any) {
+      console.error("[v0] Error sending email to", recipient.email, err)
+      return { success: false, email: recipient.email, error: err.message }
+    }
+  })
+
+  const results = await Promise.all(emailPromises)
+  const successCount = results.filter((r) => r.success).length
+
+  console.log("[v0] Email results:", successCount, "of", recipients.length, "sent successfully")
+
+  return {
+    success: true,
+    message: `Sent ${successCount} of ${recipients.length} emails`,
+    results,
+  }
+}
+
+async function sendTenantPostNotifications(post: any, tenantId: string, supabase: any, resend: any) {
   // Get tenant details
   const { data: tenant, error: tenantError } = await supabase.from("tenants").select("*").eq("id", tenantId).single()
 
@@ -148,7 +302,7 @@ export async function sendPostNotificationEmails(postId: string, tenantId: strin
       // Log the email send
       await supabase.from("email_logs").insert({
         tenant_id: tenantId,
-        post_id: postId,
+        post_id: post.id,
         supporter_id: recipient.type === "supporter" ? recipient.id : null,
         email_type: "post_notification",
         recipient_email: recipient.email,

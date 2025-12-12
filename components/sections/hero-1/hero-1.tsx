@@ -80,7 +80,7 @@ export default function Hero1({ props }: Hero1Props) {
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
 
   const isVideo =
     backgroundType === "video" ||
@@ -92,23 +92,20 @@ export default function Hero1({ props }: Hero1Props) {
   useEffect(() => {
     if (!isVideo || !actualVideoUrl) return
 
-    const deferVideoLoad = () => {
-      setShouldLoadVideo(true)
+    const deferVideoRender = () => {
+      setShouldRenderVideo(true)
     }
 
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+      requestIdleCallback(deferVideoRender)
     } else {
-      setTimeout(deferVideoLoad, 1000)
+      setTimeout(deferVideoRender, 2000)
     }
   }, [isVideo, actualVideoUrl])
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video || !isVideo || !actualVideoUrl || !shouldLoadVideo) return
-
-    video.src = actualVideoUrl
-    video.load()
+    if (!video || !shouldRenderVideo) return
 
     const playVideo = async () => {
       try {
@@ -136,7 +133,7 @@ export default function Hero1({ props }: Hero1Props) {
     return () => {
       video.removeEventListener("canplay", playVideo)
     }
-  }, [isVideo, actualVideoUrl, shouldLoadVideo])
+  }, [shouldRenderVideo])
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (isVideo) {
@@ -175,19 +172,19 @@ export default function Hero1({ props }: Hero1Props) {
       className="relative min-h-[700px] lg:min-h-[800px] flex items-center overflow-hidden"
       style={getBackgroundStyle()}
     >
-      {isVideo && actualVideoUrl && shouldLoadVideo && (
+      {isVideo && actualVideoUrl && shouldRenderVideo && (
         <video
           ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          preload="none"
+          preload="auto"
           webkit-playsinline="true"
           x-webkit-airplay="allow"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
         >
-          {/* Source added dynamically via useEffect */}
+          <source src={actualVideoUrl} type="video/mp4" />
         </video>
       )}
 

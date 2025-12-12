@@ -79,7 +79,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
 
   const isVideo =
     backgroundType === "video" ||
@@ -91,27 +91,20 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
   useEffect(() => {
     if (!isVideo || !actualVideoUrl) return
 
-    // Wait for the page to be interactive before loading video
-    const deferVideoLoad = () => {
-      setShouldLoadVideo(true)
+    const deferVideoRender = () => {
+      setShouldRenderVideo(true)
     }
 
-    // Use requestIdleCallback with a longer timeout to ensure LCP completes first
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoLoad, { timeout: 3000 })
+      requestIdleCallback(deferVideoRender)
     } else {
-      // Fallback: wait 1 second after page load
-      setTimeout(deferVideoLoad, 1000)
+      setTimeout(deferVideoRender, 2000)
     }
   }, [isVideo, actualVideoUrl])
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video || !isVideo || !actualVideoUrl || !shouldLoadVideo) return
-
-    // Set the source only after we've decided to load
-    video.src = actualVideoUrl
-    video.load()
+    if (!video || !shouldRenderVideo) return
 
     const playVideo = async () => {
       try {
@@ -139,7 +132,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
     return () => {
       video.removeEventListener("canplay", playVideo)
     }
-  }, [isVideo, actualVideoUrl, shouldLoadVideo])
+  }, [shouldRenderVideo])
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (isVideo) {
@@ -193,21 +186,21 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
         minHeight,
       }}
     >
-      {isVideo && actualVideoUrl && shouldLoadVideo && (
+      {isVideo && actualVideoUrl && shouldRenderVideo && (
         <video
           ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
-          preload="none"
+          preload="auto"
           poster={posterImage || undefined}
           webkit-playsinline="true"
           x-webkit-airplay="allow"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
           style={{ zIndex: 0 }}
         >
-          {/* Source added dynamically after initial paint */}
+          <source src={actualVideoUrl} type="video/mp4" />
         </video>
       )}
 
