@@ -10,21 +10,35 @@ export default async function CreateBlogPostPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect("/auth/login")
 
-  const { data: resourceCategories } = await supabase.from("resource_categories").select("*").order("display_order")
+  let resourceCategories = []
+  let blogCategories = []
+  let tags = []
 
-  // Keep blog_categories for backward compatibility
-  const { data: blogCategories } = await supabase.from("blog_categories").select("*").order("name")
+  try {
+    const { data: resCats } = await supabase.from("resource_categories").select("*").order("display_order")
+    resourceCategories = resCats || []
+  } catch (error) {
+    console.error("[v0] Error fetching resource categories:", error)
+  }
 
-  const { data: tags } = await supabase.from("blog_tags").select("*").order("name")
+  try {
+    const { data: blogCats } = await supabase.from("blog_categories").select("*").order("name")
+    blogCategories = blogCats || []
+  } catch (error) {
+    console.error("[v0] Error fetching blog categories:", error)
+  }
+
+  try {
+    const { data: blogTags } = await supabase.from("blog_tags").select("*").order("name")
+    tags = blogTags || []
+  } catch (error) {
+    console.error("[v0] Error fetching blog tags:", error)
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">Create New Blog Post</h1>
-      <AdminPostEditor
-        categories={blogCategories || []}
-        resourceCategories={resourceCategories || []}
-        tags={tags || []}
-      />
+      <AdminPostEditor categories={blogCategories} resourceCategories={resourceCategories} tags={tags} />
     </div>
   )
 }

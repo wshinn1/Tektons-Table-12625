@@ -741,7 +741,7 @@ export async function createPlatformCategory(name: string) {
     .insert({
       name: name.trim(),
       slug,
-      tenant_id: null, // Platform-level category
+      tenant_id: "", // Platform-level category (empty string for text column)
     })
     .select()
     .single()
