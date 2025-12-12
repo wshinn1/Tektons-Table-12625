@@ -4,7 +4,6 @@ import { createServerClient } from "@/lib/supabase/server"
 import { MarketingNav } from "@/components/marketing-nav"
 import { getPageMetadata } from "@/lib/get-page-metadata"
 import * as LucideIcons from "lucide-react"
-import HeroCentered from "@/components/sections/hero-centered/hero-centered"
 import { SectionRenderer } from "@/components/sections/section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
 import dynamicImport from "next/dynamic"
@@ -94,41 +93,23 @@ export default async function LandingPage() {
 
         <MarketingNav />
 
-        <HeroCentered
-          props={{
-            heading: heroSection?.title || "Everything missionaries need to raise support",
-            subheading:
-              heroSection?.subtitle ||
-              "Replace 4+ tools with one platform. Save thousands per year. Built specifically for support-raising missionaries.",
-            buttonText: heroContent.primaryCTA || "Get Started Free",
-            buttonLink: heroContent.primaryCTALink || "/auth/signup",
-            buttonStyle: heroContent.buttonStyle || "solid",
-            buttonColor: heroContent.buttonColor || "#FACC15",
-            buttonTextColor: heroContent.buttonTextColor || "#1a1a1a",
-            backgroundType:
-              heroSection?.background_type === "video"
-                ? "video"
-                : heroSection?.background_type === "image"
-                  ? "image"
-                  : "gradient",
-            backgroundImage: heroSection?.background_type === "image" ? heroSection?.background_value : "",
-            videoUrl: heroSection?.background_type === "video" ? heroSection?.background_value : "",
-            posterImage: heroContent.posterImage || "",
-            gradientStart: heroContent.gradientStart || "#1e3a5f",
-            gradientEnd: heroContent.gradientEnd || "#0f172a",
-            gradientDirection: heroContent.gradientDirection || "to bottom",
-            overlayColor: heroContent.overlayColor || "#000000",
-            overlayOpacity: heroContent.overlayOpacity ?? 20,
-            enableBlur: heroContent.enableBlur ?? true,
-            blurIntensity: heroContent.blurIntensity ?? 30,
-            textColor: heroContent.textColor || "#ffffff",
-            headingFont: heroContent.headingFont || "italic-serif",
-            minHeight: heroContent.minHeight || "100vh",
-          }}
-        />
+        {heroSection && heroSection.section_templates?.component_path && (
+          <SectionRenderer
+            template={{
+              component_path: heroSection.section_templates.component_path,
+              name: heroSection.section_templates.name,
+            }}
+            props={heroSection.content || heroSection.section_templates.default_props || {}}
+            isVisible={heroSection.is_active}
+          />
+        )}
 
         {sections?.map((section: any) => {
-          if (section.source_type !== "built_in" || !section.section_templates?.component_path) {
+          if (
+            section.source_type !== "built_in" ||
+            !section.section_templates?.component_path ||
+            section.section_type === "hero_section"
+          ) {
             return null
           }
 

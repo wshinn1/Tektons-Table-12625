@@ -61,7 +61,7 @@ interface HomepageSection {
     component_path: string | null
     field_schema: {
       fields: Array<{
-        name: string
+        key: string // Changed from name to key
         type: string
         label: string
         required?: boolean
@@ -720,22 +720,22 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                 <h4 className="font-medium text-sm text-muted-foreground">Template Fields</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {section.section_templates.field_schema.fields.map((field: any) => (
-                                    <div key={field.name} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                                    <div key={field.key} className={field.type === "textarea" ? "md:col-span-2" : ""}>
                                       <Label>
                                         {field.label}
                                         {field.required && <span className="text-destructive ml-1">*</span>}
                                       </Label>
                                       {field.type === "text" && (
                                         <Input
-                                          value={section.content?.[field.name] || ""}
-                                          onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                          value={section.content?.[field.key] || ""}
+                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
                                           placeholder={field.label}
                                         />
                                       )}
                                       {field.type === "textarea" && (
                                         <Textarea
-                                          value={section.content?.[field.name] || ""}
-                                          onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                          value={section.content?.[field.key] || ""}
+                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
                                           placeholder={field.label}
                                           rows={3}
                                         />
@@ -743,23 +743,23 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                       {field.type === "url" && (
                                         <Input
                                           type="url"
-                                          value={section.content?.[field.name] || ""}
-                                          onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                          value={section.content?.[field.key] || ""}
+                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
                                           placeholder="https://..."
                                         />
                                       )}
                                       {field.type === "image" && (
                                         <Input
                                           type="url"
-                                          value={section.content?.[field.name] || ""}
-                                          onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                          value={section.content?.[field.key] || ""}
+                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
                                           placeholder="Image URL"
                                         />
                                       )}
                                       {field.type === "select" && field.options && (
                                         <Select
-                                          value={section.content?.[field.name] || ""}
-                                          onValueChange={(value) => updateContent(section.id, field.name, value)}
+                                          value={section.content?.[field.key] || ""}
+                                          onValueChange={(value) => updateContent(section.id, field.key, value)}
                                         >
                                           <SelectTrigger>
                                             <SelectValue placeholder={`Select ${field.label}`} />
@@ -784,13 +784,13 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                         <div className="flex items-center gap-2">
                                           <input
                                             type="color"
-                                            value={section.content?.[field.name] || field.defaultValue || "#000000"}
-                                            onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                            value={section.content?.[field.key] || field.defaultValue || "#000000"}
+                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
                                             className="h-10 w-20 rounded border cursor-pointer"
                                           />
                                           <Input
-                                            value={section.content?.[field.name] || field.defaultValue || ""}
-                                            onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                            value={section.content?.[field.key] || field.defaultValue || ""}
+                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
                                             placeholder="#000000"
                                             className="flex-1"
                                           />
@@ -802,9 +802,9 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                             type="number"
                                             min={field.min}
                                             max={field.max}
-                                            value={section.content?.[field.name] ?? field.defaultValue ?? ""}
+                                            value={section.content?.[field.key] ?? field.defaultValue ?? ""}
                                             onChange={(e) =>
-                                              updateContent(section.id, field.name, Number(e.target.value))
+                                              updateContent(section.id, field.key, Number(e.target.value))
                                             }
                                             placeholder={field.defaultValue?.toString()}
                                           />
@@ -813,9 +813,9 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                               type="range"
                                               min={field.min}
                                               max={field.max}
-                                              value={section.content?.[field.name] ?? field.defaultValue ?? field.min}
+                                              value={section.content?.[field.key] ?? field.defaultValue ?? field.min}
                                               onChange={(e) =>
-                                                updateContent(section.id, field.name, Number(e.target.value))
+                                                updateContent(section.id, field.key, Number(e.target.value))
                                               }
                                               className="w-full"
                                             />
@@ -825,13 +825,11 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                       {field.type === "boolean" && (
                                         <div className="flex items-center gap-2 pt-2">
                                           <Switch
-                                            checked={section.content?.[field.name] ?? field.defaultValue ?? false}
-                                            onCheckedChange={(checked) =>
-                                              updateContent(section.id, field.name, checked)
-                                            }
+                                            checked={section.content?.[field.key] ?? field.defaultValue ?? false}
+                                            onCheckedChange={(checked) => updateContent(section.id, field.key, checked)}
                                           />
                                           <span className="text-sm text-muted-foreground">
-                                            {(section.content?.[field.name] ?? field.defaultValue)
+                                            {(section.content?.[field.key] ?? field.defaultValue)
                                               ? "Enabled"
                                               : "Disabled"}
                                           </span>
