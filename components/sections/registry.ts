@@ -345,6 +345,97 @@ export const sectionRegistry: Record<string, SectionTypeDefinition> = {
       padding: "60px",
     },
   },
+  "full-width-visual-hero-display-1": {
+    type: "full-width-visual-hero-display-1",
+    name: "Full Width Visual Hero Display 1",
+    description:
+      "A full-width hero with centered text overlay, decorative borders, and flexible background options (image/video/gradient) with parallax support",
+    category: "hero",
+    icon: "Layout",
+    fields: [
+      { key: "heading", label: "Main Heading", type: "text", defaultValue: "WHAT IF YOU FALL?" },
+      { key: "subheadingItalic", label: "Subheading (Italic)", type: "text", defaultValue: "but oh my darling" },
+      { key: "heading2", label: "Second Heading", type: "text", defaultValue: "WHAT IF YOU FLY?" },
+      { key: "subheading", label: "Regular Subheading", type: "text", defaultValue: "" },
+
+      // Background options
+      {
+        key: "backgroundType",
+        label: "Background Type",
+        type: "select",
+        options: [
+          { label: "Image", value: "image" },
+          { label: "Video (CDN Link)", value: "video" },
+          { label: "Gradient", value: "gradient" },
+        ],
+        defaultValue: "image",
+      },
+      { key: "backgroundImage", label: "Background Image URL", type: "image" },
+      { key: "videoUrl", label: "Video CDN URL", type: "url" },
+      { key: "gradientStart", label: "Gradient Start Color", type: "color", defaultValue: "#1e3a5f" },
+      { key: "gradientEnd", label: "Gradient End Color", type: "color", defaultValue: "#0f172a" },
+      {
+        key: "gradientDirection",
+        label: "Gradient Direction",
+        type: "select",
+        options: [
+          { label: "To Bottom", value: "to bottom" },
+          { label: "To Bottom Right", value: "to bottom right" },
+          { label: "To Right", value: "to right" },
+          { label: "To Top Right", value: "to top right" },
+        ],
+        defaultValue: "to bottom right",
+      },
+
+      // Parallax option
+      { key: "enableParallax", label: "Enable Parallax (Image Only)", type: "boolean", defaultValue: false },
+
+      // Border options
+      { key: "showBorder", label: "Show Decorative Border", type: "boolean", defaultValue: true },
+      { key: "borderWidth", label: "Border Width (px)", type: "number", defaultValue: 2 },
+      { key: "borderColor", label: "Border Color", type: "color", defaultValue: "#ffffff" },
+      { key: "borderOpacity", label: "Border Opacity (%)", type: "number", defaultValue: 80 },
+
+      // Overlay
+      { key: "overlayColor", label: "Overlay Color", type: "color", defaultValue: "#000000" },
+      { key: "overlayOpacity", label: "Overlay Opacity (%)", type: "number", defaultValue: 40 },
+
+      // Text styling
+      { key: "textColor", label: "Text Color", type: "color", defaultValue: "#ffffff" },
+      {
+        key: "headingFont",
+        label: "Heading Font",
+        type: "select",
+        options: [
+          { label: "Sans Serif", value: "sans-serif" },
+          { label: "Serif", value: "serif" },
+          { label: "Monospace", value: "mono" },
+        ],
+        defaultValue: "sans-serif",
+      },
+      {
+        key: "subheadingFont",
+        label: "Subheading Font",
+        type: "select",
+        options: [
+          { label: "Sans Serif", value: "sans-serif" },
+          { label: "Serif", value: "serif" },
+          { label: "Monospace", value: "mono" },
+        ],
+        defaultValue: "serif",
+      },
+
+      // Decorative lines
+      { key: "showDecorativeLines", label: "Show Decorative Lines", type: "boolean", defaultValue: true },
+      { key: "decorativeLineColor", label: "Line Color", type: "color", defaultValue: "#ffffff" },
+      { key: "decorativeLineWidth", label: "Line Width (px)", type: "number", defaultValue: 60 },
+    ],
+    defaultStyles: {
+      backgroundColor: "#000000",
+      textColor: "#ffffff",
+      padding: "0px",
+    },
+  },
 }
 
 export function getSectionType(type: string): SectionTypeDefinition | undefined {

@@ -6,15 +6,11 @@ import { getPageMetadata } from "@/lib/get-page-metadata"
 import * as LucideIcons from "lucide-react"
 import HeroCentered from "@/components/sections/hero-centered/hero-centered"
 import { SectionRenderer } from "@/components/sections/section-renderer"
+import { MarketingFooter } from "@/components/marketing-footer"
 import dynamicImport from "next/dynamic"
 
 const NewsletterSignup = dynamicImport(
   () => import("@/components/newsletter-signup").then((mod) => ({ default: mod.NewsletterSignup })),
-  { ssr: true },
-)
-
-const MarketingFooter = dynamicImport(
-  () => import("@/components/marketing-footer").then((mod) => ({ default: mod.MarketingFooter })),
   { ssr: true },
 )
 

@@ -1,7 +1,41 @@
 import Link from "next/link"
 import { NewsletterSignup } from "./newsletter-signup"
+import { getFooterSettings } from "@/app/actions/footer-settings"
 
-export function MarketingFooter() {
+export async function MarketingFooter() {
+  const footerSettings = await getFooterSettings()
+
+  // Fallback to defaults if settings not found
+  const siteTitle = footerSettings?.site_title || "Tekton's Table"
+  const siteSubtitle = footerSettings?.site_subtitle || "Built by storytellers for storytellers in God's kingdom."
+  const copyrightText = footerSettings?.copyright_text || "Tekton's Table. All rights reserved."
+  const menuColumns = footerSettings?.menu_columns || [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", url: "/#features" },
+        { label: "Pricing", url: "/pricing" },
+        { label: "Example", url: "/example" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About", url: "/about" },
+        { label: "Privacy", url: "/privacy" },
+        { label: "Terms", url: "/terms" },
+      ],
+    },
+    {
+      title: "Connect",
+      links: [
+        { label: "Contact", url: "/support" },
+        { label: "Blog", url: "/blog" },
+        { label: "Login", url: "/auth/login" },
+      ],
+    },
+  ]
+
   return (
     <>
       <NewsletterSignup />
@@ -9,73 +43,27 @@ export function MarketingFooter() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-foreground mb-4">Tekton's Table</h3>
-              <p className="text-sm text-muted-foreground">Built by storytellers for storytellers in God's kingdom.</p>
+              <h3 className="font-bold text-foreground mb-4">{siteTitle}</h3>
+              <p className="text-sm text-muted-foreground">{siteSubtitle}</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Product</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/example" className="text-sm text-muted-foreground hover:text-foreground">
-                    Example
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Company</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
-                    Terms
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Connect</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/support" className="text-sm text-muted-foreground hover:text-foreground">
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-foreground">
-                    Login
-                  </Link>
-                </li>
-              </ul>
-            </div>
+            {menuColumns.map((column, index) => (
+              <div key={index}>
+                <h4 className="font-semibold text-foreground mb-4">{column.title}</h4>
+                <ul className="space-y-2">
+                  {column.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <Link href={link.url} className="text-sm text-muted-foreground hover:text-foreground">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
           <div className="pt-8 border-t border-border">
             <p className="text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Tekton's Table. All rights reserved.
+              © {new Date().getFullYear()} {copyrightText}
             </p>
           </div>
         </div>

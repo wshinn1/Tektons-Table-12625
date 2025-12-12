@@ -5,10 +5,12 @@ import dynamic from "next/dynamic"
 // Dynamically import section components
 const HeroOverlay = dynamic(() => import("./hero-overlay"))
 const VisualTektonAbout1 = dynamic(() => import("./visual-tekton-about-1"))
+const FullWidthVisualHeroDisplay1 = dynamic(() => import("./full-width-visual-hero-display-1"))
 
 const SECTION_COMPONENTS: Record<string, any> = {
   "sections/hero-overlay": HeroOverlay,
   "sections/visual-tekton-about-1": VisualTektonAbout1,
+  "sections/full-width-visual-hero-display-1": FullWidthVisualHeroDisplay1,
   // Add more section components as they are created
 }
 
