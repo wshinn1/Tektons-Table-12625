@@ -5,30 +5,54 @@ import { ArrowRight, Check } from "lucide-react"
 
 export default function PricingComparison(props: any) {
   const {
-    headline,
-    subheadline,
+    headline = "Save $1,620 - $3,072 per year",
+    subheadline = "See how Tekton's Table compares to paying for multiple tools separately.",
+    currentStackTitle = "Traditional Approach",
+    currentStackItems = [],
+    platformTitle = "Tekton's Table",
+    platformItems = [],
+    savingsAmount = "Save $1,620 - $3,072",
+    ctaText = "Get Started Free",
+    ctaLink = "/signup",
+    // Legacy support for leftCard/rightCard structure
     leftCard,
     rightCard,
-    // Legacy props for backwards compatibility
-    currentStackTitle = leftCard?.title || "What You Pay Now",
-    currentStackItems = leftCard?.items,
-    platformTitle = rightCard?.title || "Tektons Table",
-    platformItems = rightCard?.items,
-    savingsAmount = rightCard?.savings,
-    ctaText = "Start saving today",
-    ctaLink = "/auth/signup",
   } = props
 
-  // If we have leftCard/rightCard from database, use that structure
-  const useCardStructure = leftCard && rightCard
+  const useLeftCard = leftCard || {
+    title: currentStackTitle,
+    subtitle: "Paying for multiple tools separately",
+    backgroundColor: "rgb(254, 242, 242)",
+    borderColor: "#fecaca",
+    titleColor: "#dc2626",
+  }
+
+  const useRightCard = rightCard || {
+    title: platformTitle,
+    subtitle: "All-in-one missionary fundraising platform",
+    backgroundColor: "rgb(240, 253, 244)",
+    borderColor: "#bbf7d0",
+    titleColor: "#16a34a",
+    badge: "Best Value",
+    badgeColor: "#16a34a",
+  }
+
+  const displayLeftItems = currentStackItems.map((item: any) => ({
+    label: item.name,
+    value: item.cost,
+  }))
+
+  const displayRightItems = platformItems.map((item: any) => ({
+    label: item.name,
+    isCheck: item.included === true,
+    value: item.cost,
+  }))
 
   return (
     <section id="pricing" className="py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-            {headline || "Save $1,620 - $3,072 per year"}
-          </h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">{headline}</h2>
           {subheadline && <p className="text-xl text-muted-foreground text-pretty">{subheadline}</p>}
         </div>
 
@@ -37,102 +61,96 @@ export default function PricingComparison(props: any) {
           <div
             className="border-2 rounded-2xl p-8"
             style={{
-              backgroundColor: leftCard?.backgroundColor || "rgb(254, 242, 242)",
-              borderColor: leftCard?.borderColor || "#fecaca",
+              backgroundColor: useLeftCard.backgroundColor,
+              borderColor: useLeftCard.borderColor,
             }}
           >
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2" style={{ color: leftCard?.titleColor || "#dc2626" }}>
-                {currentStackTitle}
+              <h3 className="text-2xl font-bold mb-2" style={{ color: useLeftCard.titleColor }}>
+                {useLeftCard.title}
               </h3>
-              <p className="text-sm text-muted-foreground">{leftCard?.subtitle || "Typical missionary stack"}</p>
+              <p className="text-sm text-muted-foreground">{useLeftCard.subtitle}</p>
             </div>
             <div className="space-y-4 mb-6">
-              {currentStackItems?.map((item: any, i: number) => (
+              {displayLeftItems.map((item: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
                   <span className="text-muted-foreground">{item.label}</span>
                   <span className="font-semibold">{item.value}</span>
                 </div>
               ))}
             </div>
-            {leftCard?.monthlyTotal && (
-              <div className="border-t pt-4 mt-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold">Monthly Total</span>
-                  <span className="font-bold">{leftCard.monthlyTotal}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">Annual Total</span>
-                  <span className="font-bold text-lg" style={{ color: leftCard.titleColor || "#dc2626" }}>
-                    {leftCard.annualTotal}
-                  </span>
-                </div>
+            <div className="border-t pt-4 mt-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-bold">Monthly Total</span>
+                <span className="font-bold">$135 - $256/mo</span>
               </div>
-            )}
+              <div className="flex justify-between items-center">
+                <span className="font-bold">Annual Total</span>
+                <span className="font-bold text-lg" style={{ color: useLeftCard.titleColor }}>
+                  $1,620 - $3,072/yr
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Right Card / Platform Cost */}
           <div
             className="border-2 rounded-2xl p-8 relative"
             style={{
-              backgroundColor: rightCard?.backgroundColor || "rgb(240, 253, 244)",
-              borderColor: rightCard?.borderColor || "#bbf7d0",
+              backgroundColor: useRightCard.backgroundColor,
+              borderColor: useRightCard.borderColor,
             }}
           >
-            {rightCard?.badge && (
+            {useRightCard.badge && (
               <div
                 className="absolute -top-4 right-8 px-4 py-1 rounded-full text-sm font-semibold text-white"
-                style={{ backgroundColor: rightCard.badgeColor || "#16a34a" }}
+                style={{ backgroundColor: useRightCard.badgeColor }}
               >
-                {rightCard.badge}
+                {useRightCard.badge}
               </div>
             )}
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2" style={{ color: rightCard?.titleColor || "#16a34a" }}>
-                {platformTitle}
+              <h3 className="text-2xl font-bold mb-2" style={{ color: useRightCard.titleColor }}>
+                {useRightCard.title}
               </h3>
-              <p className="text-sm text-muted-foreground">{rightCard?.subtitle || "All-in-one platform"}</p>
+              <p className="text-sm text-muted-foreground">{useRightCard.subtitle}</p>
             </div>
             <div className="space-y-4 mb-6">
-              {platformItems?.map((item: any, i: number) => (
+              {displayRightItems.map((item: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
                   <span className="text-muted-foreground">{item.label}</span>
-                  {item.checkmark || item.isCheck ? (
-                    <Check className="w-5 h-5" style={{ color: rightCard?.titleColor || "#16a34a" }} />
+                  {item.isCheck ? (
+                    <Check className="w-5 h-5" style={{ color: useRightCard.titleColor }} />
                   ) : (
-                    <span className={`font-semibold ${item.strikethrough ? "line-through text-muted-foreground" : ""}`}>
-                      {item.value}
-                    </span>
+                    <span className="font-semibold">{item.value}</span>
                   )}
                 </div>
               ))}
             </div>
-            {rightCard?.monthlyTotal && (
-              <div className="border-t pt-4 mt-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">Monthly Total</span>
-                  <span className="font-bold text-lg" style={{ color: rightCard.titleColor || "#16a34a" }}>
-                    {rightCard.monthlyTotal}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">Annual Total</span>
-                  <span className="font-bold text-lg" style={{ color: rightCard.titleColor || "#16a34a" }}>
-                    {rightCard.annualTotal}
-                  </span>
-                </div>
+            <div className="border-t pt-4 mt-4 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-bold">Monthly Total</span>
+                <span className="font-bold text-lg" style={{ color: useRightCard.titleColor }}>
+                  $0/mo
+                </span>
               </div>
-            )}
+              <div className="flex justify-between items-center">
+                <span className="font-bold">Annual Total</span>
+                <span className="font-bold text-lg" style={{ color: useRightCard.titleColor }}>
+                  $0/yr
+                </span>
+              </div>
+            </div>
             {savingsAmount && (
               <div
                 className="mt-4 border rounded-lg p-4 text-center"
                 style={{
                   backgroundColor: "rgba(187, 247, 208, 0.3)",
-                  borderColor: rightCard?.borderColor || "#bbf7d0",
+                  borderColor: useRightCard.borderColor,
                 }}
               >
                 <p className="text-sm font-semibold text-foreground">Annual Savings</p>
-                <p className="text-2xl font-bold" style={{ color: rightCard?.titleColor || "#16a34a" }}>
+                <p className="text-2xl font-bold" style={{ color: useRightCard.titleColor }}>
                   {savingsAmount}
                 </p>
               </div>
