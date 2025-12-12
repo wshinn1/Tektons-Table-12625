@@ -1,21 +1,11 @@
 import Link from "next/link"
-import { ArrowRight, Check } from "lucide-react"
 import { createServerClient } from "@/lib/supabase/server"
 import { MarketingNav } from "@/components/marketing-nav"
 import { getPageMetadata } from "@/lib/get-page-metadata"
-import * as LucideIcons from "lucide-react"
 import { SectionRenderer } from "@/components/sections/section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
-import dynamicImport from "next/dynamic"
 
-const NewsletterSignup = dynamicImport(
-  () => import("@/components/newsletter-signup").then((mod) => ({ default: mod.NewsletterSignup })),
-  { ssr: true, loading: () => null },
-)
-
-export const revalidate = 60 // Revalidate every 60 seconds instead
-
-const iconMap: Record<string, any> = LucideIcons
+export const revalidate = 60
 
 async function getSiteContent(section: string) {
   try {
@@ -70,11 +60,6 @@ export default async function LandingPage() {
   const heroSection = sections?.find((s: any) => s.section_type === "hero_section")
   const nonHeroSections = sections?.filter((s: any) => s.section_type !== "hero_section") || []
 
-  const featuresSection = sections?.find((s: any) => s.section_type === "features_grid")
-  const pricingSection = sections?.find((s: any) => s.section_type === "pricing_comparison")
-  const benefitsSection = sections?.find((s: any) => s.section_type === "benefits_columns")
-  const ctaSection = sections?.find((s: any) => s.section_type === "cta")
-
   const bannerContent = banner || { enabled: false }
 
   try {
@@ -105,243 +90,23 @@ export default async function LandingPage() {
         )}
 
         {nonHeroSections.map((section: any) => {
-          if (section.source_type === "built_in" && section.section_templates?.component_path) {
-            return (
-              <SectionRenderer
-                key={section.id}
-                template={{
-                  component_path: section.section_templates.component_path,
-                  name: section.section_templates.name,
-                }}
-                props={section.content || section.section_templates.default_props || {}}
-                isVisible={section.is_active}
-              />
-            )
+          if (!section.section_templates?.component_path) {
+            console.warn(`Section ${section.id} has no component_path`)
+            return null
           }
-          return null
+
+          return (
+            <SectionRenderer
+              key={section.id}
+              template={{
+                component_path: section.section_templates.component_path,
+                name: section.section_templates.name,
+              }}
+              props={section.content || section.section_templates.default_props || {}}
+              isVisible={section.is_active}
+            />
+          )
         })}
-
-        {featuresSection && featuresSection.source_type !== "built_in" && (
-          <section className="py-20 px-6" style={{ backgroundColor: featuresSection.background_value || "#f9f9f9" }}>
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{featuresSection.title}</h2>
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">{featuresSection.subtitle}</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuresSection.content?.features?.map((feature: any, index: number) => {
-                  const IconComponent = iconMap[feature.icon] || iconMap.Circle
-                  return (
-                    <div key={index} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center mb-4">
-                        <IconComponent className="w-6 h-6 text-red-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                      <p className="text-gray-600 mb-4">{feature.description}</p>
-                      {feature.badge && (
-                        <span
-                          className="inline-block text-sm font-medium px-3 py-1 rounded-full"
-                          style={{ color: feature.badgeColor, backgroundColor: `${feature.badgeColor}20` }}
-                        >
-                          {feature.badge}
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {pricingSection && pricingSection.source_type !== "built_in" && (
-          <section className="py-20 px-6" style={{ backgroundColor: pricingSection.background_value || "#ffffff" }}>
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{pricingSection.title}</h2>
-                <p className="text-xl text-gray-600">{pricingSection.subtitle}</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                {pricingSection.content?.leftCard && (
-                  <div
-                    className="rounded-2xl p-8 border-2"
-                    style={{
-                      backgroundColor: pricingSection.content.leftCard.backgroundColor,
-                      borderColor: pricingSection.content.leftCard.borderColor,
-                    }}
-                  >
-                    <h3
-                      className="text-2xl font-bold mb-2"
-                      style={{ color: pricingSection.content.leftCard.titleColor }}
-                    >
-                      {pricingSection.content.leftCard.title}
-                    </h3>
-                    <p className="text-gray-600 mb-6">{pricingSection.content.leftCard.subtitle}</p>
-
-                    <div className="space-y-3 mb-6">
-                      {pricingSection.content.leftCard.items?.map((item: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <span className="text-gray-700">{item.label}</span>
-                          <span className="font-semibold text-gray-900">{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="border-t-2 border-gray-300 pt-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-lg text-gray-900">Monthly Total</span>
-                        <span className="font-bold text-lg text-gray-900">
-                          {pricingSection.content.leftCard.monthlyTotal}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-lg text-gray-900">Annual Total</span>
-                        <span
-                          className="font-bold text-2xl"
-                          style={{ color: pricingSection.content.leftCard.titleColor }}
-                        >
-                          {pricingSection.content.leftCard.annualTotal}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {pricingSection.content?.rightCard && (
-                  <div
-                    className="rounded-2xl p-8 border-2 relative"
-                    style={{
-                      backgroundColor: pricingSection.content.rightCard.backgroundColor,
-                      borderColor: pricingSection.content.rightCard.borderColor,
-                    }}
-                  >
-                    {pricingSection.content.rightCard.badge && (
-                      <div
-                        className="absolute -top-4 right-8 px-4 py-1 rounded-full text-sm font-semibold"
-                        style={{
-                          backgroundColor: pricingSection.content.rightCard.badgeColor,
-                          color: "#ffffff",
-                        }}
-                      >
-                        {pricingSection.content.rightCard.badge}
-                      </div>
-                    )}
-
-                    <h3 className="text-2xl font-bold mb-2 text-gray-900">{pricingSection.content.rightCard.title}</h3>
-                    <p className="text-gray-600 mb-6">{pricingSection.content.rightCard.subtitle}</p>
-
-                    <div className="space-y-3 mb-6">
-                      {pricingSection.content.rightCard.items?.map((item: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <span className="text-gray-700">{item.label}</span>
-                          {item.isCheck ? (
-                            <Check className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <span className="font-semibold text-gray-900">{item.value}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="border-t-2 border-gray-300 pt-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-lg text-gray-900">Monthly Total</span>
-                        <span
-                          className="font-bold text-2xl"
-                          style={{ color: pricingSection.content.rightCard.badgeColor }}
-                        >
-                          {pricingSection.content.rightCard.monthlyTotal}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="font-bold text-lg text-gray-900">Annual Total</span>
-                        <span
-                          className="font-bold text-2xl"
-                          style={{ color: pricingSection.content.rightCard.badgeColor }}
-                        >
-                          {pricingSection.content.rightCard.annualTotal}
-                        </span>
-                      </div>
-
-                      {pricingSection.content.rightCard.savings && (
-                        <div
-                          className="text-center py-3 rounded-lg"
-                          style={{
-                            backgroundColor: `${pricingSection.content.rightCard.badgeColor}30`,
-                          }}
-                        >
-                          <div className="text-sm text-gray-600 mb-1">Annual Savings</div>
-                          <div
-                            className="text-2xl font-bold"
-                            style={{ color: pricingSection.content.rightCard.badgeColor }}
-                          >
-                            {pricingSection.content.rightCard.savings}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {benefitsSection && benefitsSection.source_type !== "built_in" && (
-          <section className="py-20 px-6" style={{ backgroundColor: benefitsSection.background_value || "#f9f9f9" }}>
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{benefitsSection.title}</h2>
-                <p className="text-xl text-gray-600">{benefitsSection.subtitle}</p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-12">
-                {benefitsSection.content?.benefits?.map((benefit: any, index: number) => {
-                  const IconComponent = iconMap[benefit.icon] || iconMap.Circle
-                  return (
-                    <div key={index} className="text-center">
-                      <div
-                        className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center"
-                        style={{ backgroundColor: benefit.iconBgColor }}
-                      >
-                        <IconComponent className="w-8 h-8" style={{ color: benefit.iconColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
-                      <p className="text-gray-600">{benefit.description}</p>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {ctaSection && ctaSection.source_type !== "built_in" && (
-          <section className="py-20 px-6" style={{ backgroundColor: ctaSection.background_value || "#f5f5f5" }}>
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{ctaSection.title}</h2>
-              <p className="text-xl text-gray-600 mb-8">{ctaSection.subtitle}</p>
-
-              <Link
-                href={ctaSection.button_url || "/auth/signup"}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-lg font-semibold transition-transform hover:scale-105"
-                style={{
-                  backgroundColor: ctaSection.button_color || "#000000",
-                  color: "#ffffff",
-                }}
-              >
-                {ctaSection.button_text || "Get started for free"}
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-
-              {ctaSection.content?.supportingText && (
-                <p className="text-sm text-gray-500 mt-6">{ctaSection.content.supportingText}</p>
-              )}
-            </div>
-          </section>
-        )}
 
         <MarketingFooter />
       </div>

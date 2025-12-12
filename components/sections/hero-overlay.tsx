@@ -17,6 +17,14 @@ interface HeroOverlayProps {
   buttonColor: string
 }
 
+function parseOpacity(value: any): number {
+  const num = Number(value)
+  if (isNaN(num) || !isFinite(num)) {
+    return 40 // Safe default
+  }
+  return Math.max(0, Math.min(100, num)) // Clamp between 0-100
+}
+
 export default function HeroOverlay({
   title,
   subtitle,
@@ -30,6 +38,8 @@ export default function HeroOverlay({
   buttonColor,
 }: HeroOverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  const safeOpacity = parseOpacity(overlayOpacity)
 
   useEffect(() => {
     const video = videoRef.current
@@ -82,7 +92,7 @@ export default function HeroOverlay({
         className="absolute inset-0"
         style={{
           backgroundColor: overlayColor,
-          opacity: overlayOpacity / 100,
+          opacity: safeOpacity / 100,
         }}
       />
 

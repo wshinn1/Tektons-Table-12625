@@ -2,8 +2,16 @@
 
 import * as Icons from "lucide-react"
 
-export default function FeaturesGrid({ props }: { props: any }) {
-  const { headline, subheadline, features, backgroundColor = "bg-accent/5" } = props
+export default function FeaturesGrid(props: any) {
+  const {
+    headline = "Features",
+    subheadline = "",
+    features = [],
+    benefits = [],
+    backgroundColor = "bg-accent/5",
+  } = props
+
+  const items = features.length > 0 ? features : benefits
 
   return (
     <section className={`py-20 ${backgroundColor}`}>
@@ -14,7 +22,7 @@ export default function FeaturesGrid({ props }: { props: any }) {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features?.map((feature: any, i: number) => {
+          {items?.map((feature: any, i: number) => {
             const IconComponent = (Icons as any)[feature.icon] || Icons.Mail
             return (
               <div key={i} className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-shadow">

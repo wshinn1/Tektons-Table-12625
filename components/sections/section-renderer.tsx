@@ -2,16 +2,22 @@
 
 import dynamic from "next/dynamic"
 
-// Dynamically import section components
 const HeroOverlay = dynamic(() => import("./hero-overlay"))
 const VisualTektonAbout1 = dynamic(() => import("./visual-tekton-about-1"))
 const FullWidthVisualHeroDisplay1 = dynamic(() => import("./full-width-visual-hero-display-1"))
+const FeaturesGrid = dynamic(() => import("./features-grid/features-grid"))
+const PricingComparison = dynamic(() => import("./pricing-comparison/pricing-comparison"))
+const CtaSection = dynamic(() => import("./cta-section/cta-section"))
+const HeroCentered = dynamic(() => import("./hero-centered/hero-centered"))
 
 const SECTION_COMPONENTS: Record<string, any> = {
   "sections/hero-overlay": HeroOverlay,
   "sections/visual-tekton-about-1": VisualTektonAbout1,
   "sections/full-width-visual-hero-display-1": FullWidthVisualHeroDisplay1,
-  // Add more section components as they are created
+  "sections/features-grid": FeaturesGrid,
+  "sections/pricing-comparison": PricingComparison,
+  "sections/cta-section": CtaSection,
+  "sections/hero-centered": HeroCentered,
 }
 
 interface SectionRendererProps {

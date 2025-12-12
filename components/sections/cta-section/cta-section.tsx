@@ -3,15 +3,18 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
-export default function CTASection({ props }: { props: any }) {
+export default function CTASection(props: any) {
   const {
-    headline,
-    subheadline,
+    headline = "Ready to get started?",
+    subheadline = "",
+    supportingText = "",
     ctaText = "Get Started",
     ctaLink = "/auth/signup",
-    disclaimer,
+    disclaimer = "",
     backgroundColor = "bg-background",
   } = props
+
+  const displayDisclaimer = disclaimer || supportingText
 
   return (
     <section className={`py-20 ${backgroundColor}`}>
@@ -25,7 +28,7 @@ export default function CTASection({ props }: { props: any }) {
           {ctaText}
           <ArrowRight className="w-6 h-6" />
         </Link>
-        {disclaimer && <p className="text-sm text-muted-foreground mt-4">{disclaimer}</p>}
+        {displayDisclaimer && <p className="text-sm text-muted-foreground mt-4">{displayDisclaimer}</p>}
       </div>
     </section>
   )

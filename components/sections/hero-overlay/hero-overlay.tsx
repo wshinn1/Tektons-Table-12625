@@ -3,30 +3,48 @@
 import { useEffect, useRef, useState } from "react"
 
 interface HeroOverlayProps {
-  title: string
+  title?: string
   subtitle?: string
-  backgroundType: "image" | "video"
-  backgroundUrl: string
-  overlayColor: string
-  overlayOpacity: number
-  textColor: string
+  backgroundType?: "image" | "video"
+  backgroundUrl?: string
+  overlayColor?: string
+  overlayOpacity?: number
+  textColor?: string
   buttonText?: string
   buttonLink?: string
-  buttonColor: string
+  buttonColor?: string
+  primary?: {
+    heading?: string
+    subheading?: string
+  }
 }
 
 export function HeroOverlay({
-  title,
-  subtitle,
-  backgroundType,
-  backgroundUrl,
-  overlayColor,
-  overlayOpacity,
-  textColor,
+  title: directTitle,
+  subtitle: directSubtitle,
+  primary,
+  backgroundType = "image",
+  backgroundUrl = "/placeholder.svg?height=600&width=1200",
+  overlayColor = "#000000",
+  overlayOpacity = 40,
+  textColor = "#ffffff",
   buttonText,
   buttonLink,
-  buttonColor,
+  buttonColor = "#3b82f6",
 }: HeroOverlayProps) {
+  const title = directTitle || primary?.heading || "Welcome"
+  const subtitle = directSubtitle || primary?.subheading || ""
+
+  const parseOpacity = (value: any): number => {
+    const parsed = Number(value)
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      return 40 // Default fallback
+    }
+    return Math.max(0, Math.min(100, parsed)) // Clamp between 0-100
+  }
+
+  const safeOpacity = parseOpacity(overlayOpacity)
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
@@ -110,7 +128,7 @@ export function HeroOverlay({
         className="absolute inset-0"
         style={{
           backgroundColor: overlayColor,
-          opacity: overlayOpacity / 100,
+          opacity: safeOpacity / 100,
           zIndex: 1,
         }}
       />
