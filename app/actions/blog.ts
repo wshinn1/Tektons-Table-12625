@@ -741,13 +741,19 @@ export async function createPlatformCategory(name: string) {
     .insert({
       name: name.trim(),
       slug,
+      tenant_id: null, // Platform-level category
     })
     .select()
     .single()
 
   if (error) {
-    console.error("[v0] createPlatformCategory: Failed to create category:", error)
-    throw new Error("Failed to create category")
+    console.error("[v0] createPlatformCategory: Database error:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    })
+    throw new Error(`Failed to create category: ${error.message}`)
   }
 
   console.log("[v0] createPlatformCategory: Category created successfully =", category)

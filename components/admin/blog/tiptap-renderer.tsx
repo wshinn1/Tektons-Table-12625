@@ -6,6 +6,7 @@ import Underline from "@tiptap/extension-underline"
 import Link from "@tiptap/extension-link"
 import Image from "@tiptap/extension-image"
 import Youtube from "@tiptap/extension-youtube"
+import { Iframe } from "./tiptap-iframe-extension"
 
 interface TiptapRendererProps {
   content: string | object
@@ -35,6 +36,12 @@ export function TiptapRenderer({ content }: TiptapRendererProps) {
       Youtube.configure({
         controls: true,
         nocookie: true,
+      }),
+      Iframe.configure({
+        allowFullscreen: true,
+        HTMLAttributes: {
+          class: "w-full rounded-md",
+        },
       }),
     ],
     content: parsedContent,

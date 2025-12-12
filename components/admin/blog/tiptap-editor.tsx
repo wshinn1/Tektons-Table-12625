@@ -9,6 +9,7 @@ import Link from "@tiptap/extension-link"
 import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
 import Youtube from "@tiptap/extension-youtube"
+import { Iframe } from "./tiptap-iframe-extension"
 import { useEffect, useState, useRef } from "react"
 import {
   Bold,
@@ -28,6 +29,7 @@ import {
   ImageIcon,
   Video,
   Loader2,
+  Frame,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toggle } from "@/components/ui/toggle"
@@ -93,6 +95,7 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
         },
         codeBlock: true,
         link: false,
+        underline: false, // Explicitly disable underline in StarterKit to avoid duplicate extension warning
       }),
       Underline,
       Link.configure({
@@ -102,6 +105,12 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
       Youtube.configure({
         controls: true,
         nocookie: true,
+      }),
+      Iframe.configure({
+        allowFullscreen: true,
+        HTMLAttributes: {
+          class: "w-full rounded-md",
+        },
       }),
       Placeholder.configure({
         placeholder: placeholder || "Start writing...",
@@ -247,6 +256,20 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
     }
   }
 
+  const addIframe = () => {
+    const src = window.prompt("Enter iframe source URL (e.g., Scribehow, Loom, etc.)")
+    if (src) {
+      const width = window.prompt("Enter width (default: 100%)", "100%")
+      const height = window.prompt("Enter height in pixels (default: 640)", "640")
+
+      editor.commands.setIframe({
+        src,
+        width: width || "100%",
+        height: height || "640",
+      })
+    }
+  }
+
   return (
     <>
       <div className="border rounded-lg overflow-hidden bg-background">
@@ -357,6 +380,15 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
           </Button>
           <Button size="sm" variant="ghost" onClick={addYouTube} className="h-8 px-2" title="Embed YouTube Video">
             <Video className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={addIframe}
+            className="h-8 px-2"
+            title="Embed Iframe (Scribehow, Loom, etc.)"
+          >
+            <Frame className="h-4 w-4" />
           </Button>
 
           <Separator orientation="vertical" className="h-6" />

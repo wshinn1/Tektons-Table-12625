@@ -34,6 +34,39 @@ export async function getFooterSettings(): Promise<FooterSettings | null> {
       return null
     }
 
+    if (data && typeof data.menu_columns === "string") {
+      data.menu_columns = JSON.parse(data.menu_columns)
+    }
+
+    if (!data.menu_columns || !Array.isArray(data.menu_columns)) {
+      data.menu_columns = [
+        {
+          title: "Product",
+          links: [
+            { label: "Features", url: "/features" },
+            { label: "Pricing", url: "/pricing" },
+            { label: "Example", url: "/example" },
+          ],
+        },
+        {
+          title: "Company",
+          links: [
+            { label: "About", url: "/about" },
+            { label: "Privacy", url: "/privacy" },
+            { label: "Terms", url: "/terms" },
+          ],
+        },
+        {
+          title: "Connect",
+          links: [
+            { label: "Contact", url: "/contact" },
+            { label: "Blog", url: "/blog" },
+            { label: "Login", url: "/auth/login" },
+          ],
+        },
+      ]
+    }
+
     return data as FooterSettings
   } catch (error) {
     console.error("Error in getFooterSettings:", error)

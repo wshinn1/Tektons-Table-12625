@@ -79,8 +79,8 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: var(--font-geist), "Geist", "Geist Fallback", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", "Geist Mono Fallback", "Courier New", monospace;
   --font-old-standard: var(--font-old-standard);
   --font-open-sans: var(--font-open-sans);
   --font-bodoni-moda: var(--font-bodoni-moda);
@@ -133,6 +133,18 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Optimize text rendering for better FCP */
+  html {
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ensure fonts render immediately with fallback */
+  body {
+    font-display: swap;
   }
 }
 
@@ -219,6 +231,28 @@
   aspect-ratio: 16 / 9;
   border-radius: 0.5em;
   margin: 1em 0;
+}
+
+/* Adding styles for iframe container to support custom embed codes like Scribehow */
+.ProseMirror .iframe-container {
+  max-width: 100%;
+  margin: 1.5em 0;
+  border-radius: 0.5em;
+  overflow: hidden;
+}
+
+.ProseMirror .iframe-container iframe {
+  width: 100%;
+  border: 0;
+  border-radius: 0.5em;
+  min-height: 640px;
+}
+
+/* Responsive iframe sizing */
+@media (max-width: 768px) {
+  .ProseMirror .iframe-container iframe {
+    min-height: 400px;
+  }
 }
 
 /* Placeholder styling */

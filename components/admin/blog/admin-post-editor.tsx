@@ -13,7 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { X, Upload, Plus, Loader2, Crown } from "lucide-react"
 import { createBlogPost, uploadPlatformBlogImage, createPlatformCategory, createPlatformTag } from "@/app/actions/blog"
 import { toast } from "sonner"
@@ -589,9 +596,12 @@ export function AdminPostEditor({
       />
 
       <Dialog open={showNewCategoryDialog} onOpenChange={setShowNewCategoryDialog}>
-        <DialogContent>
+        <DialogContent aria-describedby="create-category-description">
           <DialogHeader>
             <DialogTitle>Create New Category</DialogTitle>
+            <DialogDescription id="create-category-description">
+              Create a new category to organize your blog posts.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="new-category">Category Name</Label>

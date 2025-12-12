@@ -11,7 +11,7 @@ import dynamicImport from "next/dynamic"
 
 const NewsletterSignup = dynamicImport(
   () => import("@/components/newsletter-signup").then((mod) => ({ default: mod.NewsletterSignup })),
-  { ssr: true },
+  { ssr: true, loading: () => null },
 )
 
 export const dynamicRoute = "force-dynamic"
@@ -66,7 +66,7 @@ export async function generateMetadata() {
 }
 
 export default async function LandingPage() {
-  const fetchWithTimeout = async (fn: () => Promise<any>, timeout = 2000) => {
+  const fetchWithTimeout = async (fn: () => Promise<any>, timeout = 1500) => {
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
     try {
       return await Promise.race([fn(), timeoutPromise])

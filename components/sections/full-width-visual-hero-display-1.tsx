@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
 interface FullWidthVisualHeroDisplay1Props {
@@ -75,13 +76,23 @@ export default function FullWidthVisualHeroDisplay1({
     if (backgroundType !== "video") return
 
     const deferVideoLoad = () => {
-      setShouldLoadVideo(true)
+      if (document.readyState === "complete") {
+        setTimeout(() => setShouldLoadVideo(true), 2000)
+      } else {
+        window.addEventListener(
+          "load",
+          () => {
+            setTimeout(() => setShouldLoadVideo(true), 2000)
+          },
+          { once: true },
+        )
+      }
     }
 
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoLoad, { timeout: 2000 })
+      requestIdleCallback(deferVideoLoad, { timeout: 7000 })
     } else {
-      setTimeout(deferVideoLoad, 1500)
+      setTimeout(deferVideoLoad, 7000)
     }
   }, [backgroundType])
 
@@ -140,7 +151,17 @@ export default function FullWidthVisualHeroDisplay1({
   return (
     <section className="relative w-full min-h-[600px] md:min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden">
       {/* Background Layer */}
-      {backgroundType === "image" && enableParallax ? (
+      {backgroundType === "image" && backgroundImage && !enableParallax ? (
+        <Image
+          src={backgroundImage || "/placeholder.svg"}
+          alt="Hero background"
+          fill
+          quality={85}
+          sizes="100vw"
+          loading="lazy"
+          className="object-cover"
+        />
+      ) : backgroundType === "image" && enableParallax ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -150,8 +171,6 @@ export default function FullWidthVisualHeroDisplay1({
             backgroundSize: "cover",
           }}
         />
-      ) : backgroundType === "image" && !enableParallax ? (
-        <div className="absolute inset-0" style={backgroundStyles()} />
       ) : backgroundType === "gradient" ? (
         <div className="absolute inset-0" style={backgroundStyles()} />
       ) : backgroundType === "video" && shouldLoadVideo ? (
@@ -165,7 +184,12 @@ export default function FullWidthVisualHeroDisplay1({
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
         />
       ) : backgroundType === "video" && !shouldLoadVideo ? (
-        <div className="absolute inset-0 bg-muted" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
+          }}
+        />
       ) : null}
 
       {/* Overlay */}

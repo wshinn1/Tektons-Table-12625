@@ -2,6 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
 interface HeroCenteredProps {
@@ -92,19 +93,33 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
     if (!isVideo || !actualVideoUrl) return
 
     const deferVideoRender = () => {
-      setShouldRenderVideo(true)
+      // Check if page is loaded
+      if (document.readyState === "complete") {
+        setTimeout(() => setShouldRenderVideo(true), 1000)
+      } else {
+        window.addEventListener(
+          "load",
+          () => {
+            setTimeout(() => setShouldRenderVideo(true), 1000)
+          },
+          { once: true },
+        )
+      }
     }
 
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoRender)
+      requestIdleCallback(deferVideoRender, { timeout: 5000 })
     } else {
-      setTimeout(deferVideoRender, 2000)
+      setTimeout(deferVideoRender, 5000)
     }
   }, [isVideo, actualVideoUrl])
 
   useEffect(() => {
     const video = videoRef.current
     if (!video || !shouldRenderVideo) return
+
+    video.src = actualVideoUrl
+    video.load()
 
     const playVideo = async () => {
       try {
@@ -132,7 +147,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
     return () => {
       video.removeEventListener("canplay", playVideo)
     }
-  }, [shouldRenderVideo])
+  }, [shouldRenderVideo, actualVideoUrl])
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (isVideo) {
@@ -186,6 +201,19 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
         minHeight,
       }}
     >
+      {isVideo && posterImage && (
+        <Image
+          src={posterImage || "/placeholder.svg"}
+          alt="Hero background"
+          fill
+          priority
+          quality={85}
+          sizes="100vw"
+          className="object-cover"
+          style={{ zIndex: 0 }}
+        />
+      )}
+
       {isVideo && actualVideoUrl && shouldRenderVideo && (
         <video
           ref={videoRef}
@@ -193,10 +221,8 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
           muted
           loop
           playsInline
-          preload="auto"
+          preload="none"
           poster={posterImage || undefined}
-          webkit-playsinline="true"
-          x-webkit-airplay="allow"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
           style={{ zIndex: 0 }}
         >
@@ -245,7 +271,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
 
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto py-20">
         <h1
-          className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-balance ${getHeadingFontClass()}`}
+          className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-balance ${getHeadingFontClass()} font-display`}
           style={{ color: textColor }}
         >
           {heading}

@@ -10,8 +10,8 @@ import { headers } from "next/headers"
 import { createAdminClient } from "@/lib/supabase/admin"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const _geist = Geist({ subsets: ["latin"], display: "swap", preload: true, variable: "--font-geist" })
+const _geistMono = Geist_Mono({ subsets: ["latin"], display: "swap", preload: true, variable: "--font-geist-mono" })
 
 // Default TektonsTable branding
 const DEFAULT_FAVICON = "/images/android-chrome-512x512.png"
@@ -136,8 +136,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head></head>
-      <body className={`font-sans antialiased`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://vercel.live" />
+        <link rel="dns-prefetch" href="https://vitals.vercel-insights.com" />
+      </head>
+      <body className={`${_geist.variable} ${_geistMono.variable} font-sans antialiased`}>
         <SentryInit />
         <GoogleAnalytics />
         {children}
