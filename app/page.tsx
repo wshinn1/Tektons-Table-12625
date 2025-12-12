@@ -68,14 +68,14 @@ export default async function LandingPage() {
   const [banner, sections] = await Promise.all([getSiteContent("announcement_banner"), getHomepageSections()])
 
   const heroSection = sections?.find((s: any) => s.section_type === "hero_section")
-  const heroContent = heroSection?.content || {}
-
-  const bannerContent = banner || { enabled: false }
+  const nonHeroSections = sections?.filter((s: any) => s.section_type !== "hero_section") || []
 
   const featuresSection = sections?.find((s: any) => s.section_type === "features_grid")
   const pricingSection = sections?.find((s: any) => s.section_type === "pricing_comparison")
   const benefitsSection = sections?.find((s: any) => s.section_type === "benefits_columns")
   const ctaSection = sections?.find((s: any) => s.section_type === "cta")
+
+  const bannerContent = banner || { enabled: false }
 
   try {
     return (
@@ -104,12 +104,8 @@ export default async function LandingPage() {
           />
         )}
 
-        {sections?.map((section: any) => {
-          if (
-            section.source_type !== "built_in" ||
-            !section.section_templates?.component_path ||
-            section.section_type === "hero_section"
-          ) {
+        {nonHeroSections.map((section: any) => {
+          if (section.source_type !== "built_in" || !section.section_templates?.component_path) {
             return null
           }
 
@@ -126,18 +122,8 @@ export default async function LandingPage() {
           )
         })}
 
-        {featuresSection && (
-          <section
-            className="py-20 px-6"
-            style={{
-              background:
-                featuresSection.background_type === "color"
-                  ? featuresSection.background_value
-                  : featuresSection.background_type === "image"
-                    ? `url(${featuresSection.background_value})`
-                    : "transparent",
-            }}
-          >
+        {featuresSection && featuresSection.source_type !== "built_in" && (
+          <section className="py-20 px-6" style={{ backgroundColor: featuresSection.background_value || "#f9f9f9" }}>
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{featuresSection.title}</h2>
@@ -170,7 +156,7 @@ export default async function LandingPage() {
           </section>
         )}
 
-        {pricingSection && (
+        {pricingSection && pricingSection.source_type !== "built_in" && (
           <section className="py-20 px-6" style={{ backgroundColor: pricingSection.background_value || "#ffffff" }}>
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
@@ -304,7 +290,7 @@ export default async function LandingPage() {
           </section>
         )}
 
-        {benefitsSection && (
+        {benefitsSection && benefitsSection.source_type !== "built_in" && (
           <section className="py-20 px-6" style={{ backgroundColor: benefitsSection.background_value || "#f9f9f9" }}>
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
@@ -333,7 +319,7 @@ export default async function LandingPage() {
           </section>
         )}
 
-        {ctaSection && (
+        {ctaSection && ctaSection.source_type !== "built_in" && (
           <section className="py-20 px-6" style={{ backgroundColor: ctaSection.background_value || "#f5f5f5" }}>
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{ctaSection.title}</h2>
