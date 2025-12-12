@@ -394,7 +394,6 @@ export default async function LandingPage() {
           </section>
         )}
 
-        <NewsletterSignup />
         <MarketingFooter />
       </div>
     )

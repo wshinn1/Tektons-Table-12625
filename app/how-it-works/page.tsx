@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Check, Play, UserPlus, Palette, Send, DollarSign, BarChart3 } from "lucide-react"
 import { OptimizedVideo } from "@/components/optimized-video"
+import { MarketingFooter } from "@/components/marketing-footer"
 
 export async function generateMetadata() {
   return await getPageMetadata("how-it-works")
@@ -349,69 +350,7 @@ export default async function HowItWorksPage() {
       })}
 
       {/* Footer */}
-      <footer className="border-t bg-accent/5 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-bold text-foreground mb-4">Tekton's Table</h3>
-              <p className="text-sm text-muted-foreground">Free fundraising platform for missionaries worldwide.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Product</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link href="/pricing" className="text-muted-foreground hover:text-foreground">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/how-it-works" className="text-muted-foreground hover:text-foreground">
-                    How It Works
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/security" className="text-muted-foreground hover:text-foreground">
-                    Security
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Company</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link href="/" className="text-muted-foreground hover:text-foreground">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/help" className="text-muted-foreground hover:text-foreground">
-                    Help Center
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Legal</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="text-muted-foreground hover:text-foreground">
-                    Terms & Conditions
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Tekton's Table. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }
