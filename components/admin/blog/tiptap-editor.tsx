@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button"
 import { Toggle } from "@/components/ui/toggle"
 import { Separator } from "@/components/ui/separator"
 import { MediaLibraryModal } from "@/components/admin/media-library-modal"
+import { IframeEmbedDialog } from "./iframe-embed-dialog"
 import { toast } from "sonner"
 
 interface TiptapEditorProps {
@@ -47,6 +48,7 @@ interface TiptapEditorProps {
 
 export function TiptapEditor({ initialContent, content, onChange, placeholder, onImageUpload }: TiptapEditorProps) {
   const [showMediaModal, setShowMediaModal] = useState(false)
+  const [showIframeDialog, setShowIframeDialog] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -257,17 +259,25 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
   }
 
   const addIframe = () => {
-    const src = window.prompt("Enter iframe source URL (e.g., Scribehow, Loom, etc.)")
-    if (src) {
-      const width = window.prompt("Enter width (default: 100%)", "100%")
-      const height = window.prompt("Enter height in pixels (default: 640)", "640")
+    setShowIframeDialog(true)
+  }
 
-      editor.commands.setIframe({
-        src,
-        width: width || "100%",
-        height: height || "640",
-      })
+  const handleIframeEmbed = (src: string, width: string, height: string) => {
+    console.log("[v0] Embedding iframe:", { src, width, height })
+
+    if (!editor) {
+      console.error("[v0] Editor not available")
+      toast.error("Editor not ready")
+      return
     }
+
+    editor.commands.setIframe({
+      src,
+      width: width || "100%",
+      height: height || "640",
+    })
+
+    toast.success("Iframe embedded successfully")
   }
 
   return (
@@ -428,6 +438,13 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
       <MediaLibraryModal open={showMediaModal} onClose={() => setShowMediaModal(false)} onSelect={handleMediaSelect} />
+
+      {/* Iframe Embed Dialog */}
+      <IframeEmbedDialog
+        open={showIframeDialog}
+        onClose={() => setShowIframeDialog(false)}
+        onEmbed={handleIframeEmbed}
+      />
     </>
   )
 }

@@ -20,6 +20,7 @@ import {
   Layout,
   Sparkles,
   Wand2,
+  Twitch as Switch,
 } from "lucide-react"
 import {
   Dialog,
@@ -65,6 +66,9 @@ interface HomepageSection {
         label: string
         required?: boolean
         options?: Array<{ value: string; label: string }>
+        defaultValue?: any
+        min?: number
+        max?: number
       }>
     } | null
     default_props: any
@@ -775,6 +779,63 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                             })}
                                           </SelectContent>
                                         </Select>
+                                      )}
+                                      {field.type === "color" && (
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="color"
+                                            value={section.content?.[field.name] || field.defaultValue || "#000000"}
+                                            onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                            className="h-10 w-20 rounded border cursor-pointer"
+                                          />
+                                          <Input
+                                            value={section.content?.[field.name] || field.defaultValue || ""}
+                                            onChange={(e) => updateContent(section.id, field.name, e.target.value)}
+                                            placeholder="#000000"
+                                            className="flex-1"
+                                          />
+                                        </div>
+                                      )}
+                                      {field.type === "number" && (
+                                        <div className="space-y-2">
+                                          <Input
+                                            type="number"
+                                            min={field.min}
+                                            max={field.max}
+                                            value={section.content?.[field.name] ?? field.defaultValue ?? ""}
+                                            onChange={(e) =>
+                                              updateContent(section.id, field.name, Number(e.target.value))
+                                            }
+                                            placeholder={field.defaultValue?.toString()}
+                                          />
+                                          {field.min !== undefined && field.max !== undefined && (
+                                            <input
+                                              type="range"
+                                              min={field.min}
+                                              max={field.max}
+                                              value={section.content?.[field.name] ?? field.defaultValue ?? field.min}
+                                              onChange={(e) =>
+                                                updateContent(section.id, field.name, Number(e.target.value))
+                                              }
+                                              className="w-full"
+                                            />
+                                          )}
+                                        </div>
+                                      )}
+                                      {field.type === "boolean" && (
+                                        <div className="flex items-center gap-2 pt-2">
+                                          <Switch
+                                            checked={section.content?.[field.name] ?? field.defaultValue ?? false}
+                                            onCheckedChange={(checked) =>
+                                              updateContent(section.id, field.name, checked)
+                                            }
+                                          />
+                                          <span className="text-sm text-muted-foreground">
+                                            {(section.content?.[field.name] ?? field.defaultValue)
+                                              ? "Enabled"
+                                              : "Disabled"}
+                                          </span>
+                                        </div>
                                       )}
                                     </div>
                                   ))}
