@@ -92,25 +92,28 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
   useEffect(() => {
     if (!isVideo || !actualVideoUrl) return
 
-    const deferVideoRender = () => {
-      // Check if page is loaded
-      if (document.readyState === "complete") {
-        setTimeout(() => setShouldRenderVideo(true), 1000)
-      } else {
-        window.addEventListener(
-          "load",
-          () => {
-            setTimeout(() => setShouldRenderVideo(true), 1000)
-          },
-          { once: true },
-        )
-      }
+    let triggered = false
+    const loadVideo = () => {
+      if (triggered) return
+      triggered = true
+      // Wait until after significant user interaction or 10s, whichever comes first
+      setTimeout(() => setShouldRenderVideo(true), 10000)
     }
 
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoRender, { timeout: 5000 })
-    } else {
-      setTimeout(deferVideoRender, 5000)
+    // Load on scroll or interaction
+    const events = ["scroll", "touchstart", "click", "mousemove"]
+    events.forEach((event) => {
+      window.addEventListener(event, loadVideo, { once: true, passive: true })
+    })
+
+    // Fallback after 10s
+    const timeout = setTimeout(loadVideo, 10000)
+
+    return () => {
+      clearTimeout(timeout)
+      events.forEach((event) => {
+        window.removeEventListener(event, loadVideo)
+      })
     }
   }, [isVideo, actualVideoUrl])
 
@@ -207,7 +210,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
           alt="Hero background"
           fill
           priority
-          quality={85}
+          quality={90}
           sizes="100vw"
           className="object-cover"
           style={{ zIndex: 0 }}
@@ -224,7 +227,7 @@ export default function HeroCentered({ props }: HeroCenteredProps) {
           preload="none"
           poster={posterImage || undefined}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-          style={{ zIndex: 0 }}
+          style={{ zIndex: posterImage ? 1 : 0 }}
         >
           <source src={actualVideoUrl} type="video/mp4" />
         </video>

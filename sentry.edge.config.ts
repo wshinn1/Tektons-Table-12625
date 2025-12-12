@@ -5,4 +5,12 @@ Sentry.init({
 
   tracesSampleRate: 1.0,
   debug: false,
+
+  spotlight: process.env.NODE_ENV === "development",
+
+  integrations: [
+    Sentry.captureConsoleIntegration({
+      levels: ["log", "info", "warn", "error", "debug", "assert"],
+    }),
+  ],
 })

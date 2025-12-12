@@ -42,57 +42,61 @@ interface FullWidthVisualHeroDisplay1Props {
   decorativeLineWidth?: number
 }
 
-export default function FullWidthVisualHeroDisplay1({
-  heading = "WHAT IF YOU FALL?",
-  subheading = "",
-  subheadingItalic = "but oh my darling",
-  heading2 = "WHAT IF YOU FLY?",
-  backgroundType = "image",
-  backgroundImage = "/inspirational-scene.jpg",
-  videoUrl = "",
-  gradientStart = "#1e3a5f",
-  gradientEnd = "#0f172a",
-  gradientDirection = "to bottom right",
-  enableParallax = false,
-  showBorder = true,
-  borderWidth = 2,
-  borderColor = "#ffffff",
-  borderOpacity = 80,
-  overlayColor = "#000000",
-  overlayOpacity = 40,
-  textColor = "#ffffff",
-  headingFont = "sans-serif",
-  subheadingFont = "serif",
-  showDecorativeLines = true,
-  decorativeLineColor = "#ffffff",
-  decorativeLineWidth = 60,
-}: FullWidthVisualHeroDisplay1Props) {
+export default function FullWidthVisualHeroDisplay1(props: FullWidthVisualHeroDisplay1Props) {
+  const {
+    heading,
+    subheading,
+    subheadingItalic,
+    heading2,
+    backgroundType = "gradient",
+    backgroundImage,
+    videoUrl,
+    gradientStart = "#1e3a5f",
+    gradientEnd = "#0f172a",
+    gradientDirection = "to bottom right",
+    enableParallax = false,
+    showBorder = true,
+    borderWidth = 2,
+    borderColor = "#ffffff",
+    borderOpacity = 80,
+    overlayColor = "#000000",
+    overlayOpacity = 40,
+    textColor = "#ffffff",
+    headingFont = "sans-serif",
+    subheadingFont = "serif",
+    showDecorativeLines = true,
+    decorativeLineColor = "#ffffff",
+    decorativeLineWidth = 60,
+  } = props
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
   const [videoLoaded, setVideoLoaded] = useState(false)
 
-  // Defer video loading for performance
   useEffect(() => {
     if (backgroundType !== "video") return
 
-    const deferVideoLoad = () => {
-      if (document.readyState === "complete") {
-        setTimeout(() => setShouldLoadVideo(true), 2000)
-      } else {
-        window.addEventListener(
-          "load",
-          () => {
-            setTimeout(() => setShouldLoadVideo(true), 2000)
-          },
-          { once: true },
-        )
-      }
+    let triggered = false
+    const loadVideo = () => {
+      if (triggered) return
+      triggered = true
+      setTimeout(() => setShouldLoadVideo(true), 15000)
     }
 
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(deferVideoLoad, { timeout: 7000 })
-    } else {
-      setTimeout(deferVideoLoad, 7000)
+    // Wait for user interaction
+    const events = ["scroll", "touchstart", "click", "mousemove"]
+    events.forEach((event) => {
+      window.addEventListener(event, loadVideo, { once: true, passive: true })
+    })
+
+    // Fallback after 15s
+    const timeout = setTimeout(loadVideo, 15000)
+
+    return () => {
+      clearTimeout(timeout)
+      events.forEach((event) => {
+        window.removeEventListener(event, loadVideo)
+      })
     }
   }, [backgroundType])
 
@@ -128,22 +132,6 @@ export default function FullWidthVisualHeroDisplay1({
     video.addEventListener("canplay", playVideo, { once: true })
   }, [shouldLoadVideo, videoUrl])
 
-  const backgroundStyles = () => {
-    if (backgroundType === "gradient") {
-      return {
-        background: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
-      }
-    }
-    if (backgroundType === "image" && !enableParallax) {
-      return {
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    }
-    return {}
-  }
-
   const headingFontClass = headingFont === "serif" ? "font-serif" : headingFont === "mono" ? "font-mono" : "font-sans"
   const subheadingFontClass =
     subheadingFont === "serif" ? "font-serif" : subheadingFont === "mono" ? "font-mono" : "font-sans"
@@ -151,17 +139,19 @@ export default function FullWidthVisualHeroDisplay1({
   return (
     <section className="relative w-full min-h-[600px] md:min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden">
       {/* Background Layer */}
-      {backgroundType === "image" && backgroundImage && !enableParallax ? (
+      {backgroundType === "image" && backgroundImage && !enableParallax && (
         <Image
           src={backgroundImage || "/placeholder.svg"}
           alt="Hero background"
           fill
-          quality={85}
+          priority
+          quality={90}
           sizes="100vw"
-          loading="lazy"
           className="object-cover"
         />
-      ) : backgroundType === "image" && enableParallax ? (
+      )}
+
+      {backgroundType === "image" && backgroundImage && enableParallax && (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -171,9 +161,27 @@ export default function FullWidthVisualHeroDisplay1({
             backgroundSize: "cover",
           }}
         />
-      ) : backgroundType === "gradient" ? (
-        <div className="absolute inset-0" style={backgroundStyles()} />
-      ) : backgroundType === "video" && shouldLoadVideo ? (
+      )}
+
+      {backgroundType === "gradient" && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
+          }}
+        />
+      )}
+
+      {backgroundType === "video" && !shouldLoadVideo && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
+          }}
+        />
+      )}
+
+      {backgroundType === "video" && shouldLoadVideo && videoUrl && (
         <video
           ref={videoRef}
           autoPlay
@@ -181,16 +189,9 @@ export default function FullWidthVisualHeroDisplay1({
           loop
           playsInline
           preload="none"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
         />
-      ) : backgroundType === "video" && !shouldLoadVideo ? (
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
-          }}
-        />
-      ) : null}
+      )}
 
       {/* Overlay */}
       <div
@@ -227,7 +228,7 @@ export default function FullWidthVisualHeroDisplay1({
           )}
 
           {/* Decorative Line 1 */}
-          {showDecorativeLines && (
+          {showDecorativeLines && (heading || subheadingItalic) && (
             <div
               className="h-px mb-6"
               style={{
@@ -265,7 +266,7 @@ export default function FullWidthVisualHeroDisplay1({
           )}
 
           {/* Decorative Line 2 */}
-          {showDecorativeLines && (
+          {showDecorativeLines && (heading2 || subheading) && (
             <div
               className="h-px"
               style={{

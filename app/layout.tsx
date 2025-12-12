@@ -10,8 +10,20 @@ import { headers } from "next/headers"
 import { createAdminClient } from "@/lib/supabase/admin"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"], display: "swap", preload: true, variable: "--font-geist" })
-const _geistMono = Geist_Mono({ subsets: ["latin"], display: "swap", preload: true, variable: "--font-geist-mono" })
+const _geist = Geist({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  variable: "--font-geist",
+  adjustFontFallback: true,
+})
+const _geistMono = Geist_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  variable: "--font-geist-mono",
+  adjustFontFallback: true,
+})
 
 // Default TektonsTable branding
 const DEFAULT_FAVICON = "/images/android-chrome-512x512.png"
@@ -141,6 +153,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://vercel.live" />
         <link rel="dns-prefetch" href="https://vitals.vercel-insights.com" />
+        <link rel="dns-prefetch" href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com" />
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+          body { opacity: 1; }
+          .font-display { font-family: var(--font-geist); }
+          h1, h2, h3 { text-rendering: optimizeSpeed; }
+        `,
+          }}
+        />
       </head>
       <body className={`${_geist.variable} ${_geistMono.variable} font-sans antialiased`}>
         <SentryInit />

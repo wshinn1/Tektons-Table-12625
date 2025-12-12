@@ -12,10 +12,15 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   replaysSessionSampleRate: 0.1,
 
+  spotlight: process.env.NODE_ENV === "development",
+
   integrations: [
     Sentry.replayIntegration({
       maskAllText: false,
       blockAllMedia: false,
+    }),
+    Sentry.captureConsoleIntegration({
+      levels: ["log", "info", "warn", "error", "debug", "assert"],
     }),
   ],
 
@@ -37,10 +42,6 @@ Sentry.init({
   ],
 
   beforeSend(event, hint) {
-    // Filter out non-error console messages
-    if (event.level === "log") {
-      return null
-    }
     return event
   },
 })

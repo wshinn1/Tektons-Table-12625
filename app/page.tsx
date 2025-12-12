@@ -66,7 +66,7 @@ export async function generateMetadata() {
 }
 
 export default async function LandingPage() {
-  const fetchWithTimeout = async (fn: () => Promise<any>, timeout = 1500) => {
+  const fetchWithTimeout = async (fn: () => Promise<any>, timeout = 800) => {
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
     try {
       return await Promise.race([fn(), timeoutPromise])

@@ -7,10 +7,15 @@ Sentry.init({
   profilesSampleRate: 1.0,
   sendDefaultPii: true,
 
+  spotlight: process.env.NODE_ENV === "development",
+
   integrations: [
     Sentry.vercelAIIntegration({
       recordInputs: true,
       recordOutputs: true,
+    }),
+    Sentry.captureConsoleIntegration({
+      levels: ["log", "info", "warn", "error", "debug", "assert"],
     }),
   ],
 
