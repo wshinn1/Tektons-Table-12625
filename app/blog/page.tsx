@@ -203,7 +203,23 @@ export default async function BlogIndexPage({
 
   // When no filters, use allPosts excluding hero/featured
   // When filtering, use filteredPosts
-  const masonryPosts = hasFilters ? filteredPosts : allPosts.filter((p) => !excludedIds.has(p.id))
+  const allMasonryPosts = hasFilters ? filteredPosts : allPosts.filter((p) => !excludedIds.has(p.id))
+
+  const masonryColumns = masonrySection?.content?.columns || 2
+  const masonryRows = masonrySection?.content?.rows || 2
+  const postsPerMasonryPage = masonryColumns * masonryRows
+
+  // Calculate total pages for masonry (when no filters)
+  const masonryTotalPages = hasFilters ? totalPages : Math.ceil(allMasonryPosts.length / postsPerMasonryPage)
+
+  // Paginate masonry posts when no filters
+  const masonryStartIndex = hasFilters ? 0 : (page - 1) * postsPerMasonryPage
+  const masonryPosts = hasFilters
+    ? allMasonryPosts
+    : allMasonryPosts.slice(masonryStartIndex, masonryStartIndex + postsPerMasonryPage)
+
+  // Determine which total pages to use
+  const displayTotalPages = hasFilters ? totalPages : masonryTotalPages
 
   return (
     <>
@@ -234,13 +250,7 @@ export default async function BlogIndexPage({
         </div>
 
         {/* Masonry Grid Section */}
-        {masonrySection && (
-          <BlogMasonrySection
-            posts={masonryPosts}
-            columns={masonrySection.content?.columns || 2}
-            rows={masonrySection.content?.rows || 2}
-          />
-        )}
+        {masonrySection && <BlogMasonrySection posts={masonryPosts} columns={masonryColumns} rows={masonryRows} />}
 
         {/* Fallback if no masonry section configured */}
         {!masonrySection && (
@@ -336,7 +346,7 @@ export default async function BlogIndexPage({
           </div>
         )}
 
-        {hasFilters && totalPages > 1 && (
+        {displayTotalPages > 1 && (
           <div className="flex items-center justify-center gap-2 py-12 font-raleway">
             <Button
               variant="outline"
@@ -360,16 +370,16 @@ export default async function BlogIndexPage({
               )}
             </Button>
             <span className="text-sm text-black px-4 font-raleway">
-              Page {page} of {totalPages}
+              Page {page} of {displayTotalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
               className="text-black font-raleway bg-transparent"
-              asChild={page < totalPages}
-              disabled={page === totalPages}
+              asChild={page < displayTotalPages}
+              disabled={page === displayTotalPages}
             >
-              {page < totalPages ? (
+              {page < displayTotalPages ? (
                 <Link
                   href={`/blog?page=${page + 1}${params.category ? `&category=${params.category}` : ""}${params.tag ? `&tag=${params.tag}` : ""}${params.search ? `&search=${params.search}` : ""}`}
                 >
