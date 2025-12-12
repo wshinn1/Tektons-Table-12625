@@ -21,6 +21,7 @@ import {
 import { MarketingNav } from "@/components/marketing-nav"
 import { createClient } from "@/lib/supabase/client"
 import { getPageMetadata } from "@/lib/get-page-metadata"
+import { OptimizedVideo } from "@/components/optimized-video"
 
 export const dynamic = "force-dynamic"
 
@@ -124,12 +125,7 @@ export default async function PricingPage() {
           style={{ ...renderBackground(hero), ...getImageBackgroundStyle(hero) }}
         >
           {(hero.background_type === "video" || isVideoUrl(hero.background_value)) && hero.background_value && (
-            <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
-              <source
-                src={hero.background_value}
-                type={`video/${hero.background_value.split(".").pop()?.split("?")[0] || "mp4"}`}
-              />
-            </video>
+            <OptimizedVideo src={hero.background_value} fallbackBg="#1a1a2e" />
           )}
 
           {heroHasMediaBackground && <div className="absolute inset-0 bg-black/40" />}

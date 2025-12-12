@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Check, Play, UserPlus, Palette, Send, DollarSign, BarChart3 } from "lucide-react"
+import { OptimizedVideo } from "@/components/optimized-video"
 
 export async function generateMetadata() {
   return await getPageMetadata("how-it-works")
@@ -84,9 +85,7 @@ export default async function HowItWorksPage() {
             <section key={section.id} className="py-20 relative overflow-hidden" style={backgroundStyle}>
               {section.background_type === "video" && (
                 <>
-                  <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
-                    <source src={section.background_value || ""} type="video/mp4" />
-                  </video>
+                  <OptimizedVideo src={section.background_value || ""} fallbackBg="#000000" />
                   <div className="absolute inset-0 bg-black/40" />
                 </>
               )}

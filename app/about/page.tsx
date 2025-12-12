@@ -3,6 +3,7 @@ import { ArrowRight, Heart, Globe, Camera, Users, Target } from "lucide-react"
 import Image from "next/image"
 import { MarketingNav } from "@/components/marketing-nav"
 import { createServerClient } from "@/lib/supabase/server"
+import { OptimizedVideo } from "@/components/optimized-video"
 
 export const dynamic = "force-dynamic"
 
@@ -67,9 +68,7 @@ export default async function AboutPage() {
       {hero && (
         <section className="relative py-20 md:py-32 overflow-hidden" style={renderBackground(hero)}>
           {hero.background_type === "video" && hero.background_value && (
-            <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
-              <source src={hero.background_value} type="video/mp4" />
-            </video>
+            <OptimizedVideo src={hero.background_value} fallbackBg="#1a1a2e" />
           )}
           <div className="max-w-7xl mx-auto px-6 relative">
             <div className="text-center max-w-4xl mx-auto">
