@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import { Save, ChevronDown, ChevronUp, GripVertical } from "lucide-react"
+import { Save, ChevronDown, ChevronUp, GripVertical, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface BlogPageSection {
@@ -62,6 +63,33 @@ export function BlogPageEditorClient({ sections: initialSections, posts }: Props
 
   const updateSectionContent = (id: string, contentUpdates: Record<string, any>) => {
     setSections((prev) => prev.map((s) => (s.id === id ? { ...s, content: { ...s.content, ...contentUpdates } } : s)))
+  }
+
+  const toggleHeroPost = (sectionId: string, postId: string) => {
+    const section = sections.find((s) => s.id === sectionId)
+    if (!section) return
+
+    const currentIds: string[] = section.content?.selectedPostIds || []
+    let newIds: string[]
+
+    if (currentIds.includes(postId)) {
+      newIds = currentIds.filter((id) => id !== postId)
+    } else if (currentIds.length < 4) {
+      newIds = [...currentIds, postId]
+    } else {
+      toast.error("Maximum 4 posts can be selected for the hero slider")
+      return
+    }
+
+    updateSectionContent(sectionId, { selectedPostIds: newIds })
+  }
+
+  const removeHeroPost = (sectionId: string, postId: string) => {
+    const section = sections.find((s) => s.id === sectionId)
+    if (!section) return
+
+    const currentIds: string[] = section.content?.selectedPostIds || []
+    updateSectionContent(sectionId, { selectedPostIds: currentIds.filter((id) => id !== postId) })
   }
 
   const handleSave = async () => {
@@ -190,10 +218,80 @@ export function BlogPageEditorClient({ sections: initialSections, posts }: Props
                           This word will be circled/highlighted in the tagline
                         </p>
                       </div>
-                      <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
-                        This section automatically displays the 4 most recent blog posts. The featured image changes on
-                        hover.
-                      </p>
+
+                      <div className="pt-4 border-t">
+                        <Label>Post Selection Mode</Label>
+                        <Select
+                          value={section.content?.mode || "auto"}
+                          onValueChange={(value) => updateSectionContent(section.id, { mode: value })}
+                        >
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="auto">Automatic (4 Most Recent Posts)</SelectItem>
+                            <SelectItem value="manual">Manual Selection</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {section.content?.mode === "manual" && (
+                        <div className="space-y-3">
+                          <Label>Selected Posts ({(section.content?.selectedPostIds || []).length}/4)</Label>
+
+                          {/* Show selected posts */}
+                          {(section.content?.selectedPostIds || []).length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {(section.content?.selectedPostIds || []).map((postId: string) => {
+                                const post = posts.find((p) => p.id === postId)
+                                if (!post) return null
+                                return (
+                                  <div
+                                    key={postId}
+                                    className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm"
+                                  >
+                                    <span className="max-w-[200px] truncate">{post.title}</span>
+                                    <button
+                                      onClick={() => removeHeroPost(section.id, postId)}
+                                      className="hover:bg-primary/20 rounded-full p-0.5"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+
+                          {/* Post selector */}
+                          <div className="max-h-60 overflow-y-auto border rounded-md p-2 space-y-1">
+                            {posts.map((post) => {
+                              const isSelected = (section.content?.selectedPostIds || []).includes(post.id)
+                              return (
+                                <div
+                                  key={post.id}
+                                  className={`flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer ${isSelected ? "bg-primary/5" : ""}`}
+                                  onClick={() => toggleHeroPost(section.id, post.id)}
+                                >
+                                  <Checkbox checked={isSelected} />
+                                  <span className="text-sm truncate">{post.title}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Select up to 4 posts to display in the hero slider. If fewer than 4 are selected, recent
+                            posts will fill the remaining slots.
+                          </p>
+                        </div>
+                      )}
+
+                      {section.content?.mode !== "manual" && (
+                        <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
+                          This section automatically displays the 4 most recent blog posts. The featured image changes
+                          on hover.
+                        </p>
+                      )}
                     </div>
                   )}
 

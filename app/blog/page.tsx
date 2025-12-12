@@ -141,7 +141,7 @@ async function getAllPublishedPosts() {
     .eq("status", "published")
     .eq("tenant_id", "platform")
     .order("published_at", { ascending: false })
-    .limit(20)
+    .limit(30) // Increased from 20 to 30 to support larger grids
 
   return data || []
 }
@@ -163,7 +163,7 @@ export default async function BlogIndexPage({
     getTags(),
   ])
 
-  // Get filtered/paginated posts for masonry
+  // Get filtered/paginated posts for masonry (only when filtering)
   const { posts: filteredPosts, total } = await getPublishedBlogPosts({
     search: params.search,
     category: params.category,
@@ -178,12 +178,32 @@ export default async function BlogIndexPage({
   const featuredSection = sections.find((s) => s.section_type === "blog_featured_post")
   const masonrySection = sections.find((s) => s.section_type === "blog_masonry")
 
+  const heroPostIds: string[] = heroSection?.content?.selectedPostIds || []
+  const heroMode = heroSection?.content?.mode || "auto"
+  let heroPosts = allPosts.slice(0, 4)
+  if (heroMode === "manual" && heroPostIds.length > 0) {
+    // Get posts in the order specified
+    heroPosts = heroPostIds
+      .map((id) => allPosts.find((p) => p.id === id))
+      .filter(Boolean)
+      .slice(0, 4)
+    // Fill remaining with recent posts if less than 4 selected
+    if (heroPosts.length < 4) {
+      const remainingPosts = allPosts.filter((p) => !heroPostIds.includes(p.id))
+      heroPosts = [...heroPosts, ...remainingPosts.slice(0, 4 - heroPosts.length)]
+    }
+  }
+
   // Get featured post
   const featuredPostId = featuredSection?.content?.featuredPostId
   const featuredPost = featuredPostId ? allPosts.find((p) => p.id === featuredPostId) : allPosts[0]
 
-  // Posts for masonry (excluding featured if no filters)
-  const masonryPosts = hasFilters ? filteredPosts : filteredPosts.filter((p) => p.id !== featuredPost?.id)
+  const heroPostIdSet = new Set(heroPosts.map((p) => p.id))
+  const excludedIds = new Set([...(featuredPost ? [featuredPost.id] : []), ...Array.from(heroPostIdSet)])
+
+  // When no filters, use allPosts excluding hero/featured
+  // When filtering, use filteredPosts
+  const masonryPosts = hasFilters ? filteredPosts : allPosts.filter((p) => !excludedIds.has(p.id))
 
   return (
     <>
@@ -192,7 +212,7 @@ export default async function BlogIndexPage({
         {/* Hero Slider Section - Only show when no filters */}
         {!hasFilters && heroSection && (
           <BlogHeroSliderSection
-            posts={allPosts.slice(0, 4)}
+            posts={heroPosts}
             tagline={heroSection.content?.tagline || "TEKTON'S TABLE, personal editorial daily magazine."}
             highlightWord={heroSection.content?.highlightWord || "editorial"}
           />
@@ -304,17 +324,19 @@ export default async function BlogIndexPage({
           </div>
         )}
 
-        {filteredPosts.length === 0 && (
+        {filteredPosts.length === 0 && hasFilters && (
           <div className="py-20 text-center">
-            <p className="text-lg text-muted-foreground font-raleway">
-              {params.search || params.category || params.tag
-                ? "No blog posts found matching your filters."
-                : "No blog posts published yet. Check back soon!"}
-            </p>
+            <p className="text-lg text-muted-foreground font-raleway">No blog posts found matching your filters.</p>
           </div>
         )}
 
-        {totalPages > 1 && (
+        {masonryPosts.length === 0 && !hasFilters && (
+          <div className="py-20 text-center">
+            <p className="text-lg text-muted-foreground font-raleway">No blog posts published yet. Check back soon!</p>
+          </div>
+        )}
+
+        {hasFilters && totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 py-12 font-raleway">
             <Button
               variant="outline"
