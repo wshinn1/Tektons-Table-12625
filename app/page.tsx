@@ -105,21 +105,20 @@ export default async function LandingPage() {
         )}
 
         {nonHeroSections.map((section: any) => {
-          if (section.source_type !== "built_in" || !section.section_templates?.component_path) {
-            return null
+          if (section.source_type === "built_in" && section.section_templates?.component_path) {
+            return (
+              <SectionRenderer
+                key={section.id}
+                template={{
+                  component_path: section.section_templates.component_path,
+                  name: section.section_templates.name,
+                }}
+                props={section.content || section.section_templates.default_props || {}}
+                isVisible={section.is_active}
+              />
+            )
           }
-
-          return (
-            <SectionRenderer
-              key={section.id}
-              template={{
-                component_path: section.section_templates.component_path,
-                name: section.section_templates.name,
-              }}
-              props={section.content || section.section_templates.default_props || {}}
-              isVisible={section.is_active}
-            />
-          )
+          return null
         })}
 
         {featuresSection && featuresSection.source_type !== "built_in" && (
