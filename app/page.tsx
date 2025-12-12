@@ -5,7 +5,7 @@ import { getPageMetadata } from "@/lib/get-page-metadata"
 import { SectionRenderer } from "@/components/sections/section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
 
-export const revalidate = 60
+export const dynamic = "force-dynamic"
 
 async function getSiteContent(section: string) {
   try {

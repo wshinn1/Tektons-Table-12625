@@ -220,6 +220,7 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
   }
 
   const updateContent = (id: string, key: string, value: any) => {
+    console.log("[v0] Updating content for section:", id, "key:", key, "value:", value)
     setSections((prev) =>
       prev.map((s) => {
         if (s.id === id) {
@@ -299,13 +300,22 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
   const handleSave = async () => {
     setSaving(true)
     try {
+      console.log("[v0] Saving sections:", sections)
+
       const response = await fetch("/api/admin/homepage-sections", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sections }),
       })
 
-      if (!response.ok) throw new Error("Failed to save")
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] Save failed:", errorData)
+        throw new Error("Failed to save")
+      }
+
+      const result = await response.json()
+      console.log("[v0] Save successful:", result)
 
       toast.success("Homepage sections saved successfully!")
     } catch (error) {
@@ -349,6 +359,42 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
         background_type: "image",
         background_value: data.url,
       })
+
+      toast.success("Image uploaded successfully!")
+    } catch (error) {
+      console.error("Failed to upload image:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to upload image")
+    } finally {
+      setUploadingSections((prev) => ({ ...prev, [sectionId]: false }))
+    }
+  }
+
+  const handleFieldImageUpload = async (sectionId: string, fieldKey: string, file: File) => {
+    setUploadingSections((prev) => ({ ...prev, [sectionId]: true }))
+
+    try {
+      const hostname = window.location.hostname
+      const parts = hostname.split(".")
+      const isRootDomain = parts.length <= 2 || parts[0] === "www" || parts[0] === hostname.replace(/\..+$/, "")
+
+      const formData = new FormData()
+      formData.append("file", file)
+      if (!isRootDomain && parts[0]) {
+        formData.append("tenantId", parts[0])
+      }
+
+      const response = await fetch("/api/tenant/upload-media", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Upload failed")
+      }
+
+      const data = await response.json()
+      updateContent(sectionId, fieldKey, data.url)
 
       toast.success("Image uploaded successfully!")
     } catch (error) {
@@ -749,12 +795,51 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                         />
                                       )}
                                       {field.type === "image" && (
-                                        <Input
-                                          type="url"
-                                          value={section.content?.[field.key] || ""}
-                                          onChange={(e) => updateContent(section.id, field.key, e.target.value)}
-                                          placeholder="Image URL"
-                                        />
+                                        <div className="space-y-2">
+                                          <Input
+                                            type="url"
+                                            value={section.content?.[field.key] || ""}
+                                            onChange={(e) => updateContent(section.id, field.key, e.target.value)}
+                                            placeholder="Image URL"
+                                          />
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={isUploading}
+                                            asChild
+                                          >
+                                            <label className="cursor-pointer">
+                                              <Upload className="w-4 h-4 mr-2" />
+                                              {isUploading ? "Uploading..." : "Upload Image"}
+                                              <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                  const file = e.target.files?.[0]
+                                                  if (file) handleFieldImageUpload(section.id, field.key, file)
+                                                }}
+                                                disabled={isUploading}
+                                              />
+                                            </label>
+                                          </Button>
+                                          {section.content?.[field.key] && (
+                                            <div className="mt-2">
+                                              <Label className="text-sm text-muted-foreground">Preview</Label>
+                                              <div className="mt-1 rounded-md border overflow-hidden w-full max-w-sm">
+                                                <img
+                                                  src={section.content[field.key] || "/placeholder.svg"}
+                                                  alt="Field image preview"
+                                                  className="w-full h-32 object-cover"
+                                                  onError={(e) => {
+                                                    e.currentTarget.src = "/placeholder.svg?height=128&width=400"
+                                                  }}
+                                                />
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
                                       )}
                                       {field.type === "select" && field.options && (
                                         <Select
