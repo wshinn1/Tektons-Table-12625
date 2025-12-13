@@ -1,7 +1,12 @@
 "use client"
 
+import { useEffect } from "react"
+
+import { useState } from "react"
+
+import { useRef } from "react"
+
 import type React from "react"
-import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Youtube } from "lucide-react"
 
@@ -16,13 +21,15 @@ interface Hero1Props {
     buttonColor?: string
 
     // Background
-    backgroundType?: "image" | "cdn" | "gradient" | "video"
+    backgroundType?: "image" | "cdn" | "gradient" | "video" | "color"
     backgroundImage?: string
     cdnLink?: string
     videoUrl?: string
     gradientStart?: string
     gradientEnd?: string
     gradientDirection?: string
+    backgroundUrl?: string
+    backgroundColor?: string
 
     // Overlay
     overlayColor?: string
@@ -39,6 +46,10 @@ interface Hero1Props {
 
     // Pagination dots (for visual similarity, static)
     showPaginationDots?: boolean
+
+    // Blur effects
+    enableTopBlur?: boolean
+    enableBottomBlur?: boolean
   }
 }
 
@@ -60,6 +71,8 @@ export default function Hero1({ props }: Hero1Props) {
     gradientStart = "#1a1a2e",
     gradientEnd = "#16213e",
     gradientDirection = "to-br",
+    backgroundUrl = "",
+    backgroundColor = "#1a1a2e",
 
     // Overlay
     overlayColor = "#000000",
@@ -76,6 +89,10 @@ export default function Hero1({ props }: Hero1Props) {
 
     // Pagination dots
     showPaginationDots = true,
+
+    // Blur effects
+    enableTopBlur = true,
+    enableBottomBlur = true,
   } = props
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -141,6 +158,14 @@ export default function Hero1({ props }: Hero1Props) {
     }
 
     switch (backgroundType) {
+      case "cdn":
+        return backgroundUrl
+          ? {
+              backgroundImage: `url(${backgroundUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : { backgroundColor }
       case "image":
         return backgroundImage
           ? {
@@ -148,28 +173,22 @@ export default function Hero1({ props }: Hero1Props) {
               backgroundSize: "cover",
               backgroundPosition: "center",
             }
-          : { backgroundColor: "#1a1a2e" }
-      case "cdn":
-        return cdnLink
-          ? {
-              backgroundImage: `url(${cdnLink})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : { backgroundColor: "#1a1a2e" }
+          : { backgroundColor }
       case "gradient":
         const direction = gradientDirection.replace("to-", "to ")
         return {
           background: `linear-gradient(${direction}, ${gradientStart}, ${gradientEnd})`,
         }
+      case "color":
+        return { backgroundColor }
       default:
-        return { backgroundColor: "#1a1a2e" }
+        return { backgroundColor }
     }
   }
 
   return (
     <section
-      className="relative min-h-[700px] lg:min-h-[800px] flex items-center overflow-hidden"
+      className="relative min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden"
       style={getBackgroundStyle()}
     >
       {isVideo && actualVideoUrl && shouldRenderVideo && (
@@ -188,9 +207,17 @@ export default function Hero1({ props }: Hero1Props) {
         </video>
       )}
 
+      {enableTopBlur && (
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-[1]" />
+      )}
+
+      {enableBottomBlur && (
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-[1]" />
+      )}
+
       {/* Overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-[2]"
         style={{
           backgroundColor: overlayColor,
           opacity: overlayOpacity / 100,
@@ -198,9 +225,8 @@ export default function Hero1({ props }: Hero1Props) {
       />
 
       {/* Content Container */}
-      <div className="relative z-10 container mx-auto px-6 lg:px-12 py-20">
-        <div className="max-w-2xl">
-          {/* Subtitle */}
+      <div className="relative z-10 container mx-auto px-6 lg:px-12 py-20 text-center">
+        <div className="max-w-4xl mx-auto">
           {subtitle && (
             <p
               className="text-sm md:text-base font-semibold tracking-widest uppercase mb-4"
@@ -212,8 +238,8 @@ export default function Hero1({ props }: Hero1Props) {
 
           {/* Headline */}
           <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-balance"
-            style={{ color: textColor }}
+            className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-balance italic"
+            style={{ color: "#ffffff" }}
           >
             {headline}
           </h1>
@@ -221,7 +247,7 @@ export default function Hero1({ props }: Hero1Props) {
           {/* Description */}
           {description && (
             <p
-              className="text-base md:text-lg mb-8 leading-relaxed text-pretty max-w-xl"
+              className="text-base md:text-lg mb-8 leading-relaxed text-pretty max-w-xl mx-auto"
               style={{ color: textColor, opacity: 0.85 }}
             >
               {description}
@@ -232,10 +258,10 @@ export default function Hero1({ props }: Hero1Props) {
           {buttonText && buttonLink && (
             <Link
               href={buttonLink}
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-lg transition-opacity hover:opacity-90"
+              className="inline-flex items-center justify-center px-10 py-4 text-lg font-bold rounded-full transition-transform hover:scale-105 shadow-lg"
               style={{
                 backgroundColor: buttonColor,
-                color: "#ffffff",
+                color: "#000000",
               }}
             >
               {buttonText}
