@@ -46,5 +46,9 @@ export function SectionRenderer({ template, props, isVisible }: SectionRendererP
     )
   }
 
+  if (template.component_path === "sections/hero-1") {
+    return <Component props={props} />
+  }
+
   return <Component {...props} />
 }
