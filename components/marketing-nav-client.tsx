@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { motion } from "framer-motion"
 
 interface MenuItem {
   id: string
@@ -70,26 +71,121 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
 
   const isExternalUrl = (url: string) => url.startsWith("http://") || url.startsWith("https://")
 
-  const renderNavLink = (item: MenuItem, className: string, onClick?: () => void) => {
-    if (isExternalUrl(item.url)) {
-      return (
-        <a
-          key={item.id}
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={className}
-          onClick={onClick}
-        >
-          {item.label}
-          <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-50" />
-        </a>
-      )
-    }
+  const menuItemGradients = [
+    "radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 50%, rgba(29,78,216,0) 100%)", // blue
+    "radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)", // orange
+    "radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.06) 50%, rgba(21,128,61,0) 100%)", // green
+    "radial-gradient(circle, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)", // red
+    "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(147,51,234,0.06) 50%, rgba(126,34,206,0) 100%)", // purple
+    "radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(219,39,119,0.06) 50%, rgba(190,24,93,0) 100%)", // pink
+    "radial-gradient(circle, rgba(14,165,233,0.15) 0%, rgba(2,132,199,0.06) 50%, rgba(3,105,161,0) 100%)", // cyan
+  ]
+
+  const itemVariants = {
+    initial: { rotateX: 0, opacity: 1 },
+    hover: { rotateX: -90, opacity: 0 },
+  }
+
+  const backVariants = {
+    initial: { rotateX: 90, opacity: 0 },
+    hover: { rotateX: 0, opacity: 1 },
+  }
+
+  const glowVariants = {
+    initial: { opacity: 0, scale: 0.8 },
+    hover: {
+      opacity: 1,
+      scale: 2,
+      transition: {
+        opacity: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+        scale: { duration: 0.5, type: "spring", stiffness: 300, damping: 25 },
+      },
+    },
+  }
+
+  const sharedTransition = {
+    type: "spring",
+    stiffness: 100,
+    damping: 20,
+    duration: 0.5,
+  }
+
+  const renderAnimatedNavLink = (item: MenuItem, index: number) => {
+    const gradient = menuItemGradients[index % menuItemGradients.length]
+    const isExternal = isExternalUrl(item.url)
+
     return (
-      <Link key={item.id} href={item.url} className={className} onClick={onClick}>
-        {item.label}
-      </Link>
+      <motion.div
+        key={item.id}
+        className="relative"
+        style={{ perspective: "600px" }}
+        whileHover="hover"
+        initial="initial"
+      >
+        {/* Glow effect */}
+        <motion.div
+          className="absolute inset-0 z-0 pointer-events-none rounded-xl"
+          variants={glowVariants}
+          style={{
+            background: gradient,
+            opacity: 0,
+          }}
+        />
+
+        {/* Front face */}
+        <motion.div
+          variants={itemVariants}
+          transition={sharedTransition}
+          style={{ transformStyle: "preserve-3d", transformOrigin: "center bottom" }}
+          className="relative z-10"
+        >
+          {isExternal ? (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
+            >
+              {item.label}
+              <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-50" />
+            </a>
+          ) : (
+            <Link
+              href={item.url}
+              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
+            >
+              {item.label}
+            </Link>
+          )}
+        </motion.div>
+
+        {/* Back face */}
+        <motion.div
+          variants={backVariants}
+          transition={sharedTransition}
+          style={{ transformStyle: "preserve-3d", transformOrigin: "center top", position: "absolute", inset: 0 }}
+          className="z-10"
+        >
+          {isExternal ? (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
+            >
+              {item.label}
+              <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-50" />
+            </a>
+          ) : (
+            <Link
+              href={item.url}
+              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
+            >
+              {item.label}
+            </Link>
+          )}
+        </motion.div>
+      </motion.div>
     )
   }
 
@@ -113,12 +209,12 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-6">
-          {/* Left navigation items */}
-          {leftItems.map((item) => renderNavLink(item, "text-sm font-medium hover:text-primary transition-colors"))}
+        <nav className="hidden md:flex items-center gap-2">
+          {/* Animated left navigation items */}
+          {leftItems.map((item, index) => renderAnimatedNavLink(item, index))}
 
-          {/* Right navigation items */}
-          {rightItems.map((item) => renderNavLink(item, "text-sm font-medium hover:text-primary transition-colors"))}
+          {/* Animated right navigation items */}
+          {rightItems.map((item, index) => renderAnimatedNavLink(item, leftItems.length + index))}
 
           {!loading && (
             <>
@@ -146,7 +242,10 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                 </DropdownMenu>
               ) : (
                 <>
-                  <Link href="/auth/login" className="text-sm font-medium hover:text-primary transition-colors">
+                  <Link
+                    href="/auth/login"
+                    className="text-sm font-medium hover:text-primary transition-colors px-4 py-2"
+                  >
                     Log In
                   </Link>
                   <Button asChild>
@@ -170,11 +269,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            {[...leftItems, ...rightItems].map((item) =>
-              renderNavLink(item, "text-sm font-medium hover:text-primary transition-colors py-2", () =>
-                setMobileMenuOpen(false),
-              ),
-            )}
+            {[...leftItems, ...rightItems].map((item, index) => renderAnimatedNavLink(item, index))}
             {!loading && (
               <>
                 {user ? (

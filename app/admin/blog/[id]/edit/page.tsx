@@ -183,6 +183,16 @@ function EditBlogPostClient({ id }: { id: string }) {
         setFeaturedImageUrl(post.featured_image_url || "")
         setShowFeaturedImage(post.show_featured_image ?? true)
 
+        if (post.categories && post.categories.length > 0) {
+          setSelectedCategoryId(post.categories[0].category.id)
+        } else {
+          setSelectedCategoryId("none")
+        }
+
+        if (post.tags && post.tags.length > 0) {
+          setSelectedTagIds(post.tags.map((t: any) => t.tag.id))
+        }
+
         const [categoriesRes, resourceCategoriesRes, tagsRes] = await Promise.all([
           fetch("/api/admin/blog/categories"),
           fetch("/api/admin/resource-categories"),

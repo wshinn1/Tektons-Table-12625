@@ -684,9 +684,19 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
             {section.section_type === "featured_blog_slider" && (
               <div className="space-y-4 border-t pt-4">
                 <div>
-                  <Label>Section Title</Label>
+                  <Label htmlFor={`section-${index}-title`}>Title</Label>
                   <Input
-                    value={section.content.sectionTitle || "FEATURED POSTS"}
+                    id={`section-${index}-title`}
+                    value={section.title || ""}
+                    onChange={(e) => updateSection(index, { title: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor={`section-${index}-section-title`}>Section Title</Label>
+                  <Input
+                    id={`section-${index}-section-title`}
+                    value={section.content?.sectionTitle || ""}
                     onChange={(e) => updateContent(index, { sectionTitle: e.target.value })}
                     placeholder="FEATURED POSTS"
                   />
@@ -694,19 +704,25 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                     The heading displayed at the top left of the slider
                   </p>
                 </div>
+
                 <div>
                   <Label>Selected Categories</Label>
                   <Select
-                    value={section.content.selectedCategories?.[0] || ""}
+                    value={
+                      section.content?.selectedCategories && section.content.selectedCategories.length > 0
+                        ? section.content.selectedCategories[0]
+                        : ""
+                    }
                     onValueChange={(value) => {
-                      const currentCategories = section.content.selectedCategories || []
-                      if (currentCategories.includes(value)) {
+                      const currentCategories = section.content?.selectedCategories || []
+                      const index = currentCategories.indexOf(value)
+                      if (index > -1) {
                         // Remove if already selected
                         updateContent(index, {
                           selectedCategories: currentCategories.filter((c: string) => c !== value),
                         })
                       } else {
-                        // Add to selected
+                        // Add if not selected
                         updateContent(index, {
                           selectedCategories: [...currentCategories, value],
                         })
@@ -715,43 +731,50 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select categories">
-                        {section.content.selectedCategories && section.content.selectedCategories.length > 0
+                        {section.content?.selectedCategories && section.content.selectedCategories.length > 0
                           ? `${section.content.selectedCategories.length} categories selected`
                           : "Select categories"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {blogCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.slug}>
-                          {section.content.selectedCategories?.includes(cat.slug) ? "✓ " : ""}
-                          {cat.name}
-                        </SelectItem>
-                      ))}
+                      {blogCategories.map((cat) => {
+                        const isSelected = section.content?.selectedCategories?.includes(cat.slug)
+                        return (
+                          <SelectItem key={cat.id} value={cat.slug}>
+                            <div className="flex items-center gap-2">
+                              <input type="checkbox" checked={isSelected} readOnly className="h-4 w-4" />
+                              {cat.name}
+                            </div>
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
-                  {section.content.selectedCategories && section.content.selectedCategories.length > 0 && (
+                  {/* Show selected categories as chips */}
+                  {section.content?.selectedCategories && section.content.selectedCategories.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {section.content.selectedCategories.map((slug: string) => {
-                        const cat = blogCategories.find((c) => c.slug === slug)
+                        const category = blogCategories.find((c) => c.slug === slug)
                         return (
-                          <span
+                          <div
                             key={slug}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm"
+                            className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
                           >
-                            {cat?.name || slug}
+                            {category?.name || slug}
                             <button
-                              onClick={() =>
+                              type="button"
+                              onClick={() => {
                                 updateContent(index, {
                                   selectedCategories: section.content.selectedCategories.filter(
                                     (c: string) => c !== slug,
                                   ),
                                 })
-                              }
-                              className="text-muted-foreground hover:text-foreground"
+                              }}
+                              className="hover:text-destructive"
                             >
                               ×
                             </button>
-                          </span>
+                          </div>
                         )
                       })}
                     </div>
@@ -760,6 +783,7 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                     Select one or more blog categories to display posts from
                   </p>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
