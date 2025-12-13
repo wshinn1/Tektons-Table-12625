@@ -220,21 +220,22 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
       return
     }
 
-    // For existing sections, mark as inactive and save immediately
     try {
-      const updatedSections = sections
-        .map((section, i) => {
-          if (i === index) {
-            return { ...section, is_active: false }
-          }
-          // Update display order for remaining sections
-          if (i > index) {
-            return { ...section, display_order: section.display_order - 1 }
-          }
-          return section
-        })
-        .filter((_, i) => i !== index) // Remove from local state
+      // Mark the section as inactive and update display orders
+      const updatedSections = sections.map((section, i) => {
+        if (i === index) {
+          return { ...section, is_active: false }
+        }
+        // Update display order for sections after the deleted one
+        if (i > index) {
+          return { ...section, display_order: section.display_order - 1 }
+        }
+        return section
+      })
 
+      console.log("[v0] Deleting section at index", index, "ID:", sectionToDelete.id)
+
+      // Send ALL sections including the inactive one so it gets saved
       const response = await fetch("/api/admin/homepage-sections", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -243,7 +244,8 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
 
       if (!response.ok) throw new Error("Failed to delete section")
 
-      setSections(updatedSections)
+      // Only after successful API call, remove from local state
+      setSections(updatedSections.filter((s) => s.is_active !== false))
       toast.success("Section deleted successfully")
     } catch (error) {
       console.error("Error deleting section:", error)
