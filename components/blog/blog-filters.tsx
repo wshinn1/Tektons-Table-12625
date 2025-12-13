@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, X, Crown } from "lucide-react"
 
 interface BlogFiltersProps {
-  categories: Array<{ id: string; name: string; slug: string; is_premium?: boolean }>
+  categories: Array<{ id: string; name: string; slug: string; is_premium?: boolean; is_resource_category?: boolean }>
   tags: Array<{ id: string; name: string; slug: string }>
   basePath: string
 }

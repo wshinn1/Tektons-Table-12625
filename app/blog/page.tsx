@@ -37,8 +37,18 @@ const POSTS_PER_PAGE = 4
 
 async function getCategories() {
   const supabase = await createServerClient()
-  const { data } = await supabase.from("resource_categories").select("*").order("display_order")
-  return data || []
+  const [{ data: resourceCats }, { data: blogCats }] = await Promise.all([
+    supabase.from("resource_categories").select("*").order("display_order"),
+    supabase.from("blog_categories").select("*").order("name"),
+  ])
+
+  // Combine both types, marking which are resource categories (premium eligible)
+  const allCategories = [
+    ...(resourceCats || []).map((cat) => ({ ...cat, is_resource_category: true })),
+    ...(blogCats || []).map((cat) => ({ ...cat, is_resource_category: false, is_premium: false })),
+  ]
+
+  return allCategories
 }
 
 async function getTags() {
@@ -84,14 +94,35 @@ async function getPublishedBlogPosts(filters: {
   }
 
   if (filters.category) {
-    const { data: categoryData } = await supabase
+    const { data: resourceCatData } = await supabase
       .from("resource_categories")
       .select("id")
       .eq("slug", filters.category)
       .single()
 
-    if (categoryData) {
-      query = query.eq("resource_category_id", categoryData.id)
+    if (resourceCatData) {
+      query = query.eq("resource_category_id", resourceCatData.id)
+    } else {
+      // Try blog category
+      const { data: blogCatData } = await supabase
+        .from("blog_categories")
+        .select("id")
+        .eq("slug", filters.category)
+        .single()
+
+      if (blogCatData) {
+        const { data: postIds } = await supabase
+          .from("blog_post_categories")
+          .select("post_id")
+          .eq("category_id", blogCatData.id)
+
+        if (postIds && postIds.length > 0) {
+          query = query.in(
+            "id",
+            postIds.map((p) => p.post_id),
+          )
+        }
+      }
     }
   }
 

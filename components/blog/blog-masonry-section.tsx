@@ -13,6 +13,13 @@ interface BlogPost {
   resource_category?: {
     name: string
   } | null
+  categories?: Array<{
+    category: {
+      id: string
+      name: string
+      slug: string
+    }
+  }> | null
 }
 
 interface BlogMasonrySectionProps {
@@ -36,68 +43,79 @@ export function BlogMasonrySection({ posts, columns = 2, rows = 2, className = "
     <section className={`py-12 px-6 ${className}`}>
       <div className="max-w-6xl mx-auto">
         <div className={`grid ${gridClass} gap-8`}>
-          {displayPosts.map((post, index) => (
-            <Link
-              key={post.id}
-              href={`/blog/${post.slug}`}
-              className="group block bg-white transition-all duration-300 hover:shadow-xl"
-            >
-              {/* Image */}
-              <div className="aspect-video w-full overflow-hidden bg-gray-100 relative">
-                {post.resource_category && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <div
-                      className={`${post.is_premium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-black"} text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2`}
-                    >
-                      {post.is_premium && <Crown className="h-3 w-3" />}
-                      {post.resource_category.name}
+          {displayPosts.map((post, index) => {
+            const blogCategories = post.categories?.map((c) => c.category.name).filter(Boolean) || []
+
+            return (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="group block bg-white transition-all duration-300 hover:shadow-xl"
+              >
+                {/* Image */}
+                <div className="aspect-video w-full overflow-hidden bg-gray-100 relative">
+                  {post.resource_category && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <div
+                        className={`${post.is_premium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-black"} text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2`}
+                      >
+                        {post.is_premium && <Crown className="h-3 w-3" />}
+                        {post.resource_category.name}
+                      </div>
+                    </div>
+                  )}
+                  {!post.resource_category && blogCategories.length > 0 && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <div className="bg-black text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider">
+                        {blogCategories.join(", ")}
+                      </div>
+                    </div>
+                  )}
+                  {post.featured_image_url ? (
+                    <Image
+                      src={post.featured_image_url || "/placeholder.svg"}
+                      alt={post.title}
+                      fill
+                      sizes={columns === 3 ? "(max-width: 768px) 100vw, 33vw" : "(max-width: 768px) 100vw, 50vw"}
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      priority={index < 2}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 md:p-8 space-y-4 text-center">
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">
+                    {new Date(post.published_at).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <div className="space-y-3">
+                    <h2 className="text-xl md:text-2xl leading-tight uppercase tracking-wide font-black text-balance">
+                      {post.title}
+                    </h2>
+                    <div className="flex justify-center">
+                      <div className="w-12 h-1 bg-orange-500"></div>
                     </div>
                   </div>
-                )}
-                {post.featured_image_url ? (
-                  <Image
-                    src={post.featured_image_url || "/placeholder.svg"}
-                    alt={post.title}
-                    fill
-                    sizes={columns === 3 ? "(max-width: 768px) 100vw, 33vw" : "(max-width: 768px) 100vw, 50vw"}
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    priority={index < 2}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="p-6 md:p-8 space-y-4 text-center">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">
-                  {new Date(post.published_at).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-                <div className="space-y-3">
-                  <h2 className="text-xl md:text-2xl leading-tight uppercase tracking-wide font-black text-balance">
-                    {post.title}
-                  </h2>
-                  <div className="flex justify-center">
-                    <div className="w-12 h-1 bg-orange-500"></div>
+                  {post.subtitle && (
+                    <p className="text-gray-600 text-pretty line-clamp-3 leading-relaxed text-base">{post.subtitle}</p>
+                  )}
+                  <div className="pt-4">
+                    <span className="relative inline-flex items-center gap-2 border border-black text-black px-6 py-3 rounded-full text-sm font-medium uppercase tracking-wide overflow-hidden transition-colors duration-300 group/btn">
+                      <span className="absolute inset-0 bg-[#7DD3E8] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
+                      <span className="relative z-10">READ MORE</span>
+                      <ChevronRight className="h-4 w-4 relative z-10" />
+                    </span>
                   </div>
                 </div>
-                {post.subtitle && (
-                  <p className="text-gray-600 text-pretty line-clamp-3 leading-relaxed text-base">{post.subtitle}</p>
-                )}
-                <div className="pt-4">
-                  <span className="relative inline-flex items-center gap-2 border border-black text-black px-6 py-3 rounded-full text-sm font-medium uppercase tracking-wide overflow-hidden transition-colors duration-300 group/btn">
-                    <span className="absolute inset-0 bg-[#7DD3E8] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
-                    <span className="relative z-10">READ MORE</span>
-                    <ChevronRight className="h-4 w-4 relative z-10" />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>
