@@ -1,11 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
-
-import { useState } from "react"
-
-import { useRef } from "react"
-
+import { useEffect, useState, useRef } from "react"
 import type React from "react"
 import Link from "next/link"
 import { Facebook, Instagram, Youtube } from "lucide-react"
@@ -13,22 +8,16 @@ import { Facebook, Instagram, Youtube } from "lucide-react"
 interface Hero1Props {
   props: {
     // Content
-    subtitle?: string
     headline?: string
-    description?: string
+    subtitle?: string
     buttonText?: string
     buttonLink?: string
     buttonColor?: string
 
     // Background
-    backgroundType?: "image" | "cdn" | "gradient" | "video" | "color"
-    backgroundImage?: string
-    cdnLink?: string
-    videoUrl?: string
-    gradientStart?: string
-    gradientEnd?: string
-    gradientDirection?: string
+    backgroundType?: "image" | "cdn" | "color"
     backgroundUrl?: string
+    backgroundImage?: string
     backgroundColor?: string
 
     // Overlay
@@ -38,13 +27,13 @@ interface Hero1Props {
     // Text colors
     textColor?: string
 
-    // Social links
+    // Social links (hidden by default)
     showSocialIcons?: boolean
     facebookUrl?: string
     instagramUrl?: string
     youtubeUrl?: string
 
-    // Pagination dots (for visual similarity, static)
+    // Pagination dots (hidden by default)
     showPaginationDots?: boolean
 
     // Blur effects
@@ -56,39 +45,31 @@ interface Hero1Props {
 export default function Hero1({ props }: Hero1Props) {
   const {
     // Content
-    subtitle = "WELCOME",
     headline = "Discover New Places",
-    description = "These cases are perfectly simple and easy to distinguish. In a free hour when our power of choice is untrammelled and when nothing prevents our being able to do what we like best every pleasure.",
+    subtitle = "Stop paying $200+/month for multiple tools. Get fundraising pages, email newsletters, CRM, and more — all in one platform for zero monthly fees.",
     buttonText = "Learn More",
     buttonLink = "/about",
-    buttonColor = "#2563eb",
+    buttonColor = "#FDB913",
 
     // Background
-    backgroundType = "image",
-    backgroundImage = "/majestic-mountain-vista.png",
-    cdnLink = "",
-    videoUrl = "",
-    gradientStart = "#1a1a2e",
-    gradientEnd = "#16213e",
-    gradientDirection = "to-br",
+    backgroundType = "cdn",
     backgroundUrl = "",
+    backgroundImage = "",
     backgroundColor = "#1a1a2e",
 
     // Overlay
     overlayColor = "#000000",
-    overlayOpacity = 40,
+    overlayOpacity = 50,
 
     // Text color
     textColor = "#ffffff",
 
-    // Social links
-    showSocialIcons = true,
+    showSocialIcons = false,
     facebookUrl = "#",
     instagramUrl = "#",
     youtubeUrl = "#",
 
-    // Pagination dots
-    showPaginationDots = true,
+    showPaginationDots = false,
 
     // Blur effects
     enableTopBlur = true,
@@ -99,15 +80,10 @@ export default function Hero1({ props }: Hero1Props) {
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
 
-  const isVideo =
-    backgroundType === "video" ||
-    (videoUrl && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(videoUrl)) ||
-    (cdnLink && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(cdnLink))
-
-  const actualVideoUrl = videoUrl || (isVideo && cdnLink ? cdnLink : "")
+  const isVideo = backgroundUrl && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(backgroundUrl)
 
   useEffect(() => {
-    if (!isVideo || !actualVideoUrl) return
+    if (!isVideo || !backgroundUrl) return
 
     const deferVideoRender = () => {
       setShouldRenderVideo(true)
@@ -116,9 +92,9 @@ export default function Hero1({ props }: Hero1Props) {
     if ("requestIdleCallback" in window) {
       requestIdleCallback(deferVideoRender)
     } else {
-      setTimeout(deferVideoRender, 2000)
+      setTimeout(deferVideoRender, 100)
     }
-  }, [isVideo, actualVideoUrl])
+  }, [isVideo, backgroundUrl])
 
   useEffect(() => {
     const video = videoRef.current
@@ -137,7 +113,7 @@ export default function Hero1({ props }: Hero1Props) {
             document.removeEventListener("touchstart", handleInteraction)
             document.removeEventListener("click", handleInteraction)
           } catch (e) {
-            // Still failed, ignore
+            console.error("[v0] Video play failed:", e)
           }
         }
         document.addEventListener("touchstart", handleInteraction, { once: true })
@@ -154,36 +130,24 @@ export default function Hero1({ props }: Hero1Props) {
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (isVideo) {
-      return { backgroundColor: "#1a1a2e" } // Fallback color while video loads
+      return { backgroundColor: "#000000" }
     }
 
-    switch (backgroundType) {
-      case "cdn":
-        return backgroundUrl
-          ? {
-              backgroundImage: `url(${backgroundUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : { backgroundColor }
-      case "image":
-        return backgroundImage
-          ? {
-              backgroundImage: `url(${backgroundImage})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : { backgroundColor }
-      case "gradient":
-        const direction = gradientDirection.replace("to-", "to ")
-        return {
-          background: `linear-gradient(${direction}, ${gradientStart}, ${gradientEnd})`,
-        }
-      case "color":
-        return { backgroundColor }
-      default:
-        return { backgroundColor }
+    if (backgroundType === "color") {
+      return { backgroundColor }
     }
+
+    // For both "cdn" and "image" types, use backgroundUrl or backgroundImage
+    const imageUrl = backgroundUrl || backgroundImage
+    if (imageUrl) {
+      return {
+        backgroundImage: `url(${imageUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    }
+
+    return { backgroundColor }
   }
 
   return (
@@ -191,7 +155,7 @@ export default function Hero1({ props }: Hero1Props) {
       className="relative min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden"
       style={getBackgroundStyle()}
     >
-      {isVideo && actualVideoUrl && shouldRenderVideo && (
+      {isVideo && backgroundUrl && shouldRenderVideo && (
         <video
           ref={videoRef}
           autoPlay
@@ -199,23 +163,38 @@ export default function Hero1({ props }: Hero1Props) {
           muted
           playsInline
           preload="auto"
-          webkit-playsinline="true"
-          x-webkit-airplay="allow"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
         >
-          <source src={actualVideoUrl} type="video/mp4" />
+          <source src={backgroundUrl} type="video/mp4" />
         </video>
       )}
 
+      {/* Top blur effect */}
       {enableTopBlur && (
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-[1]" />
+        <div
+          className="absolute top-0 left-0 right-0 h-24 pointer-events-none z-[1]"
+          style={{
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)",
+          }}
+        />
       )}
 
+      {/* Bottom blur effect */}
       {enableBottomBlur && (
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-[1]" />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none z-[1]"
+          style={{
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            maskImage: "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)",
+            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)",
+          }}
+        />
       )}
 
-      {/* Overlay */}
       <div
         className="absolute inset-0 pointer-events-none z-[2]"
         style={{
@@ -227,15 +206,6 @@ export default function Hero1({ props }: Hero1Props) {
       {/* Content Container */}
       <div className="relative z-10 container mx-auto px-6 lg:px-12 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          {subtitle && (
-            <p
-              className="text-sm md:text-base font-semibold tracking-widest uppercase mb-4"
-              style={{ color: textColor, opacity: 0.9 }}
-            >
-              {subtitle}
-            </p>
-          )}
-
           {/* Headline */}
           <h1
             className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-balance italic"
@@ -244,13 +214,12 @@ export default function Hero1({ props }: Hero1Props) {
             {headline}
           </h1>
 
-          {/* Description */}
-          {description && (
+          {subtitle && (
             <p
-              className="text-base md:text-lg mb-8 leading-relaxed text-pretty max-w-xl mx-auto"
-              style={{ color: textColor, opacity: 0.85 }}
+              className="text-base md:text-xl mb-8 leading-relaxed text-pretty max-w-3xl mx-auto"
+              style={{ color: textColor }}
             >
-              {description}
+              {subtitle}
             </p>
           )}
 
@@ -270,7 +239,6 @@ export default function Hero1({ props }: Hero1Props) {
         </div>
       </div>
 
-      {/* Pagination Dots */}
       {showPaginationDots && (
         <div className="absolute bottom-8 left-6 lg:left-12 z-10 flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: buttonColor }} />
@@ -279,7 +247,6 @@ export default function Hero1({ props }: Hero1Props) {
         </div>
       )}
 
-      {/* Social Icons */}
       {showSocialIcons && (
         <div className="absolute bottom-8 right-6 lg:right-12 z-10 flex items-center gap-3">
           {facebookUrl && (
