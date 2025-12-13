@@ -101,6 +101,7 @@ async function getPublishedBlogPosts(filters: {
       .single()
 
     if (resourceCatData) {
+      // Filter by resource category only
       query = query.eq("resource_category_id", resourceCatData.id)
     } else {
       // Try blog category
@@ -117,10 +118,14 @@ async function getPublishedBlogPosts(filters: {
           .eq("category_id", blogCatData.id)
 
         if (postIds && postIds.length > 0) {
+          // Only show posts that are in this specific blog category
           query = query.in(
             "id",
             postIds.map((p) => p.post_id),
           )
+        } else {
+          // No posts in this category, return empty result
+          query = query.eq("id", "00000000-0000-0000-0000-000000000000")
         }
       }
     }

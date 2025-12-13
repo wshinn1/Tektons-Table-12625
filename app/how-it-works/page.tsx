@@ -1,16 +1,12 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { MarketingNav } from "@/components/marketing-nav"
-import { getPageMetadata } from "@/lib/get-page-metadata"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Check, Play, UserPlus, Palette, Send, DollarSign, BarChart3 } from "lucide-react"
 import { OptimizedVideo } from "@/components/optimized-video"
 import { MarketingFooter } from "@/components/marketing-footer"
-
-export async function generateMetadata() {
-  return await getPageMetadata("how-it-works")
-}
+import { FeaturedBlogSlider } from "@/components/sections/featured-blog-slider/featured-blog-slider"
 
 const iconMap: Record<string, any> = {
   "user-plus": UserPlus,
@@ -342,6 +338,24 @@ export default async function HowItWorksPage() {
                 </Button>
                 <p className="text-sm text-muted-foreground mt-4">{content.supportingText}</p>
               </div>
+            </section>
+          )
+        }
+
+        // Featured Blog Slider Section
+        if (section.section_type === "featured_blog_slider") {
+          const content = section.content as any
+          return (
+            <section
+              key={section.id}
+              className="py-20"
+              style={{ backgroundColor: section.background_value || "#ffffff" }}
+            >
+              <FeaturedBlogSlider
+                sectionTitle={content.sectionTitle || "FEATURED POSTS"}
+                selectedCategories={content.selectedCategories || []}
+                showArrows={content.showArrows !== false}
+              />
             </section>
           )
         }

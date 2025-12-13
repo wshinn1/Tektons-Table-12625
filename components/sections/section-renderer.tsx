@@ -10,6 +10,9 @@ const PricingComparison = dynamic(() => import("./pricing-comparison/pricing-com
 const CtaSection = dynamic(() => import("./cta-section/cta-section"))
 const HeroCentered = dynamic(() => import("./hero-centered/hero-centered"))
 const Hero1 = dynamic(() => import("./hero-1/hero-1"))
+const FeaturedBlogSlider = dynamic(() =>
+  import("./featured-blog-slider/featured-blog-slider").then((mod) => ({ default: mod.FeaturedBlogSlider })),
+)
 
 const SECTION_COMPONENTS: Record<string, any> = {
   "sections/hero-overlay": HeroOverlay,
@@ -20,6 +23,7 @@ const SECTION_COMPONENTS: Record<string, any> = {
   "sections/cta-section": CtaSection,
   "sections/hero-centered": HeroCentered,
   "sections/hero-1": Hero1,
+  "sections/featured-blog-slider": FeaturedBlogSlider,
 }
 
 interface SectionRendererProps {

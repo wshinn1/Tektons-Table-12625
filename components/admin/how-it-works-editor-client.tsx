@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { Loader2, Plus, Trash2, GripVertical } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type Section = {
@@ -27,6 +29,7 @@ type Section = {
 export function HowItWorksEditorClient({ initialSections }: { initialSections: Section[] }) {
   const [sections, setSections] = useState<Section[]>(initialSections)
   const [saving, setSaving] = useState(false)
+  const [draggedSection, setDraggedSection] = useState<Section | null>(null)
   const { toast } = useToast()
 
   const handleSave = async () => {
@@ -100,13 +103,63 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
     setSections(newSections)
   }
 
+  const handleDragStart = (e: React.DragEvent, section: Section) => {
+    setDraggedSection(section)
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }
+
+  const handleDrop = (e: React.DragEvent, targetSection: Section) => {
+    e.preventDefault()
+
+    if (!draggedSection || draggedSection.id === targetSection.id) return
+
+    const newSections = [...sections]
+    const draggedIndex = newSections.findIndex((s) => s.id === draggedSection.id)
+    const targetIndex = newSections.findIndex((s) => s.id === targetSection.id)
+
+    newSections.splice(draggedIndex, 1)
+    newSections.splice(targetIndex, 0, draggedSection)
+
+    const updatedSections = newSections.map((section, index) => ({
+      ...section,
+      display_order: index + 1,
+    }))
+
+    setSections(updatedSections)
+    setDraggedSection(null)
+
+    toast({
+      title: "Reordered",
+      description: "Section order updated. Don't forget to save!",
+    })
+  }
+
   return (
     <div className="space-y-8">
+      <p className="text-sm text-muted-foreground">
+        Drag and drop sections to reorder them. Changes will be saved when you click "Save All Changes".
+      </p>
+
       {sections.map((section, index) => (
-        <Card key={section.id}>
+        <Card
+          key={section.id}
+          draggable
+          onDragStart={(e) => handleDragStart(e, section)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, section)}
+          className="cursor-move hover:border-primary/50 transition-colors"
+        >
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              {section.section_key.replace(/_/g, " ").toUpperCase()}
+              <div className="flex items-center gap-3">
+                <GripVertical className="w-5 h-5 text-muted-foreground" />
+                <span>{section.section_key.replace(/_/g, " ").toUpperCase()}</span>
+              </div>
               <span className="text-sm font-normal text-muted-foreground">Order: {section.display_order}</span>
             </CardTitle>
           </CardHeader>
@@ -608,6 +661,50 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                       onChange={(e) => updateContent(index, { supportingText: e.target.value })}
                     />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {section.section_type === "featured_blog_slider" && (
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <Label>Section Title</Label>
+                  <Input
+                    value={section.content.sectionTitle || "FEATURED POSTS"}
+                    onChange={(e) => updateContent(index, { sectionTitle: e.target.value })}
+                    placeholder="FEATURED POSTS"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    The heading displayed at the top left of the slider
+                  </p>
+                </div>
+                <div>
+                  <Label>Selected Categories (comma-separated slugs)</Label>
+                  <Input
+                    value={section.content.selectedCategories?.join(", ") || ""}
+                    onChange={(e) =>
+                      updateContent(index, {
+                        selectedCategories: e.target.value
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                    placeholder="tutorial, news, updates"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter blog category slugs separated by commas (e.g., tutorial, news)
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`show-arrows-${index}`}
+                    checked={section.content.showArrows !== false}
+                    onChange={(e) => updateContent(index, { showArrows: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor={`show-arrows-${index}`}>Show navigation arrows</Label>
                 </div>
               </div>
             )}
