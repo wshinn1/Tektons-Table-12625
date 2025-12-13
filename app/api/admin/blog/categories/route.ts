@@ -7,9 +7,10 @@ export async function GET() {
   const { data: categories, error } = await supabase.from("blog_categories").select("id, name, slug").order("name")
 
   if (error) {
-    console.error("Failed to fetch categories:", error)
-    return NextResponse.json([], { status: 200 })
+    console.error("[v0] Failed to fetch categories:", error)
+    return NextResponse.json({ categories: [] }, { status: 200 })
   }
 
-  return NextResponse.json(categories || [])
+  console.log("[v0] Blog categories fetched:", categories)
+  return NextResponse.json({ categories: categories || [] })
 }

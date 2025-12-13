@@ -35,13 +35,17 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        console.log("[v0] Fetching blog categories...")
         const response = await fetch("/api/admin/blog/categories")
         if (response.ok) {
           const data = await response.json()
+          console.log("[v0] Blog categories response:", data)
           setBlogCategories(data.categories || [])
+        } else {
+          console.error("[v0] Failed to fetch categories, status:", response.status)
         }
       } catch (error) {
-        console.error("Failed to fetch blog categories:", error)
+        console.error("[v0] Failed to fetch blog categories:", error)
       }
     }
     fetchCategories()
@@ -683,6 +687,7 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
             {/* Featured Blog Slider Editor */}
             {section.section_type === "featured_blog_slider" && (
               <div className="space-y-4 border-t pt-4">
+                {console.log("[v0] Blog categories available:", blogCategories.length, blogCategories)}
                 <div>
                   <Label htmlFor={`section-${index}-title`}>Title</Label>
                   <Input
@@ -707,6 +712,7 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
 
                 <div>
                   <Label>Selected Categories</Label>
+                  {blogCategories.length === 0 && <p className="text-xs text-amber-600 mb-2">Loading categories...</p>}
                   <Select
                     value={
                       section.content?.selectedCategories && section.content.selectedCategories.length > 0
@@ -715,8 +721,8 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                     }
                     onValueChange={(value) => {
                       const currentCategories = section.content?.selectedCategories || []
-                      const index = currentCategories.indexOf(value)
-                      if (index > -1) {
+                      const categoryIndex = currentCategories.indexOf(value)
+                      if (categoryIndex > -1) {
                         // Remove if already selected
                         updateContent(index, {
                           selectedCategories: currentCategories.filter((c: string) => c !== value),
@@ -737,48 +743,25 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {blogCategories.map((cat) => {
-                        const isSelected = section.content?.selectedCategories?.includes(cat.slug)
-                        return (
-                          <SelectItem key={cat.id} value={cat.slug}>
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" checked={isSelected} readOnly className="h-4 w-4" />
-                              {cat.name}
-                            </div>
-                          </SelectItem>
-                        )
-                      })}
+                      {blogCategories.length === 0 ? (
+                        <SelectItem value="none" disabled>
+                          No categories available
+                        </SelectItem>
+                      ) : (
+                        blogCategories.map((cat) => {
+                          const isSelected = section.content?.selectedCategories?.includes(cat.slug)
+                          return (
+                            <SelectItem key={cat.id} value={cat.slug}>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={isSelected} readOnly className="h-4 w-4" />
+                                {cat.name}
+                              </div>
+                            </SelectItem>
+                          )
+                        })
+                      )}
                     </SelectContent>
                   </Select>
-                  {/* Show selected categories as chips */}
-                  {section.content?.selectedCategories && section.content.selectedCategories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {section.content.selectedCategories.map((slug: string) => {
-                        const category = blogCategories.find((c) => c.slug === slug)
-                        return (
-                          <div
-                            key={slug}
-                            className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
-                          >
-                            {category?.name || slug}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                updateContent(index, {
-                                  selectedCategories: section.content.selectedCategories.filter(
-                                    (c: string) => c !== slug,
-                                  ),
-                                })
-                              }}
-                              className="hover:text-destructive"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
                   <p className="text-xs text-muted-foreground mt-1">
                     Select one or more blog categories to display posts from
                   </p>
