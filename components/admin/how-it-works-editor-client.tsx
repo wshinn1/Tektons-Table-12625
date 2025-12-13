@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,7 +29,23 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
   const [sections, setSections] = useState<Section[]>(initialSections)
   const [saving, setSaving] = useState(false)
   const [draggedSection, setDraggedSection] = useState<Section | null>(null)
+  const [blogCategories, setBlogCategories] = useState<{ id: string; name: string; slug: string }[]>([])
   const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/admin/blog/categories")
+        if (response.ok) {
+          const data = await response.json()
+          setBlogCategories(data.categories || [])
+        }
+      } catch (error) {
+        console.error("Failed to fetch blog categories:", error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
@@ -665,6 +680,7 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
               </div>
             )}
 
+            {/* Featured Blog Slider Editor */}
             {section.section_type === "featured_blog_slider" && (
               <div className="space-y-4 border-t pt-4">
                 <div>
@@ -679,21 +695,69 @@ export function HowItWorksEditorClient({ initialSections }: { initialSections: S
                   </p>
                 </div>
                 <div>
-                  <Label>Selected Categories (comma-separated slugs)</Label>
-                  <Input
-                    value={section.content.selectedCategories?.join(", ") || ""}
-                    onChange={(e) =>
-                      updateContent(index, {
-                        selectedCategories: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="tutorial, news, updates"
-                  />
+                  <Label>Selected Categories</Label>
+                  <Select
+                    value={section.content.selectedCategories?.[0] || ""}
+                    onValueChange={(value) => {
+                      const currentCategories = section.content.selectedCategories || []
+                      if (currentCategories.includes(value)) {
+                        // Remove if already selected
+                        updateContent(index, {
+                          selectedCategories: currentCategories.filter((c: string) => c !== value),
+                        })
+                      } else {
+                        // Add to selected
+                        updateContent(index, {
+                          selectedCategories: [...currentCategories, value],
+                        })
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select categories">
+                        {section.content.selectedCategories && section.content.selectedCategories.length > 0
+                          ? `${section.content.selectedCategories.length} categories selected`
+                          : "Select categories"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {blogCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.slug}>
+                          {section.content.selectedCategories?.includes(cat.slug) ? "✓ " : ""}
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {section.content.selectedCategories && section.content.selectedCategories.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {section.content.selectedCategories.map((slug: string) => {
+                        const cat = blogCategories.find((c) => c.slug === slug)
+                        return (
+                          <span
+                            key={slug}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm"
+                          >
+                            {cat?.name || slug}
+                            <button
+                              onClick={() =>
+                                updateContent(index, {
+                                  selectedCategories: section.content.selectedCategories.filter(
+                                    (c: string) => c !== slug,
+                                  ),
+                                })
+                              }
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    Enter blog category slugs separated by commas (e.g., tutorial, news)
+                    Select one or more blog categories to display posts from
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
