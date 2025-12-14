@@ -2,6 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 import { PageEditor } from "@/components/tenant/page-editor"
 import { GrapesJSPageEditor } from "@/components/tenant/grapesjs-page-editor"
+import Script from "next/script"
 
 interface Props {
   params: Promise<{
@@ -29,7 +30,13 @@ export default async function NewPagePage({ params }: Props) {
   }
 
   if (tenant.page_builder_type === "grapesjs") {
-    return <GrapesJSPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
+    return (
+      <>
+        <Script src="https://unpkg.com/grapesjs" strategy="beforeInteractive" />
+        <Script src="https://unpkg.com/grapesjs-blocks-basic" strategy="beforeInteractive" />
+        <GrapesJSPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
+      </>
+    )
   }
 
   return <PageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />

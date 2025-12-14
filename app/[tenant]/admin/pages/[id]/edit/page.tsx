@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { PageEditor } from "@/components/tenant/page-editor"
 import { GrapesJSPageEditor } from "@/components/tenant/grapesjs-page-editor"
 import { getTenantPage } from "@/app/actions/tenant-pages"
+import Script from "next/script"
 
 interface Props {
   params: Promise<{
@@ -37,7 +38,13 @@ export default async function EditPagePage({ params }: Props) {
   }
 
   if (tenant.page_builder_type === "grapesjs") {
-    return <GrapesJSPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} page={page} />
+    return (
+      <>
+        <Script src="https://unpkg.com/grapesjs" strategy="beforeInteractive" />
+        <Script src="https://unpkg.com/grapesjs-blocks-basic" strategy="beforeInteractive" />
+        <GrapesJSPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} page={page} />
+      </>
+    )
   }
 
   return <PageEditor tenantId={tenant.id} subdomain={tenantSlug} page={page} />

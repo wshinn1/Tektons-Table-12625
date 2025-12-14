@@ -103,18 +103,18 @@ export async function getPublishedPageBySlug(tenantId: string, slug: string): Pr
 export const getTenantPageBySlug = getPublishedPageBySlug
 
 // Create a new page
-export async function createTenantPage(
-  tenantId: string,
-  data: {
-    title: string
-    slug: string
-    design_json?: Record<string, unknown>
-    html_content?: string
-    status?: "draft" | "published"
-    meta_title?: string
-    meta_description?: string
-  },
-): Promise<{ success: boolean; page?: TenantPage; error?: string }> {
+export async function createTenantPage(params: {
+  tenantId: string
+  title: string
+  slug: string
+  designJson?: Record<string, unknown>
+  htmlContent?: string
+  status?: "draft" | "published"
+  metaTitle?: string
+  metaDescription?: string
+}): Promise<{ success: boolean; page?: TenantPage; error?: string }> {
+  const { tenantId, title, slug, designJson, htmlContent, status, metaTitle, metaDescription } = params
+
   const isOwner = await verifyTenantOwnership(tenantId)
   if (!isOwner) {
     return { success: false, error: "Unauthorized" }
@@ -129,7 +129,7 @@ export async function createTenantPage(
 
   // Validate slug format
   const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-  if (!slugRegex.test(data.slug)) {
+  if (!slugRegex.test(slug)) {
     return { success: false, error: "Slug must be lowercase letters, numbers, and hyphens only" }
   }
 
@@ -137,13 +137,13 @@ export async function createTenantPage(
     .from("tenant_pages")
     .insert({
       tenant_id: tenantId,
-      title: data.title,
-      slug: data.slug,
-      design_json: data.design_json || {},
-      html_content: data.html_content || "",
-      status: data.status || "draft",
-      meta_title: data.meta_title || null,
-      meta_description: data.meta_description || null,
+      title: title,
+      slug: slug,
+      design_json: designJson || {},
+      html_content: htmlContent || "",
+      status: status || "draft",
+      meta_title: metaTitle || null,
+      meta_description: metaDescription || null,
     })
     .select()
     .single()

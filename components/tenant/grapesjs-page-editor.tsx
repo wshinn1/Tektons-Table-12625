@@ -356,7 +356,7 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showSetupDialog, setShowSetupDialog] = useState(!page)
-  const [isCreating, setIsCreating] = useState(false)
+  const [isCreatingPage, setIsCreatingPage] = useState(false)
   const [isEditorLoading, setIsEditorLoading] = useState(true)
 
   const [pageContent, setPageContent] = useState({
@@ -364,6 +364,10 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
     slug: page?.slug || "",
     content: page?.content || "",
   })
+
+  const newPageTitle = pageContent.title
+  const newPageSlug = pageContent.slug
+  const newPageContent = pageContent.content
 
   useEffect(() => {
     setMounted(true)
@@ -565,37 +569,36 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
   }, [isPublished, page])
 
   const handleCreatePage = async () => {
-    if (!pageContent.title || !pageContent.slug) {
-      alert("Please enter both a title and slug")
-      return
-    }
+    if (!newPageTitle || !newPageSlug) return
 
-    setIsCreating(true)
+    setIsCreatingPage(true)
     try {
-      const response = await fetch(`/api/tenant/${tenantId}/pages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: pageContent.title,
-          slug: pageContent.slug,
-          content: "",
-          is_published: false,
-        }),
+      console.log("[v0] Creating page:", { title: newPageTitle, slug: newPageSlug, content: newPageContent })
+
+      const result = await createTenantPage({
+        tenantId,
+        title: newPageTitle,
+        slug: newPageSlug,
+        htmlContent: newPageContent || "",
+        status: "draft",
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to create page")
+      if (result.error) {
+        console.error("[v0] Error creating page:", result.error)
+        toast.error("Failed to create page")
+        return
       }
 
-      const newPage = await response.json()
+      console.log("[v0] Page created successfully:", result.page)
+      toast.success("Page created successfully")
       setShowSetupDialog(false)
 
-      router.push(`/${tenantSlug}/admin/pages/${newPage.id}/edit`)
+      router.push(`/${tenantSlug}/admin/pages/${result.page.id}/edit`)
     } catch (error) {
-      console.error("Error creating page:", error)
-      alert("Failed to create page. Please try again.")
+      console.error("[v0] Error creating page:", error)
+      toast.error("Failed to create page")
     } finally {
-      setIsCreating(false)
+      setIsCreatingPage(false)
     }
   }
 
@@ -657,11 +660,11 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => router.push(`/${tenantSlug}/admin`)} disabled={isCreating}>
+            <Button variant="outline" onClick={() => router.push(`/${tenantSlug}/admin`)} disabled={isCreatingPage}>
               Cancel
             </Button>
-            <Button onClick={handleCreatePage} disabled={isCreating || !pageContent.title || !pageContent.slug}>
-              {isCreating ? (
+            <Button onClick={handleCreatePage} disabled={isCreatingPage || !newPageTitle || !newPageSlug}>
+              {isCreatingPage ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
