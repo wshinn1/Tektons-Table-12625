@@ -303,6 +303,9 @@ function EditBlogPostClient({ id }: { id: string }) {
     setIsSaving(true)
 
     try {
+      console.log("[v0] Saving post with categoryId:", selectedCategoryId)
+      console.log("[v0] CategoryIds array:", selectedCategoryId !== "none" ? [selectedCategoryId] : [])
+
       await updateBlogPost(id, {
         title: title.trim(),
         subtitle: subtitle.trim() || undefined,

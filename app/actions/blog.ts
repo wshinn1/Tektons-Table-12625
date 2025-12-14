@@ -252,13 +252,22 @@ export async function updateBlogPost(
 
     // Update categories if provided
     if (data.categoryIds !== undefined) {
+      console.log("[v0] Updating categories for post:", id, "categoryIds:", data.categoryIds)
       await supabase.from("blog_post_categories").delete().eq("post_id", id)
       if (data.categoryIds.length > 0) {
         const categoryInserts = data.categoryIds.map((categoryId) => ({
           post_id: id,
           category_id: categoryId,
         }))
-        await supabase.from("blog_post_categories").insert(categoryInserts)
+        console.log("[v0] Inserting categories:", categoryInserts)
+        const { error: categoryError } = await supabase.from("blog_post_categories").insert(categoryInserts)
+        if (categoryError) {
+          console.error("[v0] Failed to insert categories:", categoryError)
+        } else {
+          console.log("[v0] Categories inserted successfully")
+        }
+      } else {
+        console.log("[v0] No categories to insert (array is empty)")
       }
     }
 
