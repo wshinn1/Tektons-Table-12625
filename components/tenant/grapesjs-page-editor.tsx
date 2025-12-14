@@ -5,13 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Save, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createTenantPage, updateTenantPage } from "@/app/actions/tenant-pages"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 interface Page {
   id: string
@@ -350,6 +355,8 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
   const router = useRouter()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showSetupDialog, setShowSetupDialog] = useState(!page)
+  const [isCreating, setIsCreating] = useState(false)
 
   const [pageContent, setPageContent] = useState({
     title: page?.title || "",
@@ -547,16 +554,50 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
     }
   }, [isPublished, page])
 
+  const handleCreatePage = async () => {
+    if (!pageContent.title || !pageContent.slug) {
+      alert("Please enter both a title and slug")
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      const response = await fetch(`/api/tenant/${tenantId}/pages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: pageContent.title,
+          slug: pageContent.slug,
+          content: "",
+          is_published: false,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create page")
+      }
+
+      const newPage = await response.json()
+      setShowSetupDialog(false)
+
+      // Redirect to edit the new page
+      router.push(`/${tenantSlug}/admin/pages/${newPage.id}/edit`)
+    } catch (error) {
+      console.error("Error creating page:", error)
+      alert("Failed to create page. Please try again.")
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   return (
     <div
-      className={cn(
-        "fixed inset-0 flex flex-col bg-gray-50 transition-all duration-300",
-        "md:ml-64", // Default expanded sidebar width on desktop
-        isSidebarCollapsed && "md:ml-16", // Collapsed sidebar width on desktop
-      )}
+      className={`fixed inset-0 flex flex-col bg-gray-50 transition-all duration-300 ${
+        mounted ? (isSidebarCollapsed ? "ml-16 md:ml-16" : "ml-0 md:ml-64") : "ml-0 md:ml-64"
+      }`}
     >
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
-        <Button variant="ghost" onClick={() => router.back()}>
+      <div className="flex items-center justify-between border-b bg-white p-4">
+        <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantSlug}/admin`)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-4">
@@ -570,41 +611,50 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
         </div>
       </div>
       <div id="gjs" className="flex-1"></div>
-      <div className="p-4 bg-white border-t">
-        <Dialog open={true}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Page Editor</DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={pageContent.title}
-                  onChange={(e) => setPageContent((prev) => ({ ...prev, title: e.target.value }))}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="slug">Slug</Label>
-                <Input
-                  id="slug"
-                  value={pageContent.slug}
-                  onChange={(e) => setPageContent((prev) => ({ ...prev, slug: e.target.value }))}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  value={pageContent.content}
-                  onChange={(e) => setPageContent((prev) => ({ ...prev, content: e.target.value }))}
-                />
-              </div>
+      <Dialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Page</DialogTitle>
+            <DialogDescription>Enter a title and URL slug for your new custom page.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={pageContent.title}
+                onChange={(e) => setPageContent((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter page title..."
+              />
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="slug">Slug</Label>
+              <Input
+                id="slug"
+                value={pageContent.slug}
+                onChange={(e) => setPageContent((prev) => ({ ...prev, slug: e.target.value }))}
+                placeholder="page-url-slug"
+              />
+              <p className="text-sm text-muted-foreground">This will be the URL: /{pageContent.slug || "page-url"}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => router.push(`/${tenantSlug}/admin`)} disabled={isCreating}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreatePage} disabled={isCreating || !pageContent.title || !pageContent.slug}>
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Page"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
