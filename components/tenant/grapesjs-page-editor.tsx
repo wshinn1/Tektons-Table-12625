@@ -452,7 +452,7 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
       toast.success("Page created successfully")
       setShowSetupDialog(false)
 
-      router.push(`/${tenantId}/admin/pages/${result.page.id}/edit`)
+      router.push(`/admin/pages/${result.page.id}/edit`)
     } catch (error) {
       console.error("[v0] Error creating page:", error)
       toast.error("Failed to create page")
