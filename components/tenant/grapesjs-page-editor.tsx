@@ -357,6 +357,7 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
   const [mounted, setMounted] = useState(false)
   const [showSetupDialog, setShowSetupDialog] = useState(!page)
   const [isCreating, setIsCreating] = useState(false)
+  const [isEditorLoading, setIsEditorLoading] = useState(true)
 
   const [pageContent, setPageContent] = useState({
     title: page?.title || "",
@@ -371,7 +372,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
   useEffect(() => {
     if (!mounted) return
 
-    // Read initial sidebar state
     const checkSidebarState = () => {
       const saved = localStorage.getItem(`tenant-admin-sidebar-collapsed-${tenantSlug}`)
       setIsSidebarCollapsed(saved === "true")
@@ -379,7 +379,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
 
     checkSidebarState()
 
-    // Listen for storage changes (when sidebar is toggled)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === `tenant-admin-sidebar-collapsed-${tenantSlug}`) {
         setIsSidebarCollapsed(e.newValue === "true")
@@ -388,7 +387,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
 
     window.addEventListener("storage", handleStorageChange)
 
-    // Also check periodically for same-window changes
     const interval = setInterval(checkSidebarState, 100)
 
     return () => {
@@ -397,7 +395,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
     }
   }, [mounted, tenantSlug])
 
-  // AI generation handler
   const handleAiGenerate = useCallback(async () => {
     const editor = editorRef.current
     console.log("[v0] AI Generate called with prompt:", pageContent.content)
@@ -414,9 +411,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       toast.error("Please enter a prompt")
       return
     }
-
-    // setIsLoading(true)
-    // setAiMessages((prev) => [...prev, { role: "user", content: pageContent.content }])
 
     try {
       console.log("[v0] Calling AI API...")
@@ -438,19 +432,14 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
 
       if (data.html) {
         try {
-          // Try setComponents first (preferred for SDK)
           if (editor.setComponents) {
             editor.setComponents(data.html)
             console.log("[v0] Content inserted via setComponents")
-          }
-          // Fallback to DomComponents.getWrapper()
-          else if (editor.DomComponents?.getWrapper) {
+          } else if (editor.DomComponents?.getWrapper) {
             const wrapper = editor.DomComponents.getWrapper()
             wrapper.append(data.html)
             console.log("[v0] Content inserted via DomComponents.getWrapper().append")
-          }
-          // Last resort: access Canvas directly
-          else if (editor.Canvas) {
+          } else if (editor.Canvas) {
             const body = editor.Canvas.getBody()
             if (body) {
               body.innerHTML += data.html
@@ -458,13 +447,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
             }
           }
 
-          // setAiMessages((prev) => [
-          //   ...prev,
-          //   {
-          //     role: "assistant",
-          //     content: "I've created a component for you. You can now customize it using the visual editor.",
-          //   },
-          // ])
           toast.success("Content generated successfully!")
         } catch (insertError) {
           console.error("[v0] Error inserting content:", insertError)
@@ -475,56 +457,84 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       setPageContent((prev) => ({ ...prev, content: "" }))
     } catch (error) {
       console.error("[v0] AI generation error:", error)
-      // setAiMessages((prev) => [
-      //   ...prev,
-      //   {
-      //     role: "assistant",
-      //     content: `Error: ${error instanceof Error ? error.message : "Failed to generate content"}`,
-      //   },
-      // ])
       toast.error(error instanceof Error ? error.message : "Failed to generate content")
     } finally {
-      // setIsLoading(false)
     }
-  }, [pageContent.content])
+  }, [pageContent])
 
-  // Initialize GrapesJS Studio SDK
   useEffect(() => {
-    if (!editorRef.current && window.grapesjs) {
-      const editor = window.grapesjs.init({
-        container: "#gjs",
-        height: "100%",
-        fromElement: true,
-        storageManager: false,
-        panels: { defaults: [] },
-        layerManager: { visible: false },
-        deviceManager: { devices: [] },
-        selectorManager: { appendTo: "#my-selectors" },
-        styleManager: { appendTo: "#my-styles" },
-        blockManager: { appendTo: "#my-blocks" },
-        traitManager: { appendTo: "#my-traits" },
-        panels: { defaults: [] },
-        plugins: ["gjs-blocks-basic"],
-        pluginsOpts: {
-          "gjs-blocks-basic": {
-            /* options */
+    console.log("[v0] GrapesJS editor mounting", { hasPage: !!page, windowGrapesjs: !!window.grapesjs })
+
+    const initEditor = () => {
+      if (editorRef.current) {
+        console.log("[v0] Editor already initialized")
+        return
+      }
+
+      if (!window.grapesjs) {
+        console.log("[v0] Waiting for GrapesJS to load...")
+        setTimeout(initEditor, 100)
+        return
+      }
+
+      console.log("[v0] Initializing GrapesJS editor")
+      setIsEditorLoading(true)
+
+      try {
+        const editor = window.grapesjs.init({
+          container: "#gjs",
+          height: "100%",
+          fromElement: true,
+          storageManager: false,
+          panels: { defaults: [] },
+          layerManager: { visible: false },
+          deviceManager: { devices: [] },
+          selectorManager: { appendTo: "#my-selectors" },
+          styleManager: { appendTo: "#my-styles" },
+          blockManager: { appendTo: "#my-blocks" },
+          traitManager: { appendTo: "#my-traits" },
+          panels: { defaults: [] },
+          plugins: ["gjs-blocks-basic"],
+          pluginsOpts: {
+            "gjs-blocks-basic": {
+              /* options */
+            },
           },
-        },
-      })
+        })
 
-      editor.setStyle(`
-        body {
-          font-family: Arial, sans-serif;
-          margin: 0;
-          padding: 0;
-        }
-      `)
+        editor.setStyle(`
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+        `)
 
-      editor.setComponents(page?.content || PAGE_TEMPLATES[0].content)
+        const contentToLoad = page?.content || PAGE_TEMPLATES[0].content
+        console.log("[v0] Loading content", { hasPageContent: !!page?.content })
+        editor.setComponents(contentToLoad)
 
-      editorRef.current = editor
+        editorRef.current = editor
+        setIsEditorLoading(false)
+        console.log("[v0] GrapesJS editor initialized successfully")
+      } catch (error) {
+        console.error("[v0] Error initializing GrapesJS:", error)
+        setIsEditorLoading(false)
+      }
     }
-  }, [page])
+
+    if (!showSetupDialog) {
+      initEditor()
+    }
+
+    return () => {
+      if (editorRef.current) {
+        console.log("[v0] Destroying GrapesJS editor")
+        editorRef.current.destroy()
+        editorRef.current = null
+      }
+    }
+  }, [page, showSetupDialog]) // Fixed dependency to use entire page object instead of page?.content
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -580,7 +590,6 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       const newPage = await response.json()
       setShowSetupDialog(false)
 
-      // Redirect to edit the new page
       router.push(`/${tenantSlug}/admin/pages/${newPage.id}/edit`)
     } catch (error) {
       console.error("Error creating page:", error)
@@ -596,8 +605,17 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
         mounted ? (isSidebarCollapsed ? "ml-16 md:ml-16" : "ml-0 md:ml-64") : "ml-0 md:ml-64"
       }`}
     >
+      {isEditorLoading && !showSetupDialog && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-50">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+            <p className="text-sm text-gray-600">Loading page editor...</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between border-b bg-white p-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantSlug}/admin`)}>
+        <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantSlug}/admin/pages`)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-4">
