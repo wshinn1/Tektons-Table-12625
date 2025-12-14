@@ -17,6 +17,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog"
+import grapesjs from "grapesjs"
+import "grapesjs/dist/css/grapes.min.css"
 
 interface Page {
   id: string
@@ -32,10 +34,8 @@ interface GrapesJSPageEditorProps {
   tenantId: string
   tenantSlug: string
   page?: Page
+  onSave?: (html: string) => void
 }
-
-// Your GrapesJS Studio SDK license key
-const GRAPESJS_LICENSE_KEY = "2ba0c6133f6144aebbe2767cbbfac5a4423d7181a648457c94e3c03c0ac6fd94"
 
 const PAGE_TEMPLATES = [
   {
@@ -59,7 +59,7 @@ const PAGE_TEMPLATES = [
             <section data-gjs-name="Mission" style="padding: 80px 20px; background: white;">
               <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
                 <h2 style="font-size: 36px; font-weight: 700; color: #1f2937; margin: 0 0 16px 0;">Our Mission</h2>
-                <p style="color: #6b7280; font-size: 18px; max-width: 600px; margin: 0 auto 40px;">We're dedicated to serving communities and spreading hope through practical ministry.</p>
+                <p style="color: #6b7280; font-size: 18px; max-width: 600px; margin: 0 auto 40px;">We\'re dedicated to serving communities and spreading hope through practical ministry.</p>
                 <div style="display: flex; gap: 30px; justify-content: center; flex-wrap: wrap;">
                   <div style="flex: 1; min-width: 250px; max-width: 350px; padding: 30px; background: #f9fafb; border-radius: 12px;">
                     <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px;">Community</h3>
@@ -86,7 +86,7 @@ const PAGE_TEMPLATES = [
             <section style="padding: 80px 20px; background: #f9fafb;">
               <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: #1f2937; margin: 0 0 24px;">About Our Ministry</h1>
-                <p style="font-size: 18px; color: #6b7280; line-height: 1.8;">We are a community of believers dedicated to sharing God's love through service, worship, and outreach. Our journey began with a simple mission: to make a difference in our community and beyond.</p>
+                <p style="font-size: 18px; color: #6b7280; line-height: 1.8;">We are a community of believers dedicated to sharing God\'s love through service, worship, and outreach. Our journey began with a simple mission: to make a difference in our community and beyond.</p>
               </div>
             </section>
             <section style="padding: 60px 20px; background: white;">
@@ -182,7 +182,7 @@ const PAGE_TEMPLATES = [
             <section style="padding: 80px 20px; background: #f9fafb;">
               <div style="max-width: 600px; margin: 0 auto; text-align: center;">
                 <h1 style="font-size: 42px; font-weight: 700; color: #1f2937; margin: 0 0 16px;">Get in Touch</h1>
-                <p style="font-size: 18px; color: #6b7280;">We'd love to hear from you. Reach out with any questions.</p>
+                <p style="font-size: 18px; color: #6b7280;">We\'d love to hear from you. Reach out with any questions.</p>
               </div>
             </section>
             <section style="padding: 60px 20px; background: white;">
@@ -224,7 +224,7 @@ const PAGE_TEMPLATES = [
                   <div style="padding: 20px;">
                     <p style="color: #7c3aed; font-size: 14px; margin: 0 0 8px;">December 8, 2024</p>
                     <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px;">Walking in Faith</h3>
-                    <p style="color: #6b7280; font-size: 14px; margin: 0;">Pastor John Smith explores what it means to truly walk in faith in today's world.</p>
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">Pastor John Smith explores what it means to truly walk in faith in today\'s world.</p>
                   </div>
                 </div>
                 <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -256,7 +256,7 @@ const PAGE_TEMPLATES = [
                   <div style="width: 60px; height: 60px; background: #7c3aed; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
                     <span style="font-size: 24px;">👶</span>
                   </div>
-                  <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px;">Children's Ministry</h3>
+                  <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 12px;">Children\'s Ministry</h3>
                   <p style="color: #6b7280; margin: 0;">Nurturing young hearts with age-appropriate Bible teaching and fun activities.</p>
                 </div>
                 <div style="padding: 30px; background: #f9fafb; border-radius: 12px; text-align: center;">
@@ -302,7 +302,7 @@ const PAGE_TEMPLATES = [
                   <div style="display: flex; align-items: center; gap: 20px; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
                     <input type="checkbox" style="width: 20px; height: 20px;">
                     <div style="flex: 1;">
-                      <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin: 0 0 4px;">Children's Ministry</h3>
+                      <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin: 0 0 4px;">Children\'s Ministry</h3>
                       <p style="color: #6b7280; font-size: 14px; margin: 0;">Help teach and care for our youngest members.</p>
                     </div>
                   </div>
@@ -348,7 +348,7 @@ const PAGE_TEMPLATES = [
   },
 ]
 
-export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageEditorProps) {
+export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEditorProps) {
   const editorRef = useRef<any>(null)
   const [isPublished, setIsPublished] = useState(page?.is_published || false)
   const [isSaving, setIsSaving] = useState(false)
@@ -377,14 +377,14 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
     if (!mounted) return
 
     const checkSidebarState = () => {
-      const saved = localStorage.getItem(`tenant-admin-sidebar-collapsed-${tenantSlug}`)
+      const saved = localStorage.getItem(`tenant-admin-sidebar-collapsed-${tenantId}`)
       setIsSidebarCollapsed(saved === "true")
     }
 
     checkSidebarState()
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `tenant-admin-sidebar-collapsed-${tenantSlug}`) {
+      if (e.key === `tenant-admin-sidebar-collapsed-${tenantId}`) {
         setIsSidebarCollapsed(e.newValue === "true")
       }
     }
@@ -397,87 +397,12 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       window.removeEventListener("storage", handleStorageChange)
       clearInterval(interval)
     }
-  }, [mounted, tenantSlug])
-
-  const handleAiGenerate = useCallback(async () => {
-    const editor = editorRef.current
-    console.log("[v0] AI Generate called with prompt:", pageContent.content)
-    console.log("[v0] Editor instance from ref:", !!editor)
-    console.log("[v0] Editor ready state:", editorRef.current)
-
-    if (!editor) {
-      toast.error("Editor not ready yet. Please wait a moment and try again.")
-      console.log("[v0] Editor not ready - ref is null")
-      return
-    }
-
-    if (!pageContent.content.trim()) {
-      toast.error("Please enter a prompt")
-      return
-    }
-
-    try {
-      console.log("[v0] Calling AI API...")
-      const response = await fetch("/api/ai/generate-page", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: pageContent.content }),
-      })
-
-      console.log("[v0] AI API response status:", response.status)
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || "Failed to generate content")
-      }
-
-      const data = await response.json()
-      console.log("[v0] AI API response data received, html length:", data.html?.length)
-
-      if (data.html) {
-        try {
-          if (editor.setComponents) {
-            editor.setComponents(data.html)
-            console.log("[v0] Content inserted via setComponents")
-          } else if (editor.DomComponents?.getWrapper) {
-            const wrapper = editor.DomComponents.getWrapper()
-            wrapper.append(data.html)
-            console.log("[v0] Content inserted via DomComponents.getWrapper().append")
-          } else if (editor.Canvas) {
-            const body = editor.Canvas.getBody()
-            if (body) {
-              body.innerHTML += data.html
-              console.log("[v0] Content inserted via Canvas.getBody()")
-            }
-          }
-
-          toast.success("Content generated successfully!")
-        } catch (insertError) {
-          console.error("[v0] Error inserting content:", insertError)
-          toast.error("Generated content but failed to insert it")
-        }
-      }
-
-      setPageContent((prev) => ({ ...prev, content: "" }))
-    } catch (error) {
-      console.error("[v0] AI generation error:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to generate content")
-    } finally {
-    }
-  }, [pageContent])
+  }, [mounted, tenantId])
 
   useEffect(() => {
-    console.log("[v0] GrapesJS editor mounting", { hasPage: !!page, windowGrapesjs: !!window.grapesjs })
-
     const initEditor = () => {
       if (editorRef.current) {
         console.log("[v0] Editor already initialized")
-        return
-      }
-
-      if (!window.grapesjs) {
-        console.log("[v0] Waiting for GrapesJS to load...")
-        setTimeout(initEditor, 100)
         return
       }
 
@@ -485,36 +410,52 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       setIsEditorLoading(true)
 
       try {
-        const editor = window.grapesjs.init({
+        const editor = grapesjs.init({
           container: "#gjs",
           height: "100%",
-          fromElement: true,
+          width: "100%",
+          fromElement: false,
           storageManager: false,
           panels: { defaults: [] },
-          layerManager: { visible: false },
-          deviceManager: { devices: [] },
-          selectorManager: { appendTo: "#my-selectors" },
-          styleManager: { appendTo: "#my-styles" },
-          blockManager: { appendTo: "#my-blocks" },
-          traitManager: { appendTo: "#my-traits" },
-          panels: { defaults: [] },
-          plugins: ["gjs-blocks-basic"],
-          pluginsOpts: {
-            "gjs-blocks-basic": {
-              /* options */
-            },
+          blockManager: {
+            appendTo: "#blocks",
+            blocks: [
+              {
+                id: "section",
+                label: "<div><div>Section</div></div>",
+                attributes: { class: "gjs-block-section" },
+                content:
+                  '<section style="padding: 40px 20px; min-height: 200px;"><div>This is a section</div></section>',
+              },
+              {
+                id: "text",
+                label: "Text",
+                content: '<div data-gjs-type="text">Insert your text here</div>',
+              },
+              {
+                id: "image",
+                label: "Image",
+                select: true,
+                content: { type: "image" },
+                activate: true,
+              },
+              {
+                id: "2-columns",
+                label: "2 Columns",
+                content:
+                  '<div style="display: flex; gap: 20px;"><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 1</div><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 2</div></div>',
+              },
+              {
+                id: "3-columns",
+                label: "3 Columns",
+                content:
+                  '<div style="display: flex; gap: 20px;"><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 1</div><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 2</div><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 3</div></div>',
+              },
+            ],
           },
         })
 
-        editor.setStyle(`
-          body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-          }
-        `)
-
-        const contentToLoad = page?.content || PAGE_TEMPLATES[0].content
+        const contentToLoad = page?.content || '<section style="min-height: 100vh; padding: 40px 20px;"></section>'
         console.log("[v0] Loading content", { hasPageContent: !!page?.content })
         editor.setComponents(contentToLoad)
 
@@ -527,7 +468,7 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       }
     }
 
-    if (!showSetupDialog) {
+    if (!showSetupDialog && mounted) {
       initEditor()
     }
 
@@ -538,24 +479,28 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
         editorRef.current = null
       }
     }
-  }, [page, showSetupDialog]) // Fixed dependency to use entire page object instead of page?.content
+  }, [page, showSetupDialog, mounted])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     try {
+      const htmlContent = editorRef.current.getHtml()
       if (page) {
-        await updateTenantPage(page.id, { content: editorRef.current.getHtml() })
+        await updateTenantPage(page.id, { content: htmlContent })
       } else {
-        await createTenantPage(tenantId, { content: editorRef.current.getHtml() })
+        await createTenantPage(tenantId, { content: htmlContent })
       }
       toast.success("Page saved successfully!")
-      router.push(`/tenant/${tenantSlug}/pages`)
+      if (onSave) {
+        onSave(htmlContent)
+      }
+      router.push(`/tenant/${tenantId}/pages`)
     } catch (error) {
       toast.error("Failed to save page.")
     } finally {
       setIsSaving(false)
     }
-  }, [page, tenantId, tenantSlug, router])
+  }, [page, tenantId, router, onSave])
 
   const handlePublishToggle = useCallback(async () => {
     setIsPublished(!isPublished)
@@ -593,7 +538,7 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       toast.success("Page created successfully")
       setShowSetupDialog(false)
 
-      router.push(`/${tenantSlug}/admin/pages/${result.page.id}/edit`)
+      router.push(`/${tenantId}/admin/pages/${result.page.id}/edit`)
     } catch (error) {
       console.error("[v0] Error creating page:", error)
       toast.error("Failed to create page")
@@ -618,7 +563,7 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
       )}
 
       <div className="flex items-center justify-between border-b bg-white p-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantSlug}/admin/pages`)}>
+        <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantId}/admin/pages`)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-4">
@@ -660,7 +605,7 @@ export function GrapesJSPageEditor({ tenantId, tenantSlug, page }: GrapesJSPageE
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => router.push(`/${tenantSlug}/admin`)} disabled={isCreatingPage}>
+            <Button variant="outline" onClick={() => router.push(`/${tenantId}/admin`)} disabled={isCreatingPage}>
               Cancel
             </Button>
             <Button onClick={handleCreatePage} disabled={isCreatingPage || !newPageTitle || !newPageSlug}>
