@@ -17,8 +17,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog"
-import grapesjs from "grapesjs"
-import "grapesjs/dist/css/grapes.min.css"
+import StudioEditor from "@grapesjs/studio-sdk/react"
+import "@grapesjs/studio-sdk/style"
 
 interface Page {
   id: string
@@ -357,7 +357,6 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
   const [mounted, setMounted] = useState(false)
   const [showSetupDialog, setShowSetupDialog] = useState(!page)
   const [isCreatingPage, setIsCreatingPage] = useState(false)
-  const [isEditorLoading, setIsEditorLoading] = useState(true)
 
   const [pageContent, setPageContent] = useState({
     title: page?.title || "",
@@ -399,108 +398,23 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
     }
   }, [mounted, tenantId])
 
-  useEffect(() => {
-    const initEditor = () => {
-      if (editorRef.current) {
-        console.log("[v0] Editor already initialized")
-        return
-      }
-
-      console.log("[v0] Initializing GrapesJS editor")
-      setIsEditorLoading(true)
-
-      try {
-        const editor = grapesjs.init({
-          container: "#gjs",
-          height: "100%",
-          width: "100%",
-          fromElement: false,
-          storageManager: false,
-          panels: { defaults: [] },
-          blockManager: {
-            appendTo: "#blocks",
-            blocks: [
-              {
-                id: "section",
-                label: "<div><div>Section</div></div>",
-                attributes: { class: "gjs-block-section" },
-                content:
-                  '<section style="padding: 40px 20px; min-height: 200px;"><div>This is a section</div></section>',
-              },
-              {
-                id: "text",
-                label: "Text",
-                content: '<div data-gjs-type="text">Insert your text here</div>',
-              },
-              {
-                id: "image",
-                label: "Image",
-                select: true,
-                content: { type: "image" },
-                activate: true,
-              },
-              {
-                id: "2-columns",
-                label: "2 Columns",
-                content:
-                  '<div style="display: flex; gap: 20px;"><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 1</div><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 2</div></div>',
-              },
-              {
-                id: "3-columns",
-                label: "3 Columns",
-                content:
-                  '<div style="display: flex; gap: 20px;"><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 1</div><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 2</div><div style="flex: 1; padding: 20px; background: #f0f0f0;">Column 3</div></div>',
-              },
-            ],
-          },
-        })
-
-        const contentToLoad = page?.content || '<section style="min-height: 100vh; padding: 40px 20px;"></section>'
-        console.log("[v0] Loading content", { hasPageContent: !!page?.content })
-        editor.setComponents(contentToLoad)
-
-        editorRef.current = editor
-        setIsEditorLoading(false)
-        console.log("[v0] GrapesJS editor initialized successfully")
-      } catch (error) {
-        console.error("[v0] Error initializing GrapesJS:", error)
-        setIsEditorLoading(false)
-      }
-    }
-
-    if (!showSetupDialog && mounted) {
-      initEditor()
-    }
-
-    return () => {
-      if (editorRef.current) {
-        console.log("[v0] Destroying GrapesJS editor")
-        editorRef.current.destroy()
-        editorRef.current = null
-      }
-    }
-  }, [page, showSetupDialog, mounted])
-
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     try {
-      const htmlContent = editorRef.current.getHtml()
+      const htmlContent = editorRef.current?.getHtml() || ""
       if (page) {
         await updateTenantPage(page.id, { content: htmlContent })
-      } else {
-        await createTenantPage(tenantId, { content: htmlContent })
       }
       toast.success("Page saved successfully!")
       if (onSave) {
         onSave(htmlContent)
       }
-      router.push(`/tenant/${tenantId}/pages`)
     } catch (error) {
       toast.error("Failed to save page.")
     } finally {
       setIsSaving(false)
     }
-  }, [page, tenantId, router, onSave])
+  }, [page, onSave])
 
   const handlePublishToggle = useCallback(async () => {
     setIsPublished(!isPublished)
@@ -547,21 +461,31 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
     }
   }
 
+  const editorOptions = {
+    license: "GPL-3.0-or-later",
+    project: {
+      type: "web",
+      default: {
+        pages: [
+          {
+            name: page?.title || "New Page",
+            component: page?.content || '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
+          },
+        ],
+      },
+    },
+    storageManager: false,
+    canvas: {
+      styles: [],
+    },
+  }
+
   return (
     <div
       className={`fixed inset-0 flex flex-col bg-gray-50 transition-all duration-300 ${
         mounted ? (isSidebarCollapsed ? "ml-16 md:ml-16" : "ml-0 md:ml-64") : "ml-0 md:ml-64"
       }`}
     >
-      {isEditorLoading && !showSetupDialog && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-50">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-            <p className="text-sm text-gray-600">Loading page editor...</p>
-          </div>
-        </div>
-      )}
-
       <div className="flex items-center justify-between border-b bg-white p-4">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantId}/admin/pages`)}>
           <ArrowLeft className="h-4 w-4" />
@@ -576,7 +500,19 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
           </Button>
         </div>
       </div>
-      <div id="gjs" className="flex-1"></div>
+
+      {!showSetupDialog && mounted && (
+        <div className="flex-1 relative">
+          <StudioEditor
+            options={editorOptions}
+            onReady={(editor: any) => {
+              console.log("[v0] Studio Editor ready")
+              editorRef.current = editor
+            }}
+          />
+        </div>
+      )}
+
       <Dialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
         <DialogContent>
           <DialogHeader>

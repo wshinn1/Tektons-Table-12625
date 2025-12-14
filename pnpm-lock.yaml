@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: latest
-        version: 2.0.85(zod@3.25.76)
+        version: 2.0.86(zod@3.25.76)
       '@ai-sdk/react':
         specifier: latest
-        version: 2.0.114(react@19.2.0)(zod@3.25.76)
+        version: 2.0.115(react@19.2.0)(zod@3.25.76)
       '@blocknote/core':
         specifier: latest
         version: 0.44.2(@hocuspocus/provider@3.4.1(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27))(@tiptap/extensions@3.13.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))(@tiptap/pm@3.13.0))(@types/hast@3.0.4)(highlight.js@11.11.1)(lowlight@3.3.0)
@@ -211,7 +211,7 @@ importers:
         version: 2.0.0
       ai:
         specifier: latest
-        version: 5.0.112(zod@3.25.76)
+        version: 5.0.113(zod@3.25.76)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.0)
@@ -255,26 +255,11 @@ importers:
         specifier: latest
         version: 0.0.1-security
       grapesjs:
-        specifier: latest
+        specifier: 0.22.14
         version: 0.22.14
-      grapesjs-blocks-basic:
+      grapesjs-preset-newsletter:
         specifier: 1.0.2
         version: 1.0.2
-      grapesjs-blocks-flexbox:
-        specifier: 1.0.1
-        version: 1.0.1
-      grapesjs-plugin-forms:
-        specifier: 2.0.6
-        version: 2.0.6
-      grapesjs-preset-newsletter:
-        specifier: latest
-        version: 1.0.2
-      grapesjs-preset-webpage:
-        specifier: 1.0.3
-        version: 1.0.3
-      grapesjs-style-bg:
-        specifier: 2.0.2
-        version: 2.0.2
       heic-convert:
         specifier: 2.1.0
         version: 2.1.0
@@ -411,8 +396,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@2.0.85':
-    resolution: {integrity: sha512-3pzr7qVhsOXwjPAfmvFNZz3sRWCuyMOc3GgLHe7sWY0t8J4hA5mwQ4LISTKYI3iIr8IXzAQn9MUrC8Hiji9RpA==}
+  '@ai-sdk/openai@2.0.86':
+    resolution: {integrity: sha512-obsLIOyA93lbQiSt1rvBItoVQp1U2RDPs0bNG0JYhm6Gku8Dg/0Cm8e4NUWT5p5PN10/doKSb3SMSKCixwIAKA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -427,8 +412,8 @@ packages:
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@2.0.114':
-    resolution: {integrity: sha512-CMv4PcoLlKwcaTTOOOQRW8lrIpEV/ESgIJYhDK2mGLhzSjsgbO9p9uSTs6hfux4A7pxVdux2Wtxs/CwSjSX43A==}
+  '@ai-sdk/react@2.0.115':
+    resolution: {integrity: sha512-Etu7gWSEi2dmXss1PoR5CAZGwGShXsF9+Pon1eRO6EmatjYaBMhq1CfHPyYhGzWrint8jJIK2VaAhiMef29qZw==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -3282,8 +3267,8 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
 
-  ai@5.0.112:
-    resolution: {integrity: sha512-Y0dluYpe5wn81UkfHbZL78mH6CsceUfMiu4oPRaWZvjlmcoXSPdEAsPcYbOjvX8ZPvQc6m4kNZhkcEXmT2ln4w==}
+  ai@5.0.113:
+    resolution: {integrity: sha512-26vivpSO/mzZj0k1Si2IpsFspp26ttQICHRySQiMrtWcRd5mnJMX2a8sG28vmZ38C+JUn1cWmfZrsLMxkSMw9g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4174,32 +4159,11 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  grapesjs-blocks-basic@1.0.2:
-    resolution: {integrity: sha512-SsPKf/CvQkZ+kABOsN01auAPHXh/2J20g0AWYF7fHR3Gw3TZLtdIxT1mk90Qzi76u/7sUYi3CTI+i3ZaTtXHRA==}
-
-  grapesjs-blocks-flexbox@1.0.1:
-    resolution: {integrity: sha512-V0tynCVJufvEOpMpVr+WgQ/8tkaq+QZiAPmYtTQUEac4UPabmLHID485w3vjXEk50zjubdA86droeNj72oniYQ==}
-
-  grapesjs-plugin-forms@2.0.6:
-    resolution: {integrity: sha512-4rDob01NLiJWas5JW1FCpQc/4R4oS4wc/qr7pQwjGUiDzHNPKZLix10FqUKEv7hnzPmBaR2ejBL87sMwz11Tlw==}
-
   grapesjs-preset-newsletter@1.0.2:
     resolution: {integrity: sha512-z8KJ1ZrTXfASSJZ/tHOcnpcWu4AMr2F/ZfQit+QjimNi3UGowwl7+Yjefuh3R7lbDTrXMMaxhCannCaJo/kPJw==}
 
-  grapesjs-preset-webpage@1.0.3:
-    resolution: {integrity: sha512-C0VOKLAdhv0j1f81c6F2uk3JpJvxgXl5DeHUtDa5qGf/HZzaCmQxsvd8Re3Oh5Cah4uUCqoi9uB5FYx3hLND2w==}
-
-  grapesjs-style-bg@2.0.2:
-    resolution: {integrity: sha512-LFPRjWeGpnwW6WbbxvbQIG6F52RAFuHyO5L7Rov39rltvERlyrE1n/xaZW8arFAF4yxylPHQ/hhxJaVlILf2Iw==}
-
-  grapesjs-style-gradient@3.0.3:
-    resolution: {integrity: sha512-FDXPvFFg2a+2hh6IyGlPhdFVj2UYzOGd4lRsY3sb6057U0/tmLrzPAPDC2IpmaSddICOEYfJiAW/oMIci/SShQ==}
-
   grapesjs@0.22.14:
     resolution: {integrity: sha512-UyHKGtB9YOQ4bmvhmwY3H7J6SO30qgIH4qRp1ucUlblS21btMxY90xwQuAVIi+EFGl0wi8v1NBEYvA52eIEfyg==}
-
-  grapick@0.1.13:
-    resolution: {integrity: sha512-2v7DdmXKbl9+GsL2ZRl2qEMD+PeczYJBSifwx+5SGbaSh0pZ+b6GLya87cBfN953wwXsZqyzuSVPBzqRz8F12g==}
 
   h3@1.15.4:
     resolution: {integrity: sha512-z5cFQWDffyOe4vQ9xIqNfCZdV4p//vy6fBnr8Q1AWnVZ0teurKMG66rLj++TKwKPUP3u7iMUvrvKaEUiQw2QWQ==}
@@ -6467,7 +6431,7 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.85(zod@3.25.76)':
+  '@ai-sdk/openai@2.0.86(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
@@ -6484,10 +6448,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.114(react@19.2.0)(zod@3.25.76)':
+  '@ai-sdk/react@2.0.115(react@19.2.0)(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
-      ai: 5.0.112(zod@3.25.76)
+      ai: 5.0.113(zod@3.25.76)
       react: 19.2.0
       swr: 2.3.7(react@19.2.0)
       throttleit: 2.1.0
@@ -9597,7 +9561,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ai@5.0.112(zod@3.25.76):
+  ai@5.0.113(zod@3.25.76):
     dependencies:
       '@ai-sdk/gateway': 2.0.21(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
@@ -10480,23 +10444,7 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  grapesjs-blocks-basic@1.0.2: {}
-
-  grapesjs-blocks-flexbox@1.0.1: {}
-
-  grapesjs-plugin-forms@2.0.6: {}
-
   grapesjs-preset-newsletter@1.0.2: {}
-
-  grapesjs-preset-webpage@1.0.3: {}
-
-  grapesjs-style-bg@2.0.2:
-    dependencies:
-      grapesjs-style-gradient: 3.0.3
-
-  grapesjs-style-gradient@3.0.3:
-    dependencies:
-      grapick: 0.1.13
 
   grapesjs@0.22.14:
     dependencies:
@@ -10508,8 +10456,6 @@ snapshots:
       html-entities: 1.4.0
       promise-polyfill: 8.3.0
       underscore: 1.13.1
-
-  grapick@0.1.13: {}
 
   h3@1.15.4:
     dependencies:
