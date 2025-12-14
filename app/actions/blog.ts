@@ -97,7 +97,7 @@ export async function createBlogPost(data: {
   const categoryIds = data.categoryIds || (data.categoryId ? [data.categoryId] : [])
   if (categoryIds.length > 0) {
     const categoryInserts = categoryIds.map((categoryId) => ({
-      post_id: post.id,
+      blog_post_id: post.id,
       category_id: categoryId,
     }))
     await supabase.from("blog_post_categories").insert(categoryInserts)
@@ -106,7 +106,7 @@ export async function createBlogPost(data: {
   // Add tags
   if (data.tagIds && data.tagIds.length > 0) {
     const tagInserts = data.tagIds.map((tagId) => ({
-      post_id: post.id,
+      blog_post_id: post.id,
       tag_id: tagId,
     }))
     await supabase.from("blog_post_tags").insert(tagInserts)
@@ -253,10 +253,10 @@ export async function updateBlogPost(
     // Update categories if provided
     if (data.categoryIds !== undefined) {
       console.log("[v0] Updating categories for post:", id, "categoryIds:", data.categoryIds)
-      await supabase.from("blog_post_categories").delete().eq("post_id", id)
+      await supabase.from("blog_post_categories").delete().eq("blog_post_id", id)
       if (data.categoryIds.length > 0) {
         const categoryInserts = data.categoryIds.map((categoryId) => ({
-          post_id: id,
+          blog_post_id: id,
           category_id: categoryId,
         }))
         console.log("[v0] Inserting categories:", categoryInserts)
@@ -273,10 +273,10 @@ export async function updateBlogPost(
 
     // Update tags if provided
     if (data.tagIds !== undefined) {
-      await supabase.from("blog_post_tags").delete().eq("post_id", id)
+      await supabase.from("blog_post_tags").delete().eq("blog_post_id", id)
       if (data.tagIds.length > 0) {
         const tagInserts = data.tagIds.map((tagId) => ({
-          post_id: id,
+          blog_post_id: id,
           tag_id: tagId,
         }))
         await supabase.from("blog_post_tags").insert(tagInserts)
