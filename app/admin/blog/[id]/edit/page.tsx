@@ -201,7 +201,13 @@ function EditBlogPostClient({ id }: { id: string }) {
 
         if (categoriesRes.ok) {
           const categoriesData = await categoriesRes.json()
-          setCategories(categoriesData)
+          console.log("[v0] Blog categories response:", categoriesData)
+          setCategories(categoriesData.categories || categoriesData)
+          console.log(
+            "[v0] Blog categories available:",
+            categoriesData.categories?.length || categoriesData.length,
+            categoriesData.categories || categoriesData,
+          )
         }
 
         if (resourceCategoriesRes.ok) {
