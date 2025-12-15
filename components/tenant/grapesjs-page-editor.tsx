@@ -1,26 +1,14 @@
 "use client"
 
-import { useRef, useState, useEffect, useCallback } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { ArrowLeft, Save, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { createTenantPage, updateTenantPage } from "@/app/actions/tenant-pages"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog"
 import StudioEditor from "@grapesjs/studio-sdk/react"
 import "@grapesjs/studio-sdk/style"
-
-const GRAPESJS_LICENSE_KEY = process.env.NEXT_PUBLIC_GRAPESJS_LICENSE_KEY || ""
+import type { Editor } from "grapesjs"
+import { getGrapesJSLicenseKey } from "@/app/actions/grapesjs-license"
 
 interface Page {
   id: string
@@ -33,10 +21,10 @@ interface Page {
 }
 
 interface GrapesJSPageEditorProps {
+  pageId?: string
   tenantId: string
-  tenantSlug: string
-  page?: Page
-  onSave?: (html: string) => void
+  initialContent?: string
+  pageName?: string
 }
 
 const PAGE_TEMPLATES = [
@@ -350,152 +338,68 @@ const PAGE_TEMPLATES = [
   },
 ]
 
-export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEditorProps) {
-  const editorRef = useRef<any>(null)
-  const [isPublished, setIsPublished] = useState(page?.is_published || false)
-  const [isSaving, setIsSaving] = useState(false)
+export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName }: GrapesJSPageEditorProps) {
   const router = useRouter()
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const [showSetupDialog, setShowSetupDialog] = useState(!page)
-  const [isCreatingPage, setIsCreatingPage] = useState(false)
-
-  const [pageContent, setPageContent] = useState({
-    title: page?.title || "",
-    slug: page?.slug || "",
-    content: page?.content || "",
-  })
-
-  const newPageTitle = pageContent.title
-  const newPageSlug = pageContent.slug
-  const newPageContent = pageContent.content
+  const editorRef = useRef<Editor | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [licenseKey, setLicenseKey] = useState<string>("")
+  const [isLoadingLicense, setIsLoadingLicense] = useState(true)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
-    const checkSidebarState = () => {
-      const saved = localStorage.getItem(`tenant-admin-sidebar-collapsed-${tenantId}`)
-      setIsSidebarCollapsed(saved === "true")
-    }
-
-    checkSidebarState()
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `tenant-admin-sidebar-collapsed-${tenantId}`) {
-        setIsSidebarCollapsed(e.newValue === "true")
+    async function loadLicense() {
+      try {
+        const key = await getGrapesJSLicenseKey()
+        setLicenseKey(key)
+      } catch (error) {
+        console.error("[v0] Failed to load GrapesJS license:", error)
+        toast.error("Failed to load page builder")
+      } finally {
+        setIsLoadingLicense(false)
       }
     }
+    loadLicense()
+  }, [])
 
-    window.addEventListener("storage", handleStorageChange)
-
-    const interval = setInterval(checkSidebarState, 100)
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      clearInterval(interval)
-    }
-  }, [mounted, tenantId])
-
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     setIsSaving(true)
     try {
       const htmlContent = editorRef.current?.getHtml() || ""
-      if (page) {
-        await updateTenantPage(page.id, { content: htmlContent })
+      if (pageId) {
+        // Assuming updateTenantPage function exists and handles updates
+        await fetch(`/api/pages/${pageId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ content: htmlContent }),
+        })
       }
       toast.success("Page saved successfully!")
-      if (onSave) {
-        onSave(htmlContent)
-      }
     } catch (error) {
       toast.error("Failed to save page.")
     } finally {
       setIsSaving(false)
     }
-  }, [page, onSave])
-
-  const handlePublishToggle = useCallback(async () => {
-    setIsPublished(!isPublished)
-    try {
-      if (page) {
-        await updateTenantPage(page.id, { is_published: !isPublished })
-      }
-    } catch (error) {
-      toast.error("Failed to update page status.")
-    }
-  }, [isPublished, page])
-
-  const handleCreatePage = async () => {
-    if (!newPageTitle || !newPageSlug) return
-
-    setIsCreatingPage(true)
-    try {
-      console.log("[v0] Creating page:", { title: newPageTitle, slug: newPageSlug, content: newPageContent })
-
-      const result = await createTenantPage({
-        tenantId,
-        title: newPageTitle,
-        slug: newPageSlug,
-        htmlContent: newPageContent || "",
-        status: "draft",
-      })
-
-      if (result.error) {
-        console.error("[v0] Error creating page:", result.error)
-        toast.error("Failed to create page")
-        return
-      }
-
-      console.log("[v0] Page created successfully:", result.page)
-      toast.success("Page created successfully")
-      setShowSetupDialog(false)
-
-      router.push(`/admin/pages/${result.page.id}/edit`)
-    } catch (error) {
-      console.error("[v0] Error creating page:", error)
-      toast.error("Failed to create page")
-    } finally {
-      setIsCreatingPage(false)
-    }
   }
 
-  const editorOptions = {
-    license: GRAPESJS_LICENSE_KEY,
-    project: {
-      type: "web",
-      default: {
-        pages: [
-          {
-            name: page?.title || "New Page",
-            component: page?.content || '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
-          },
-        ],
-      },
-    },
-    storageManager: false,
-    canvas: {
-      styles: [],
-    },
+  if (isLoadingLicense) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading page builder...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div
-      className={`fixed inset-0 flex flex-col bg-gray-50 transition-all duration-300 ${
-        mounted ? (isSidebarCollapsed ? "ml-16 md:ml-16" : "ml-0 md:ml-64") : "ml-0 md:ml-64"
-      }`}
-    >
+    <div className="flex h-[calc(100vh-4rem)] flex-col">
       <div className="flex items-center justify-between border-b bg-white p-4">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantId}/admin/pages`)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-4">
-          <Switch checked={isPublished} onCheckedChange={handlePublishToggle}>
-            Publish
-          </Switch>
           <Button variant="default" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save
@@ -503,62 +407,32 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
         </div>
       </div>
 
-      {!showSetupDialog && mounted && (
-        <div className="flex-1 relative">
-          <StudioEditor
-            options={editorOptions}
-            onReady={(editor: any) => {
-              console.log("[v0] Studio Editor ready")
-              editorRef.current = editor
-            }}
-          />
-        </div>
-      )}
-
-      <Dialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Page</DialogTitle>
-            <DialogDescription>Enter a title and URL slug for your new custom page.</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={pageContent.title}
-                onChange={(e) => setPageContent((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter page title..."
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input
-                id="slug"
-                value={pageContent.slug}
-                onChange={(e) => setPageContent((prev) => ({ ...prev, slug: e.target.value }))}
-                placeholder="page-url-slug"
-              />
-              <p className="text-sm text-muted-foreground">This will be the URL: /{pageContent.slug || "page-url"}</p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => router.push(`/${tenantId}/admin`)} disabled={isCreatingPage}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreatePage} disabled={isCreatingPage || !newPageTitle || !newPageSlug}>
-              {isCreatingPage ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Page"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="flex-1 overflow-hidden">
+        <StudioEditor
+          license={licenseKey}
+          options={{
+            project: {
+              type: "web",
+              default: {
+                pages: [
+                  {
+                    name: pageName || "New Page",
+                    component: initialContent || '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
+                  },
+                ],
+              },
+            },
+            storageManager: false,
+            canvas: {
+              styles: [],
+            },
+          }}
+          onReady={(editor) => {
+            console.log("[v0] Studio Editor ready")
+            editorRef.current = editor
+          }}
+        />
+      </div>
     </div>
   )
 }

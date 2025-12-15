@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { generateText, createOpenAI } from "ai"
 import { createClient } from "@/utils/supabase/server"
 
 export async function POST(request: NextRequest) {
@@ -27,9 +26,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Image URL is required" }, { status: 400 })
     }
 
+    const openaiProvider = createOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
     // Use AI to analyze the screenshot
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: openaiProvider("gpt-4o"),
       messages: [
         {
           role: "user",

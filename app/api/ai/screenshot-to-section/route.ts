@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { isSuperAdmin } from "@/lib/supabase/admin"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { generateText, createOpenAI } from "ai"
 
 export const maxDuration = 60
 
@@ -22,6 +21,10 @@ export async function POST(request: NextRequest) {
     if (!screenshotUrl) {
       return NextResponse.json({ error: "Screenshot URL is required" }, { status: 400 })
     }
+
+    const openai = createOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
 
     const { text } = await generateText({
       model: openai("gpt-4o"),

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useChat } from "@ai-sdk/react"
+import { useChat } from "ai/react"
 import { DefaultChatTransport } from "ai"
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
