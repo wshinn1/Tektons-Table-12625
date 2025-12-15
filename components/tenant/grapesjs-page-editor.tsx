@@ -357,10 +357,12 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
       if (!key || key.length === 0) {
         console.error("[v0] CRITICAL: GrapesJS license key is empty or missing!")
         toast.error("Page builder license configuration error. Please contact support.")
+        setIsLoadingLicense(false)
         return
       }
       console.log("[v0] License key format check:", `${key.slice(0, 4)}...${key.slice(-4)}`)
       setLicenseKey(key)
+      setIsLoadingLicense(false)
     }
     fetchLicense()
   }, [])
@@ -481,7 +483,6 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
                     console.log("[v0] GrapesJS License Key length:", licenseKey.length)
                     console.log("[v0] GrapesJS License Key exists:", !!licenseKey)
                     editorRef.current = editor
-                    setIsLoadingLicense(false)
                   },
                 }}
               />
