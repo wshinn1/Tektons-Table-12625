@@ -1,5 +1,4 @@
-import { streamText, convertToModelMessages, type UIMessage } from "ai"
-import { createOpenAI } from "ai"
+import { streamText, convertToModelMessages, createOpenAI, type UIMessage } from "ai"
 import { createServerClient } from "@/lib/supabase/server"
 
 export const maxDuration = 30
