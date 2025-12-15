@@ -20,6 +20,8 @@ import {
 import StudioEditor from "@grapesjs/studio-sdk/react"
 import "@grapesjs/studio-sdk/style"
 
+const GRAPESJS_LICENSE_KEY = process.env.NEXT_PUBLIC_GRAPESJS_LICENSE_KEY || ""
+
 interface Page {
   id: string
   title: string
@@ -462,7 +464,7 @@ export function GrapesJSPageEditor({ page, tenantId, onSave }: GrapesJSPageEdito
   }
 
   const editorOptions = {
-    license: "GPL-3.0-or-later",
+    license: GRAPESJS_LICENSE_KEY,
     project: {
       type: "web",
       default: {
