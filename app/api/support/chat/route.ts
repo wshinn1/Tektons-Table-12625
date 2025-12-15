@@ -229,7 +229,7 @@ ${knowledgeBase}${tenantContent}`
       }
     }
 
-    return result.toUIMessageStreamResponse()
+    return result.toDataStreamResponse() // Use toDataStreamResponse() instead of toUIMessageStreamResponse() for AI SDK v4
   } catch (error) {
     console.error("Chat API Error:", error)
     return new Response(JSON.stringify({ error: "Failed to process chat" }), {

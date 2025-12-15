@@ -346,22 +346,23 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
   const [licenseKey, setLicenseKey] = useState<string>("")
   const [isLoadingLicense, setIsLoadingLicense] = useState(true)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isTemplateSelected, setIsTemplateSelected] = useState(false)
 
   useEffect(() => {
-    async function loadLicense() {
-      try {
-        const key = await getGrapesJSLicenseKey()
-        console.log("[v0] Received license key length:", key?.length || 0)
-        console.log("[v0] Received license key exists:", !!key)
-        setLicenseKey(key)
-      } catch (error) {
-        console.error("[v0] Failed to load GrapesJS license:", error)
-        toast.error("Failed to load page builder")
-      } finally {
-        setIsLoadingLicense(false)
+    async function fetchLicense() {
+      console.log("[v0] Fetching GrapesJS license key...")
+      const key = await getGrapesJSLicenseKey()
+      console.log("[v0] Received license key length:", key?.length)
+      console.log("[v0] Received license key exists:", !!key)
+      if (!key || key.length === 0) {
+        console.error("[v0] CRITICAL: GrapesJS license key is empty or missing!")
+        toast.error("Page builder license configuration error. Please contact support.")
+        return
       }
+      console.log("[v0] License key format check:", `${key.slice(0, 4)}...${key.slice(-4)}`)
+      setLicenseKey(key)
     }
-    loadLicense()
+    fetchLicense()
   }, [])
 
   const handleSave = async () => {
@@ -410,7 +411,7 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="h-screen flex flex-col">
       <div className="flex items-center justify-between border-b bg-white p-4">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantId}/admin/pages`)}>
           <ArrowLeft className="h-4 w-4" />
@@ -423,31 +424,70 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
         </div>
       </div>
 
-      <div className={cn("flex-1 transition-all duration-300", isSidebarCollapsed ? "ml-0" : "ml-64")}>
-        <StudioEditor
-          license={licenseKey}
-          options={{
-            project: {
-              type: "web",
-              default: {
-                pages: [
-                  {
-                    name: pageName || "New Page",
-                    component: initialContent || '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
+      <div className="flex-1 relative">
+        {!licenseKey ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p className="text-sm text-muted-foreground">Loading page builder license...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {!isTemplateSelected && !pageId && (
+              <div className="flex flex-col items-center justify-center h-full">
+                <h2 className="text-lg font-bold">Select a Template</h2>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  {PAGE_TEMPLATES.map((template) => (
+                    <div key={template.id} className="cursor-pointer" onClick={() => setIsTemplateSelected(true)}>
+                      <img
+                        src={template.media || "/placeholder.svg"}
+                        alt={template.name}
+                        className="w-full h-40 object-cover rounded"
+                      />
+                      <p className="text-center mt-2">{template.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div
+              className={cn("h-full", {
+                hidden: !isTemplateSelected && !pageId,
+              })}
+            >
+              <StudioEditor
+                license={licenseKey}
+                options={{
+                  project: {
+                    type: "web",
+                    default: {
+                      pages: [
+                        {
+                          name: pageName || "New Page",
+                          component:
+                            initialContent || '<section style="min-height: 100vh; padding: 40px 20px;"></section>',
+                        },
+                      ],
+                    },
                   },
-                ],
-              },
-            },
-            storageManager: false,
-            canvas: {
-              styles: [],
-            },
-          }}
-          onReady={(editor) => {
-            console.log("[v0] Studio Editor ready")
-            editorRef.current = editor
-          }}
-        />
+                  storageManager: false,
+                  canvas: {
+                    styles: [],
+                  },
+                  onReady: (editor: Editor) => {
+                    console.log("[v0] Studio Editor ready")
+                    console.log("[v0] GrapesJS License Key length:", licenseKey.length)
+                    console.log("[v0] GrapesJS License Key exists:", !!licenseKey)
+                    editorRef.current = editor
+                    setIsLoadingLicense(false)
+                  },
+                }}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
