@@ -26,10 +26,10 @@ Go to [https://studio.plasmic.app](https://studio.plasmic.app) and sign up for a
 
 Add these to your Vercel project environment variables:
 
-\`\`\`env
+```env
 NEXT_PUBLIC_PLASMIC_PROJECT_ID=your_project_id_here
 NEXT_PUBLIC_PLASMIC_PROJECT_TOKEN=your_api_token_here
-\`\`\`
+```
 
 Make sure to add them for all environments (Production, Preview, Development).
 
@@ -60,7 +60,7 @@ Make sure to add them for all environments (Production, Preview, Development).
 
 You can register your existing React components to use in Plasmic:
 
-\`\`\`tsx
+```tsx
 // lib/plasmic-init.ts
 import { initPlasmicLoader } from "@plasmicapp/loader-nextjs"
 import { Button } from "@/components/ui/button"
@@ -90,7 +90,7 @@ PLASMIC.registerComponent(Button, {
     },
   },
 })
-\`\`\`
+```
 
 ## Current Setup
 

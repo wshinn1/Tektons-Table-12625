@@ -6,12 +6,12 @@ Sentry is now integrated across the entire platform to track errors and performa
 
 Add these to your Vercel project:
 
-\`\`\`bash
+```bash
 NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
 SENTRY_ORG=your-org-name
 SENTRY_PROJECT=your-project-name
 SENTRY_AUTH_TOKEN=your-auth-token
-\`\`\`
+```
 
 ## Getting Your Sentry Values
 
@@ -65,10 +65,10 @@ Errors will be grouped by:
 
 To test the integration:
 
-\`\`\`javascript
+```javascript
 // In browser console
 throw new Error('Test error from tenant site')
-\`\`\`
+```
 
 Check your Sentry dashboard - you should see the error with full tenant context.
 
@@ -76,14 +76,14 @@ Check your Sentry dashboard - you should see the error with full tenant context.
 
 1. Don't log sensitive data (payment details, passwords, etc.)
 2. Use Sentry breadcrumbs for context: 
-   \`\`\`typescript
+   ```typescript
    Sentry.addBreadcrumb({
      message: 'User initiated donation',
      level: 'info',
    })
-   \`\`\`
+   ```
 3. Set custom contexts for important flows:
-   \`\`\`typescript
+   ```typescript
    Sentry.setContext('donation', {
      amount: 100,
      currency: 'USD',

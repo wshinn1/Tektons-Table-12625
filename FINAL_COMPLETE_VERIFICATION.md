@@ -40,9 +40,9 @@ All 18 changes across this session have been systematically verified by reading 
 **File**: `app/[tenant]/page.tsx`
 - **Roboto Font**: Imported and applied to Read More buttons
 - **Slide-Up Animation**: Button uses slide-up blue background on hover
-  \`\`\`tsx
+  ```tsx
   <span className="absolute inset-0 bg-[#7DD3E8] translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></span>
-  \`\`\`
+  ```
 - **Performance Optimizations**:
   - Priority loading for first 2 blog post images
   - Lazy loading for subsequent images

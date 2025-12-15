@@ -17,9 +17,9 @@ Your donations are processed through **Stripe Connect** (connected accounts for 
 
 Look for the section **"Listen to events on connected accounts"** and check the box:
 
-\`\`\`
+```
 ☑️ Listen to events on connected accounts
-\`\`\`
+```
 
 This tells Stripe to send events from connected accounts (your tenants' accounts) to YOUR platform webhook endpoint.
 
@@ -34,14 +34,14 @@ Make sure these events are selected:
 ### Step 4: Keep the Endpoint URL
 
 Your endpoint URL is correct:
-\`\`\`
+```
 https://wesshinn.tektonstable.com/api/stripe/webhook
-\`\`\`
+```
 
 **However**, I recommend changing it to:
-\`\`\`
+```
 https://tektonstable.com/api/stripe/webhook
-\`\`\`
+```
 
 This way the webhook works for ALL tenants, not just wesshinn.
 
@@ -50,11 +50,11 @@ This way the webhook works for ALL tenants, not just wesshinn.
 1. Save the webhook configuration
 2. Make a test donation on any tenant site
 3. Check Vercel logs for:
-   \`\`\`
+   ```
    [v0] Webhook event received: checkout.session.completed
    [v0] Event account: acct_xxxxx
    [v0] Donation recorded successfully
-   \`\`\`
+   ```
 
 ## Why This Matters
 

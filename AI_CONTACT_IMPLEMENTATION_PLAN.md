@@ -15,7 +15,7 @@ Transform the contact page from a traditional form into an intelligent AI assist
 #### 1. `ai_contact_conversations`
 Stores complete conversation threads for context and support escalation.
 
-\`\`\`sql
+```sql
 CREATE TABLE ai_contact_conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
@@ -35,7 +35,7 @@ CREATE TABLE ai_contact_conversations (
 CREATE INDEX idx_ai_conversations_tenant ON ai_contact_conversations(tenant_id);
 CREATE INDEX idx_ai_conversations_session ON ai_contact_conversations(session_id);
 CREATE INDEX idx_ai_conversations_escalated ON ai_contact_conversations(escalated_to_support);
-\`\`\`
+```
 
 #### 2. `ai_contact_rate_limits`
 Track rate limits using Upstash Redis keys (optional table for analytics).
@@ -43,7 +43,7 @@ Track rate limits using Upstash Redis keys (optional table for analytics).
 #### 3. Extend `help_articles` for Vector Search
 Add support for RAG by storing embeddings (optional - can use text search initially).
 
-\`\`\`sql
+```sql
 -- Option A: Simple text search (start here)
 ALTER TABLE help_articles ADD COLUMN search_vector TSVECTOR;
 CREATE INDEX idx_help_articles_search ON help_articles USING gin(search_vector);
@@ -51,7 +51,7 @@ CREATE INDEX idx_help_articles_search ON help_articles USING gin(search_vector);
 -- Option B: Vector embeddings (advanced)
 ALTER TABLE help_articles ADD COLUMN content_embedding vector(1536);
 CREATE INDEX ON help_articles USING ivfflat (content_embedding vector_cosine_ops);
-\`\`\`
+```
 
 ---
 
@@ -67,7 +67,7 @@ CREATE INDEX ON help_articles USING ivfflat (content_embedding vector_cosine_ops
 - Mobile-responsive design
 
 **State Management:**
-\`\`\`typescript
+```typescript
 interface Message {
   role: 'user' | 'assistant' | 'system'
   content: string
@@ -80,7 +80,7 @@ const [input, setInput] = useState('')
 const [isLoading, setIsLoading] = useState(false)
 const [sessionId] = useState(() => generateSessionId())
 const [showEscalation, setShowEscalation] = useState(false)
-\`\`\`
+```
 
 ### B. Server Actions (`app/actions/ai-contact.ts`)
 
@@ -103,7 +103,7 @@ const [showEscalation, setShowEscalation] = useState(false)
 - Return top 3-5 relevant articles
 - Include article slug, title, and excerpt
 
-\`\`\`typescript
+```typescript
 export async function sendAIMessage(
   tenantId: string,
   sessionId: string,
@@ -144,7 +144,7 @@ export async function sendAIMessage(
   
   return { stream, citedArticles: relevantArticles }
 }
-\`\`\`
+```
 
 ---
 
@@ -153,7 +153,7 @@ export async function sendAIMessage(
 ### Option A: Simple Text Search (Recommended Start)
 Use PostgreSQL full-text search on `help_articles.content`.
 
-\`\`\`typescript
+```typescript
 async function searchHelpArticles(tenantId: string, query: string) {
   const { data } = await supabase
     .from('help_articles')
@@ -165,12 +165,12 @@ async function searchHelpArticles(tenantId: string, query: string) {
   
   return data || []
 }
-\`\`\`
+```
 
 ### Option B: Semantic Search with Embeddings (Advanced)
 Use OpenAI embeddings + vector similarity search.
 
-\`\`\`typescript
+```typescript
 // Generate embedding for user query
 const embedding = await openai.embeddings.create({
   model: 'text-embedding-3-small',
@@ -183,14 +183,14 @@ const { data } = await supabase.rpc('match_help_articles', {
   match_threshold: 0.7,
   match_count: 5,
 })
-\`\`\`
+```
 
 ---
 
 ## Phase 4: Rate Limiting with Redis (30 minutes)
 
 ### Redis Rate Limit Keys
-\`\`\`typescript
+```typescript
 // Pattern: ai_contact:{ip}:{tenant_id}
 // TTL: 1 hour (3600 seconds)
 // Limit: 10 requests per hour
@@ -210,7 +210,7 @@ async function checkRateLimit(ip: string, tenantId: string) {
     resetTime: Date.now() + 3600000
   }
 }
-\`\`\`
+```
 
 ### UI Display
 Show remaining requests: "8 questions remaining this hour"
@@ -232,7 +232,7 @@ Modal/card that appears over chat:
 - "Send to Support" button
 
 ### Email Template
-\`\`\`typescript
+```typescript
 await resend.emails.send({
   from: 'hello@tektonstable.com',
   to: tenant.contact_email_recipients,
@@ -252,7 +252,7 @@ await resend.emails.send({
     <p><a href="mailto:${visitorEmail}">Reply to ${visitorName}</a></p>
   `
 })
-\`\`\`
+```
 
 ---
 
@@ -260,7 +260,7 @@ await resend.emails.send({
 
 ### New Page Structure (`app/[tenant]/contact/page.tsx`)
 
-\`\`\`tsx
+```tsx
 export default function ContactPage() {
   return (
     <div className="min-h-screen">
@@ -312,7 +312,7 @@ export default function ContactPage() {
     </div>
   )
 }
-\`\`\`
+```
 
 ---
 

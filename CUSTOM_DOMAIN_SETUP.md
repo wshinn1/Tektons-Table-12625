@@ -20,18 +20,18 @@ From the visitor's perspective, the custom domain looks like an independent webs
 
 Add a `custom_domain` column to the `tenants` table:
 
-\`\`\`sql
+```sql
 ALTER TABLE tenants ADD COLUMN custom_domain TEXT UNIQUE;
 
 -- Example: Enable custom domain for a tenant
 UPDATE tenants SET custom_domain = 'wesshinn.org' WHERE subdomain = 'wesshinn';
-\`\`\`
+```
 
 ### 2. Middleware Changes
 
 Update `middleware.ts` to check for custom domains:
 
-\`\`\`ts
+```ts
 // Current logic (simplified)
 const subdomain = hostname.replace('.tektonstable.com', '')
 const tenant = await getTenantBySubdomain(subdomain)
@@ -42,7 +42,7 @@ if (!tenant) {
   const subdomain = hostname.replace('.tektonstable.com', '')
   tenant = await getTenantBySubdomain(subdomain)
 }
-\`\`\`
+```
 
 ### 3. Add Domain in Vercel
 

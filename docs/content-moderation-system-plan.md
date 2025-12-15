@@ -93,7 +93,7 @@ An automated system to scan tenant sites for Terms of Service violations, inappr
 
 #### 1. `content_scans`
 Tracks all scanning operations
-\`\`\`sql
+```sql
 CREATE TABLE content_scans (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
@@ -108,11 +108,11 @@ CREATE TABLE content_scans (
 
 CREATE INDEX idx_content_scans_tenant ON content_scans(tenant_id);
 CREATE INDEX idx_content_scans_status ON content_scans(status);
-\`\`\`
+```
 
 #### 2. `content_violations`
 Records detected violations
-\`\`\`sql
+```sql
 CREATE TABLE content_violations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_id UUID REFERENCES content_scans(id) ON DELETE CASCADE,
@@ -132,11 +132,11 @@ CREATE TABLE content_violations (
 CREATE INDEX idx_violations_tenant ON content_violations(tenant_id);
 CREATE INDEX idx_violations_status ON content_violations(status);
 CREATE INDEX idx_violations_severity ON content_violations(severity);
-\`\`\`
+```
 
 #### 3. `enforcement_actions`
 Track enforcement history
-\`\`\`sql
+```sql
 CREATE TABLE enforcement_actions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   violation_id UUID REFERENCES content_violations(id) ON DELETE SET NULL,
@@ -153,11 +153,11 @@ CREATE TABLE enforcement_actions (
 
 CREATE INDEX idx_enforcement_tenant ON enforcement_actions(tenant_id);
 CREATE INDEX idx_enforcement_type ON enforcement_actions(action_type);
-\`\`\`
+```
 
 #### 4. `violation_appeals`
 Handle dispute process
-\`\`\`sql
+```sql
 CREATE TABLE violation_appeals (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   violation_id UUID REFERENCES content_violations(id) ON DELETE CASCADE,
@@ -172,11 +172,11 @@ CREATE TABLE violation_appeals (
 
 CREATE INDEX idx_appeals_status ON violation_appeals(status);
 CREATE INDEX idx_appeals_tenant ON violation_appeals(tenant_id);
-\`\`\`
+```
 
 #### 5. `moderation_rules`
 Configurable detection rules
-\`\`\`sql
+```sql
 CREATE TABLE moderation_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   rule_type TEXT NOT NULL, -- 'keyword', 'pattern', 'url', 'custom'
@@ -191,7 +191,7 @@ CREATE TABLE moderation_rules (
 
 CREATE INDEX idx_rules_active ON moderation_rules(is_active);
 CREATE INDEX idx_rules_type ON moderation_rules(rule_type);
-\`\`\`
+```
 
 ---
 
@@ -308,7 +308,7 @@ CREATE INDEX idx_rules_type ON moderation_rules(rule_type);
 
 ### Scanning Flow
 
-\`\`\`
+```
 Content Created/Updated
   ↓
 Real-Time Scan Triggered
@@ -340,12 +340,12 @@ Notify Admin (High/Critical)
 Notify Tenant (All Violations)
   ↓
 Auto-Enforcement (Critical Only)
-\`\`\`
+```
 
 ### API Endpoints
 
 **Server Actions**
-\`\`\`typescript
+```typescript
 // Scanning
 scanContent(contentType: string, contentId: string)
 scanTenantSite(tenantId: string)
@@ -369,10 +369,10 @@ reviewAppeal(appealId: string, decision: 'approve' | 'deny', notes?: string)
 createRule(ruleData: ModerationRule)
 updateRule(ruleId: string, updates: Partial<ModerationRule>)
 toggleRule(ruleId: string, isActive: boolean)
-\`\`\`
+```
 
 **Cron Jobs**
-\`\`\`typescript
+```typescript
 // /api/cron/scan-tenants
 // Daily full-site scans for all active tenants
 POST /api/cron/scan-tenants
@@ -387,7 +387,7 @@ Authorization: Bearer CRON_SECRET
 // Automatically reinstate expired suspensions
 POST /api/cron/expire-suspensions
 Authorization: Bearer CRON_SECRET
-\`\`\`
+```
 
 ---
 
@@ -485,7 +485,7 @@ Authorization: Bearer CRON_SECRET
 ### Main Moderation Queue
 
 **Layout:**
-\`\`\`
+```
 ┌─────────────────────────────────────────────────┐
 │ 🚨 Moderation Queue                  [ Filters ]│
 ├─────────────────────────────────────────────────┤
@@ -509,7 +509,7 @@ Authorization: Bearer CRON_SECRET
 │ │ ...                                         ││
 │ └──────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────┘
-\`\`\`
+```
 
 **Filters:**
 - Status (Pending, Reviewed, Dismissed, Enforced)
@@ -550,7 +550,7 @@ Authorization: Bearer CRON_SECRET
 ### Rules Management
 
 **Interface:**
-\`\`\`
+```
 ┌─────────────────────────────────────┐
 │ Moderation Rules      [+ Add Rule] │
 ├─────────────────────────────────────┤
@@ -564,14 +564,14 @@ Authorization: Bearer CRON_SECRET
 │ │ [Edit] [Disable] [Delete]      ││
 │ └──────────────────────────────────┘│
 └─────────────────────────────────────┘
-\`\`\`
+```
 
 ---
 
 ## Email Notifications
 
 ### Violation Warning Email
-\`\`\`
+```
 Subject: Action Required: Content Violation Detected
 
 Hi [Tenant Name],
@@ -598,10 +598,10 @@ Need help? Reply to this email or visit our Help Center.
 
 Best regards,
 Tekton's Table Team
-\`\`\`
+```
 
 ### Enforcement Action Email
-\`\`\`
+```
 Subject: Important: Account Action Taken
 
 Hi [Tenant Name],
@@ -622,7 +622,7 @@ To appeal this decision:
 
 Best regards,
 Tekton's Table Team
-\`\`\`
+```
 
 ---
 
@@ -938,7 +938,7 @@ Tekton's Table Team
 
 ### OpenAI Moderation Categories
 
-\`\`\`typescript
+```typescript
 interface ModerationResponse {
   id: string;
   model: string;
@@ -972,11 +972,11 @@ interface ModerationResponse {
     };
   }];
 }
-\`\`\`
+```
 
 ### Sample Moderation Rules
 
-\`\`\`json
+```json
 [
   {
     "rule_type": "keyword",
@@ -1000,7 +1000,7 @@ interface ModerationResponse {
     "is_active": true
   }
 ]
-\`\`\`
+```
 
 ---
 

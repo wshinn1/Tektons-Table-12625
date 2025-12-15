@@ -229,11 +229,11 @@ All changes have been verified and are ready for deployment. This document confi
 ## Rollback Plan (If Needed)
 
 ### Database Migrations:
-\`\`\`sql
+```sql
 -- If needed to rollback tenant_financial_stats:
 DROP VIEW IF EXISTS tenant_financial_stats;
 -- Then run previous version with only 'succeeded' status
-\`\`\`
+```
 
 ### Code:
 - All changes are in version control

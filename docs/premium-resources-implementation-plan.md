@@ -101,7 +101,7 @@ Transform TektonsTable into a **fundraising education platform** by adding premi
 
 ### 5. Access Control Flow
 
-\`\`\`
+```
 User visits premium resource
         │
         ▼
@@ -124,7 +124,7 @@ User visits premium resource
   Show      Show full
   paywall   content
   + preview
-\`\`\`
+```
 
 ---
 
@@ -179,7 +179,7 @@ User visits premium resource
 
 ### New Tables
 
-\`\`\`sql
+```sql
 -- Blog/Resource Categories
 CREATE TABLE resource_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -262,7 +262,7 @@ CREATE TABLE resource_read_progress (
   completed_at TIMESTAMPTZ,
   UNIQUE(user_id, resource_id)
 );
-\`\`\`
+```
 
 ---
 
@@ -296,7 +296,7 @@ Go to **Stripe Dashboard → Developers → Webhooks → Select your endpoint** 
 
 ### Payment Failure Flow
 
-\`\`\`
+```
 Payment Fails
      │
      ▼
@@ -316,7 +316,7 @@ Day 7: Access revoked if still unpaid
      │
      ▼
 User can easily resubscribe from /account/subscription
-\`\`\`
+```
 
 ---
 
@@ -399,7 +399,7 @@ User can easily resubscribe from /account/subscription
 
 ## File Structure
 
-\`\`\`
+```
 app/
 ├── (platform)/
 │   ├── resources/
@@ -461,7 +461,7 @@ components/
 lib/
 ├── premium-access.ts                             # Access checking utilities
 └── stripe-premium.ts                             # Stripe subscription helpers
-\`\`\`
+```
 
 ---
 
