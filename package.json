@@ -113,6 +113,7 @@
     "react-resizable-panels": "^2.1.7",
     "react-toastify": "11.0.5",
     "recharts": "latest",
+    "require-in-the-middle": "^7.4.0",
     "resend": "latest",
     "server-only": "latest",
     "sharp": "0.34.5",
