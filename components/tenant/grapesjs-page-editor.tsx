@@ -9,6 +9,7 @@ import StudioEditor from "@grapesjs/studio-sdk/react"
 import "@grapesjs/studio-sdk/style"
 import type { Editor } from "grapesjs"
 import { getGrapesJSLicenseKey } from "@/app/actions/grapesjs-license"
+import cn from "classnames"
 
 interface Page {
   id: string
@@ -344,6 +345,7 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
   const [isSaving, setIsSaving] = useState(false)
   const [licenseKey, setLicenseKey] = useState<string>("")
   const [isLoadingLicense, setIsLoadingLicense] = useState(true)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     async function loadLicense() {
@@ -386,17 +388,29 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
 
   if (isLoadingLicense) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading page builder...</p>
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-lg">Loading page builder...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!licenseKey) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-lg text-red-500">GrapesJS license key not configured</div>
+          <div className="text-sm text-muted-foreground">
+            Please add GRAPESJS_LICENSE_KEY to your environment variables
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-screen flex-col">
       <div className="flex items-center justify-between border-b bg-white p-4">
         <Button variant="ghost" size="sm" onClick={() => router.push(`/${tenantId}/admin/pages`)}>
           <ArrowLeft className="h-4 w-4" />
@@ -409,7 +423,7 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className={cn("flex-1 transition-all duration-300", isSidebarCollapsed ? "ml-0" : "ml-64")}>
         <StudioEditor
           license={licenseKey}
           options={{
