@@ -24,6 +24,8 @@
     "@mantine/core": "latest",
     "@mantine/hooks": "latest",
     "@mantine/utils": "latest",
+    "@plasmicapp/loader-nextjs": "latest",
+    "@plasmicapp/react-web": "latest",
     "@prismicio/client": "7.21.0",
     "@prismicio/next": "2.0.2",
     "@prismicio/react": "3.2.2",
