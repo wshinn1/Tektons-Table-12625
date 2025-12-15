@@ -1,4 +1,5 @@
-import { generateText, createOpenAI } from "ai"
+import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
 import { Response } from "node-fetch"
 
 export async function POST(request: Request) {
@@ -30,10 +31,6 @@ IMPORTANT: Only output the raw HTML, no markdown, no code blocks, no explanation
 The HTML should be ready to insert directly into a page builder.`
 
     console.log("[v0] Calling generateText with model: gpt-4o")
-
-    const openai = createOpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
 
     const { text } = await generateText({
       model: openai("gpt-4o"),

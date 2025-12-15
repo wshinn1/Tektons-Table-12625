@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
+import { isSuperAdmin } from "@/lib/supabase/admin"
+import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
 import { put } from "@vercel/blob"
-import { generateText, createOpenAI } from "ai"
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +13,7 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (!user || !(await isSuperAdmin(user.id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -27,10 +29,6 @@ export async function POST(req: NextRequest) {
     const imageBuffer = await image.arrayBuffer()
     const blob = await put(`screenshots/${Date.now()}-${image.name}`, imageBuffer, {
       access: "public",
-    })
-
-    const openai = createOpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
     })
 
     // Generate code using AI
