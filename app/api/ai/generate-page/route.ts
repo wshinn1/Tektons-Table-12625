@@ -1,4 +1,5 @@
 import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
 
 export async function POST(request: Request) {
   console.log("[v0] AI generate-page API called")
@@ -28,12 +29,12 @@ When given a prompt, generate semantic HTML with inline styles that:
 IMPORTANT: Only output the raw HTML, no markdown, no code blocks, no explanations.
 The HTML should be ready to insert directly into a page builder.`
 
-    console.log("[v0] Calling generateText with model: anthropic/claude-sonnet-4-20250514")
+    console.log("[v0] Calling generateText with model: openai/gpt-4o")
 
     const { text } = await generateText({
-      model: "anthropic/claude-sonnet-4-20250514",
+      model: openai("gpt-4o"),
       system: systemPrompt,
-      prompt: `Create a page section for: ${prompt}`,
+      prompt: `Generate a complete HTML page based on this description: ${prompt}`,
     })
 
     console.log("[v0] Generated text length:", text?.length)

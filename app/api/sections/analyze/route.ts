@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
 import { createClient } from "@/utils/supabase/server"
 
 export async function POST(request: NextRequest) {
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // Use AI to analyze the screenshot
     const { text } = await generateText({
-      model: "openai/gpt-4o",
+      model: openai("gpt-4o"),
       messages: [
         {
           role: "user",

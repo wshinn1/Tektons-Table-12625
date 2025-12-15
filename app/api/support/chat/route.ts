@@ -1,4 +1,5 @@
 import { streamText, convertToModelMessages, type UIMessage } from "ai"
+import { openai } from "@ai-sdk/openai"
 import { createServerClient } from "@/lib/supabase/server"
 
 export const maxDuration = 30
@@ -219,7 +220,7 @@ QUICK FACTS (share ONE at a time, only if asked):
 ${knowledgeBase}${tenantContent}`
 
     const result = await streamText({
-      model: "openai/gpt-4o-mini",
+      model: openai("gpt-4o-mini"),
       system: systemPrompt,
       messages: convertToModelMessages(messages),
       maxTokens: 150,
