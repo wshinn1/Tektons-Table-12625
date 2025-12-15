@@ -1,4 +1,4 @@
-import { streamText, convertToCoreMessages, type UIMessage } from "ai"
+import { streamText, convertToCoreMessages } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { createServerClient } from "@/lib/supabase/server"
 
@@ -7,23 +7,9 @@ export const maxDuration = 30
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    let messages: UIMessage[] = []
 
-    if (body.messages && Array.isArray(body.messages)) {
-      // Normalize messages to UIMessage format
-      messages = body.messages.map((msg: any) => {
-        // If it's already in UIMessage format with parts
-        if (msg.parts) {
-          return msg
-        }
-        // Convert simple content string to UIMessage format
-        return {
-          id: msg.id || crypto.randomUUID(),
-          role: msg.role || "user",
-          parts: [{ type: "text", text: msg.content || "" }],
-        }
-      })
-    }
+    // AI SDK v4 expects messages with 'role' and 'content' properties, not 'parts'
+    const messages = body.messages || []
 
     // Ensure we have at least one message
     if (messages.length === 0) {
@@ -32,6 +18,8 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
     }
+
+    console.log("[v0] Received messages:", JSON.stringify(messages, null, 2))
 
     const supabase = await createServerClient()
 
@@ -77,15 +65,9 @@ export async function POST(req: Request) {
     }
 
     const lastMessage = messages[messages.length - 1]
-    let lastMessageContent = ""
-    if (lastMessage?.parts) {
-      lastMessageContent = lastMessage.parts
-        .map((part: any) => (part.type === "text" ? part.text : ""))
-        .join("")
-        .toLowerCase()
-    } else if (typeof lastMessage?.content === "string") {
-      lastMessageContent = lastMessage.content.toLowerCase()
-    }
+    const lastMessageContent = typeof lastMessage?.content === "string" ? lastMessage.content.toLowerCase() : ""
+
+    console.log("[v0] Last message content:", lastMessageContent)
 
     const isLegalQuery =
       lastMessageContent.includes("terms") ||

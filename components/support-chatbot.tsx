@@ -97,7 +97,10 @@ export function SupportChatbot() {
     setChatError(null)
 
     sendSoundRef.current?.play().catch(() => {})
-    sendMessage({ text: trimmedInput })
+    chatHook.append({
+      role: "user",
+      content: trimmedInput,
+    })
     setInputValue("")
   }
 
