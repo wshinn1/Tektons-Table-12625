@@ -349,6 +349,8 @@ export function GrapesJSPageEditor({ pageId, tenantId, initialContent, pageName 
     async function loadLicense() {
       try {
         const key = await getGrapesJSLicenseKey()
+        console.log("[v0] Received license key length:", key?.length || 0)
+        console.log("[v0] Received license key exists:", !!key)
         setLicenseKey(key)
       } catch (error) {
         console.error("[v0] Failed to load GrapesJS license:", error)
