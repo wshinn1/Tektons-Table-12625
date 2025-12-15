@@ -9,8 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@ai-sdk/openai": "latest",
-    "@ai-sdk/react": "latest",
+    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/react": "^1.0.0",
     "@blocknote/core": "latest",
     "@blocknote/mantine": "latest",
     "@blocknote/react": "latest",
@@ -76,7 +76,7 @@
     "@tiptap/starter-kit": "latest",
     "@vercel/analytics": "latest",
     "@vercel/blob": "latest",
-    "ai": "latest",
+    "ai": "^4.0.0",
     "autoprefixer": "^10.4.20",
     "canvas-confetti": "latest",
     "class-variance-authority": "^0.7.1",

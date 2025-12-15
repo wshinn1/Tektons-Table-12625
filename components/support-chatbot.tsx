@@ -25,6 +25,7 @@ export function SupportChatbot() {
   const [showNotificationBadge, setShowNotificationBadge] = useState(true)
   const [showHelpArticles, setShowHelpArticles] = useState(false)
   const [inputValue, setInputValue] = useState("")
+  const [chatError, setChatError] = useState<string | null>(null)
   const pathname = usePathname()
 
   const sendSoundRef = useRef<HTMLAudioElement | null>(null)
@@ -32,6 +33,14 @@ export function SupportChatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const prevStatusRef = useRef<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+
+  const chatHook = useChat({
+    transport: new DefaultChatTransport({ api: "/api/support/chat" }),
+    onError: (error) => {
+      console.error("[v0] Chat error:", error)
+      setChatError(error.message || "An error occurred. Please try again.")
+    },
+  })
 
   useEffect(() => {
     setIsMounted(true)
@@ -49,9 +58,9 @@ export function SupportChatbot() {
     if (receiveSoundRef.current) receiveSoundRef.current.volume = 0.2
   }, [])
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/support/chat" }),
-  })
+  const messages = chatHook.messages
+  const sendMessage = chatHook.sendMessage
+  const status = chatHook.status
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -85,6 +94,8 @@ export function SupportChatbot() {
     if (!trimmedInput) {
       return
     }
+
+    setChatError(null)
 
     sendSoundRef.current?.play().catch(() => {})
     sendMessage({ text: trimmedInput })
@@ -170,7 +181,21 @@ export function SupportChatbot() {
 
           {/* Messages area */}
           <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-4 space-y-3 sm:space-y-4">
-            {messages.length === 0 && !showHelpArticles && (
+            {chatError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">
+                <p className="font-medium mb-1">Chat Error</p>
+                <p className="text-xs">{chatError}</p>
+                <p className="text-xs mt-2 text-gray-600">
+                  You can still browse our{" "}
+                  <a href="/help" target="_blank" className="text-blue-600 hover:underline" rel="noreferrer">
+                    help articles
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+
+            {messages.length === 0 && !showHelpArticles && !chatError && (
               <div className="text-center text-sm py-4 px-4">
                 <p className="text-gray-500">
                   Start a conversation by typing a message below or using the quick actions above.
@@ -266,12 +291,12 @@ export function SupportChatbot() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Type your message..."
-                disabled={isLoading}
+                disabled={isLoading || !!chatError}
                 className="flex-1 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base sm:text-sm"
               />
               <Button
                 type="submit"
-                disabled={isLoading || !(inputValue || "").trim()}
+                disabled={isLoading || !(inputValue || "").trim() || !!chatError}
                 className="rounded-xl bg-blue-600 hover:bg-blue-700 h-10 w-10 flex-shrink-0"
               >
                 <span className="text-lg">→</span>
