@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages, type UIMessage } from "ai"
+import { streamText, convertToCoreMessages, type UIMessage } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { createServerClient } from "@/lib/supabase/server"
 
@@ -222,7 +222,7 @@ ${knowledgeBase}${tenantContent}`
     const result = await streamText({
       model: openai("gpt-4o-mini"),
       system: systemPrompt,
-      messages: convertToModelMessages(messages),
+      messages: convertToCoreMessages(messages),
       maxTokens: 150,
       temperature: 0.85,
       abortSignal: req.signal,
