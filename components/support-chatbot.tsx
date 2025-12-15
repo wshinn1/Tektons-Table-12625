@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useChat } from "ai/react"
-import { DefaultChatTransport } from "ai"
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -35,7 +34,7 @@ export function SupportChatbot() {
   const formRef = useRef<HTMLFormElement>(null)
 
   const chatHook = useChat({
-    transport: new DefaultChatTransport({ api: "/api/support/chat" }),
+    api: "/api/support/chat",
     onError: (error) => {
       console.error("[v0] Chat error:", error)
       setChatError(error.message || "An error occurred. Please try again.")
