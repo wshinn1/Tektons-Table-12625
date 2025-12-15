@@ -62,7 +62,7 @@ export function PlasmiPageEditor({ pageId, initialData, onSave }: PlasmiPageEdit
                   Add them to your environment variables:
                   <ul className="list-disc list-inside ml-6 mt-1">
                     <li>NEXT_PUBLIC_PLASMIC_PROJECT_ID</li>
-                    <li>NEXT_PUBLIC_PLASMIC_PROJECT_TOKEN</li>
+                    <li>NEXT_PUBLIC_PLASMIC_API_TOKEN</li>
                   </ul>
                 </li>
                 <li>
