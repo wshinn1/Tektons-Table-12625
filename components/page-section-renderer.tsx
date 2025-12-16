@@ -1,15 +1,9 @@
 "use client"
 
-import { BuilderSectionRenderer } from "@/components/builder/builder-section-renderer"
-
 interface PageSectionRendererProps {
   sections: any[]
 }
 
-/**
- * Universal section renderer that handles both built-in and Builder.io sections
- * Can be used on any page in the application
- */
 export function PageSectionRenderer({ sections }: PageSectionRendererProps) {
   if (!sections || sections.length === 0) {
     return null
@@ -18,13 +12,18 @@ export function PageSectionRenderer({ sections }: PageSectionRendererProps) {
   return (
     <>
       {sections.map((section, index) => {
-        if (section.source_type === "builder_io" && section.builder_section_id) {
-          return <BuilderSectionRenderer key={section.id || index} content={section.content} />
+        // Render screenshot section
+        if (section.source_type === "screenshot" && section.content?.code) {
+          return (
+            <div key={section.id || index} className="w-full">
+              <div dangerouslySetInnerHTML={{ __html: section.content.code }} />
+            </div>
+          )
         }
 
-        // Built-in section - render based on section_type
-        // This would be handled by your existing section rendering logic
-        return null // Placeholder - your existing section components would go here
+        // Built-in sections would be rendered here based on section_type
+        // Currently only screenshot sections are supported in this renderer
+        return null
       })}
     </>
   )

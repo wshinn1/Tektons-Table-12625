@@ -1,15 +1,14 @@
+"use client"
+
 import Link from "next/link"
 import { NewsletterSignup } from "./newsletter-signup"
-import { getFooterSettings } from "@/app/actions/footer-settings"
 
-export async function MarketingFooter() {
-  const footerSettings = await getFooterSettings()
-
-  // Fallback to defaults if settings not found
-  const siteTitle = footerSettings?.site_title || "Tekton's Table"
-  const siteSubtitle = footerSettings?.site_subtitle || "Built by storytellers for storytellers in God's kingdom."
-  const copyrightText = footerSettings?.copyright_text || "Tekton's Table. All rights reserved."
-  const menuColumns = footerSettings?.menu_columns || [
+// Static fallback data for v0 preview
+const DEFAULT_FOOTER_SETTINGS = {
+  site_title: "Tekton's Table",
+  site_subtitle: "Built by storytellers for storytellers in God's kingdom.",
+  copyright_text: "Tekton's Table. All rights reserved.",
+  menu_columns: [
     {
       title: "Product",
       links: [
@@ -34,7 +33,11 @@ export async function MarketingFooter() {
         { label: "Login", url: "/auth/login" },
       ],
     },
-  ]
+  ],
+}
+
+export function MarketingFooter() {
+  const { site_title, site_subtitle, copyright_text, menu_columns } = DEFAULT_FOOTER_SETTINGS
 
   return (
     <>
@@ -43,10 +46,10 @@ export async function MarketingFooter() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-foreground mb-4">{siteTitle}</h3>
-              <p className="text-sm text-muted-foreground">{siteSubtitle}</p>
+              <h3 className="font-bold text-foreground mb-4">{site_title}</h3>
+              <p className="text-sm text-muted-foreground">{site_subtitle}</p>
             </div>
-            {menuColumns.map((column, index) => (
+            {menu_columns.map((column, index) => (
               <div key={index}>
                 <h4 className="font-semibold text-foreground mb-4">{column.title}</h4>
                 <ul className="space-y-2">
@@ -63,7 +66,7 @@ export async function MarketingFooter() {
           </div>
           <div className="pt-8 border-t border-border">
             <p className="text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {copyrightText}
+              © {new Date().getFullYear()} {copyright_text}
             </p>
           </div>
         </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { useChat } from "ai/react"
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -25,21 +24,14 @@ export function SupportChatbot() {
   const [showHelpArticles, setShowHelpArticles] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [chatError, setChatError] = useState<string | null>(null)
+  const [messages, setMessages] = useState<Array<{ id: string; role: string; content: string }>>([])
+  const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
 
   const sendSoundRef = useRef<HTMLAudioElement | null>(null)
   const receiveSoundRef = useRef<HTMLAudioElement | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const prevStatusRef = useRef<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
-
-  const chatHook = useChat({
-    api: "/api/support/chat",
-    onError: (error) => {
-      console.error("[v0] Chat error:", error)
-      setChatError(error.message || "An error occurred. Please try again.")
-    },
-  })
 
   useEffect(() => {
     setIsMounted(true)
@@ -57,20 +49,9 @@ export function SupportChatbot() {
     if (receiveSoundRef.current) receiveSoundRef.current.volume = 0.2
   }, [])
 
-  const messages = chatHook.messages
-  const sendMessage = chatHook.sendMessage
-  const status = chatHook.status
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
-
-  useEffect(() => {
-    if (prevStatusRef.current === "streaming" && status === "ready" && messages.length > 0) {
-      receiveSoundRef.current?.play().catch(() => {})
-    }
-    prevStatusRef.current = status
-  }, [status, messages.length])
 
   useEffect(() => {
     if (showHelpArticles) {
@@ -86,7 +67,7 @@ export function SupportChatbot() {
     return null
   }
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     const trimmedInput = (inputValue || "").trim()
@@ -95,13 +76,43 @@ export function SupportChatbot() {
     }
 
     setChatError(null)
+    setIsLoading(true)
 
     sendSoundRef.current?.play().catch(() => {})
-    chatHook.append({
+
+    const userMessage = {
+      id: Date.now().toString(),
       role: "user",
       content: trimmedInput,
-    })
+    }
+    setMessages((prev) => [...prev, userMessage])
     setInputValue("")
+
+    try {
+      const response = await fetch("/api/support/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to get response")
+      }
+
+      const data = await response.json()
+      const assistantMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.content || data.text || "Sorry, I couldn't process that request.",
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+      receiveSoundRef.current?.play().catch(() => {})
+    } catch (error) {
+      console.error("[v0] Chat error:", error)
+      setChatError("An error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleOpenChat = () => {
@@ -113,12 +124,6 @@ export function SupportChatbot() {
     setShowHelpArticles(true)
     sendSoundRef.current?.play().catch(() => {})
   }
-
-  const handleSendMessage = () => {
-    window.open("/support", "_blank")
-  }
-
-  const isLoading = status === "streaming" || status === "submitted"
 
   return (
     <>
@@ -230,42 +235,17 @@ export function SupportChatbot() {
               </div>
             )}
 
-            {messages.map((message) => {
-              let textContent = ""
-              if (message.parts && Array.isArray(message.parts)) {
-                textContent = message.parts
-                  .map((part: any) => {
-                    if (part.type === "text" && part.text) return part.text
-                    if (typeof part === "string") return part
-                    return ""
-                  })
-                  .filter(Boolean)
-                  .join("")
-              } else if (typeof message.content === "string") {
-                textContent = message.content
-              } else if (Array.isArray(message.content)) {
-                textContent = message.content
-                  .map((part: any) => {
-                    if (typeof part === "string") return part
-                    if (part.text) return part.text
-                    return ""
-                  })
-                  .filter(Boolean)
-                  .join("")
-              }
-
-              return (
-                <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm ${
-                      message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed">{textContent}</div>
-                  </div>
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm ${
+                    message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 rounded-2xl px-4 py-3 shadow-sm">
