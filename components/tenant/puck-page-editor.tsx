@@ -14,6 +14,9 @@ interface PuckPageEditorProps {
 }
 
 export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug }: PuckPageEditorProps) {
+  console.log("[v0] PUCK EDITOR COMPONENT LOADED - NO PLASMIC CHECKS!")
+  console.log("[v0] Props:", { pageId, tenantId, tenantSlug, hasInitialData: !!initialData })
+  
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
 
@@ -24,7 +27,7 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug }: Pu
 
   const handlePublish = async (data: any) => {
     setIsSaving(true)
-    console.log("[v0] Saving page data:", data)
+    console.log("[v0] Saving page data")
     
     try {
       const response = await fetch(`/api/tenant/${tenantSlug}/pages${pageId ? `/${pageId}` : ""}`, {
@@ -36,25 +39,20 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug }: Pu
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to save page")
-
-      console.log("[v0] Page saved successfully")
+      if (!response.ok) throw new Error("Failed to save")
+      
+      console.log("[v0] Saved successfully!")
       router.push(`/${tenantSlug}/admin/pages`)
     } catch (error) {
-      console.error("[v0] Error saving page:", error)
+      console.error("[v0] Save error:", error)
       alert("Failed to save page")
     } finally {
       setIsSaving(false)
     }
   }
 
-  console.log("[v0] Puck Editor Loading - NO PLASMIC CHECKS")
-
   return (
     <div className="h-screen">
-      <div className="bg-green-500 text-white p-4 text-center font-bold">
-        PUCK EDITOR LOADED SUCCESSFULLY
-      </div>
       <Puck 
         config={puckConfig} 
         data={initialData || defaultData} 
