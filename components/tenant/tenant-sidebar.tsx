@@ -12,7 +12,6 @@ import { tenantSignOut } from "@/app/actions/tenant-auth"
 function HouseIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      {/* Outer roof */}
       <path
         d="M50 2L2 50h10L50 14l38 36h10L50 2z"
         fill="currentColor"
@@ -20,7 +19,6 @@ function HouseIcon({ className }: { className?: string }) {
         strokeWidth="3"
         strokeLinejoin="round"
       />
-      {/* Inner roof */}
       <path
         d="M50 18L18 50h8l24-24 24 24h8L50 18z"
         fill="currentColor"
@@ -28,11 +26,8 @@ function HouseIcon({ className }: { className?: string }) {
         strokeWidth="2"
         strokeLinejoin="round"
       />
-      {/* House body with door */}
       <path d="M30 50v28h40V50L50 30 30 50z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      {/* Door */}
       <rect x="40" y="55" width="20" height="23" fill="none" stroke="currentColor" strokeWidth="3" />
-      {/* Chimney */}
       <rect x="65" y="25" width="8" height="15" fill="currentColor" stroke="currentColor" strokeWidth="2" />
     </svg>
   )
@@ -137,7 +132,6 @@ export function TenantSidebar({
         setMobileMenuOpen(false)
       }
     }
-
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
@@ -161,12 +155,6 @@ export function TenantSidebar({
 
   const allSections = [...publicNavSections, ...adminNavSections]
 
-  const handleNavigation = () => {
-    if (window.innerWidth < 768) {
-      setMobileMenuOpen(false)
-    }
-  }
-
   const getProgress = (current: number, goal: number) => {
     return Math.min(Math.round((current / goal) * 100), 100)
   }
@@ -178,9 +166,8 @@ export function TenantSidebar({
       <Link
         key={item.href}
         href={item.href}
-        onClick={handleNavigation}
         className={cn(
-          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors duration-200",
+          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors",
           active ? "bg-gray-100 text-black" : "text-black hover:bg-[#1e3a8a] hover:text-white",
         )}
       >
@@ -191,10 +178,11 @@ export function TenantSidebar({
 
   return (
     <>
+      {/* Mobile menu button */}
       <Button
         variant="outline"
         size="default"
-        className="fixed top-4 left-4 z-[60] md:hidden bg-white shadow-lg border-2 hover:bg-gray-50 font-old-standard font-bold gap-2"
+        className="fixed top-4 left-4 z-[70] md:hidden bg-white shadow-lg border-2 hover:bg-gray-50 font-old-standard font-bold gap-2"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
       >
         {mobileMenuOpen ? (
@@ -210,27 +198,34 @@ export function TenantSidebar({
         )}
       </Button>
 
-      {/* Mobile Overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[45] md:hidden" onClick={() => setMobileMenuOpen(false)} />
+      {/* Mobile/Desktop Overlay when sidebar is open */}
+      {(mobileMenuOpen || !isCollapsed) && (
+        <div
+          className="fixed inset-0 bg-black/30 z-[55] cursor-pointer"
+          onClick={() => {
+            setMobileMenuOpen(false)
+            if (!autoHide) {
+              setIsCollapsed(true)
+              localStorage.setItem(`tenant-sidebar-collapsed-${subdomain}`, "true")
+            }
+          }}
+        />
       )}
 
       {isCollapsed && !mobileMenuOpen && (
         <button
           onClick={toggleCollapsed}
-          className="hidden md:flex fixed left-2 top-1/2 -translate-y-1/2 z-[50] w-12 h-12 items-center justify-center bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200"
+          className="fixed left-2 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 flex items-center justify-center bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg hover:bg-gray-50 transition-all"
           title="Open menu"
         >
-          <HouseIcon className="w-8 h-8 text-gray-800 rotate-90" />
+          <Menu className="w-6 h-6 text-gray-800" />
         </button>
       )}
 
-      {/* Sidebar - only show when not collapsed or mobile menu is open */}
       <aside
         className={cn(
-          "fixed md:static inset-y-0 left-0 z-[50] h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-300 font-open-sans",
-          isCollapsed ? "w-0 md:w-0 overflow-hidden" : "w-64",
-          mobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0",
+          "fixed inset-y-0 left-0 z-[60] h-full bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 font-open-sans w-64 shadow-xl",
+          isCollapsed && !mobileMenuOpen ? "-translate-x-full" : "translate-x-0",
         )}
       >
         {/* Header */}
@@ -247,11 +242,10 @@ export function TenantSidebar({
             variant="ghost"
             size="sm"
             onClick={toggleCollapsed}
-            className="hidden md:flex shrink-0 hover:bg-gray-100 gap-2 font-open-sans font-bold"
+            className="shrink-0 hover:bg-gray-100 gap-2 font-open-sans font-bold"
             title="Collapse sidebar"
           >
             <X className="h-4 w-4" />
-            <span className="text-xs">Hide</span>
           </Button>
         </div>
 
@@ -260,20 +254,17 @@ export function TenantSidebar({
             <form action={tenantSignOut.bind(null, subdomain)}>
               <button
                 type="submit"
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg transition-all duration-300 relative overflow-hidden group"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg hover:bg-[#1e3a8a] hover:text-white transition-colors"
               >
-                <span className="absolute inset-0 bg-[#1e3a8a] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
-                <span className="relative z-10 transition-colors duration-300 group-hover:text-white">Sign Out</span>
+                Sign Out
               </button>
             </form>
           ) : (
             <Link
               href="https://tektonstable.com/auth/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg transition-all duration-300 relative overflow-hidden group"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg hover:bg-[#1e3a8a] hover:text-white transition-colors"
             >
-              <span className="absolute inset-0 bg-[#1e3a8a] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
-              <span className="relative z-10 transition-colors duration-300 group-hover:text-white">Sign In</span>
+              Sign In
             </Link>
           )}
         </div>
@@ -310,29 +301,18 @@ export function TenantSidebar({
                       <Link
                         key={campaign.id}
                         href={`/campaigns/${campaign.slug}`}
-                        onClick={handleNavigation}
                         className={cn(
-                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-all duration-300 relative overflow-hidden group",
+                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors",
                           isActive(`/campaigns/${campaign.slug}`)
                             ? "bg-green-50 text-green-900 font-bold"
-                            : "text-black font-semibold hover:bg-gray-50 hover:text-gray-900",
+                            : "text-black font-semibold hover:bg-gray-50",
                         )}
                       >
-                        {!isActive(`/campaigns/${campaign.slug}`) && (
-                          <span className="absolute inset-0 bg-[#1e3a8a] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
-                        )}
-                        <div className="flex items-center gap-2 relative z-10">
-                          <span
-                            className={cn(
-                              "font-bold text-xs line-clamp-1 transition-colors duration-300",
-                              !isActive(`/campaigns/${campaign.slug}`) && "group-hover:text-white",
-                            )}
-                          >
-                            {campaign.title}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs line-clamp-1">{campaign.title}</span>
                           {isCompleted && <span className="text-green-600">✓</span>}
                         </div>
-                        <div className="relative z-10">
+                        <div>
                           <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div
                               className={cn(
@@ -342,14 +322,7 @@ export function TenantSidebar({
                               style={{ width: `${progress}%` }}
                             />
                           </div>
-                          <span
-                            className={cn(
-                              "text-xs font-open-sans font-bold mt-0.5 block transition-colors duration-300",
-                              !isActive(`/campaigns/${campaign.slug}`)
-                                ? "text-gray-900 group-hover:text-white"
-                                : "text-gray-900",
-                            )}
-                          >
+                          <span className="text-xs font-open-sans font-bold mt-0.5 block text-gray-900">
                             {progress}%
                           </span>
                         </div>

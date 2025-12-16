@@ -1,6 +1,5 @@
 import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
-import { Response } from "node-fetch"
+import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   console.log("[v0] AI generate-page API called")
@@ -13,7 +12,7 @@ export async function POST(request: Request) {
 
     if (!prompt) {
       console.log("[v0] No prompt provided")
-      return Response.json({ error: "Prompt is required" }, { status: 400 })
+      return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
     const systemPrompt = `You are an expert web designer that generates clean, modern HTML for page sections.
@@ -30,10 +29,10 @@ When given a prompt, generate semantic HTML with inline styles that:
 IMPORTANT: Only output the raw HTML, no markdown, no code blocks, no explanations.
 The HTML should be ready to insert directly into a page builder.`
 
-    console.log("[v0] Calling generateText with model: gpt-4o")
+    console.log("[v0] Calling generateText with model: openai/gpt-4o")
 
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: "openai/gpt-4o",
       system: systemPrompt,
       prompt: `Generate a complete HTML page based on this description: ${prompt}`,
     })
@@ -48,13 +47,13 @@ The HTML should be ready to insert directly into a page builder.`
 
     console.log("[v0] Returning HTML response")
 
-    return Response.json({
+    return NextResponse.json({
       html,
       message: `I've created a ${prompt.toLowerCase().includes("section") ? "section" : "component"} for you. You can now customize it using the visual editor.`,
     })
   } catch (error) {
     console.error("[v0] AI generation error:", error)
-    return Response.json(
+    return NextResponse.json(
       {
         error: "Failed to generate content",
         details: error instanceof Error ? error.message : "Unknown error",
