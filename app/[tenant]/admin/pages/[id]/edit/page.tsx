@@ -1,7 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
-import { PageEditor } from "@/components/tenant/page-editor"
-import { PlasmiPageEditor } from "@/components/tenant/plasmic-page-editor"
+import { PuckPageEditor } from "@/components/tenant/puck-page-editor"
 import { getTenantPage } from "@/app/actions/tenant-pages"
 
 interface Props {
@@ -17,7 +16,7 @@ export default async function EditPagePage({ params }: Props) {
   const supabase = await createServerClient()
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, page_builder_enabled, plasmic_project_id, plasmic_api_token")
+    .select("id, page_builder_enabled")
     .eq("subdomain", tenantSlug)
     .limit(1)
     .single()
@@ -36,19 +35,13 @@ export default async function EditPagePage({ params }: Props) {
     notFound()
   }
 
-  const hasPlasmic = !!(tenant.plasmic_project_id && tenant.plasmic_api_token)
-
-  if (hasPlasmic) {
-    return (
-      <PlasmiPageEditor
-        pageId={pageId}
-        initialData={page}
-        tenantProjectId={tenant.plasmic_project_id}
-        tenantApiToken={tenant.plasmic_api_token}
-        tenantSlug={tenantSlug}
-      />
-    )
+  let initialData
+  try {
+    initialData = page.content ? JSON.parse(page.content) : undefined
+  } catch (error) {
+    console.error("[v0] Failed to parse page content:", error)
+    initialData = undefined
   }
 
-  return <PageEditor tenantId={tenant.id} subdomain={tenantSlug} page={page} />
+  return <PuckPageEditor pageId={pageId} initialData={initialData} tenantId={tenant.id} tenantSlug={tenantSlug} />
 }
