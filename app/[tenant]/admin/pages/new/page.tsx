@@ -27,12 +27,5 @@ export default async function NewPagePage({ params }: Props) {
     redirect(`/${tenantSlug}/admin`)
   }
 
-  return (
-    <div>
-      <div className="bg-green-500 text-white p-4 text-center font-bold">
-        ✓ PUCK EDITOR LOADED - Deployment Working!
-      </div>
-      <PuckPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
-    </div>
-  )
+  return <PuckPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
 }
