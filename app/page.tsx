@@ -276,7 +276,7 @@ export default async function LandingPage() {
 
     // Fetch navigation items
     const { data: dbNavItems, error: navError } = await supabase
-      .from("navigation_items")
+      .from("menu_items")
       .select("*")
       .eq("published", true)
       .order("position", { ascending: true })
