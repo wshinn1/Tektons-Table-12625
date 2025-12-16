@@ -1,50 +1,47 @@
-import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
-import { PuckPageEditor } from '@/components/tenant/puck-page-editor'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient } from "@/lib/supabase/server"
+import { notFound, redirect } from "next/navigation"
+import { PuckPageEditor } from "@/components/tenant/puck-page-editor"
+import { getTenantPage } from "@/app/actions/tenant-pages"
 
-export default async function EditCustomPagePage({
-  params,
-}: {
-  params: Promise<{ tenant: string; id: string }>
-}) {
-  const { tenant, id } = await params
+interface Props {
+  params: Promise<{
+    tenant: string
+    id: string
+  }>
+}
+
+export default async function EditPagePage({ params }: Props) {
+  const { tenant: tenantSlug, id: pageId } = await params
+
   const supabase = await createServerClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect(`/${tenant}/admin/login`)
-  }
-
-  // Check if user is an admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id, page_builder_enabled")
+    .eq("subdomain", tenantSlug)
+    .limit(1)
     .single()
 
-  if (!profile || profile.role !== 'admin') {
-    redirect(`/${tenant}`)
+  if (!tenant) {
+    notFound()
   }
 
-  // Fetch the existing page data
-  const { data: page, error } = await supabase
-    .from('custom_pages')
-    .select('*')
-    .eq('id', id)
-    .eq('tenant_id', tenant)
-    .single()
-
-  if (error || !page) {
-    redirect(`/${tenant}/admin/pages`)
+  if (!tenant.page_builder_enabled) {
+    redirect(`/admin`)
   }
 
-  return (
-    <Suspense fallback={<div>Loading editor...</div>}>
-      <PuckPageEditor tenant={tenant} pageId={id} initialData={page.content} />
-    </Suspense>
-  )
+  const page = await getTenantPage(pageId)
+
+  if (!page || page.tenant_id !== tenant.id) {
+    notFound()
+  }
+
+  let initialData
+  try {
+    initialData = page.content ? JSON.parse(page.content) : undefined
+  } catch (error) {
+    console.error("[v0] Failed to parse page content:", error)
+    initialData = undefined
+  }
+
+  return <PuckPageEditor pageId={pageId} initialData={initialData} tenantId={tenant.id} tenantSlug={tenantSlug} />
 }

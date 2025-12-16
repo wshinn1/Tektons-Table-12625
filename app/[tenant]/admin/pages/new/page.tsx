@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server"
-import { notFound, redirect } from 'next/navigation'
+import { notFound, redirect } from "next/navigation"
 import { PuckPageEditor } from "@/components/tenant/puck-page-editor"
 
 interface Props {
@@ -27,9 +27,5 @@ export default async function NewPagePage({ params }: Props) {
     redirect(`/${tenantSlug}/admin`)
   }
 
-  return (
-    <div>
-      <PuckPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
-    </div>
-  )
+  return <PuckPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
 }
