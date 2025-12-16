@@ -6,6 +6,8 @@ import { CampaignNotificationSettings } from "@/components/tenant/admin/campaign
 import { BlogWidgetSettings } from "@/components/tenant/admin/blog-widget-settings"
 import { HomepageWidgetSettings } from "@/components/tenant/admin/homepage-widget-settings"
 import { BrandingSettings } from "@/components/tenant/admin/branding-settings"
+import { PageBuilderRequest } from "@/components/tenant/admin/page-builder-request"
+import { PlasmiSettings } from "@/components/tenant/admin/plasmic-settings"
 
 export default async function TenantSettingsPage({
   params,
@@ -23,7 +25,11 @@ export default async function TenantSettingsPage({
     redirect(`/${tenantSlug}`)
   }
 
-  const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", tenantSlug).single()
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("*, plasmic_project_id, plasmic_api_token, page_builder_requested, page_builder_requested_at")
+    .eq("subdomain", tenantSlug)
+    .single()
 
   if (!tenant || tenant.email !== user.email) {
     redirect(`/${tenantSlug}`)
@@ -34,6 +40,8 @@ export default async function TenantSettingsPage({
     .select("blog_widget_preference, homepage_widget_preference")
     .eq("tenant_id", tenant.id)
     .single()
+
+  const hasPlasmic = !!(tenant.plasmic_project_id && tenant.plasmic_api_token)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -51,6 +59,22 @@ export default async function TenantSettingsPage({
           currentSiteDescription={tenant.site_description}
           tenantName={tenant.full_name || tenant.subdomain}
         />
+
+        <PageBuilderRequest
+          tenantId={tenant.id}
+          tenantName={tenant.full_name || tenant.subdomain}
+          tenantEmail={tenant.email}
+          hasRequested={tenant.page_builder_requested || false}
+          hasPlasmic={hasPlasmic}
+        />
+
+        {hasPlasmic && (
+          <PlasmiSettings
+            tenantId={tenant.id}
+            currentProjectId={tenant.plasmic_project_id}
+            currentApiToken={tenant.plasmic_api_token}
+          />
+        )}
 
         <EmailRecipientsSettings
           tenantId={tenant.id}

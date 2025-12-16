@@ -15,7 +15,7 @@ export default async function NewPagePage({ params }: Props) {
   const supabase = await createServerClient()
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, page_builder_enabled")
+    .select("id, page_builder_enabled, plasmic_project_id, plasmic_api_token")
     .eq("subdomain", tenantSlug)
     .limit(1)
     .single()
@@ -28,8 +28,16 @@ export default async function NewPagePage({ params }: Props) {
     redirect(`/${tenantSlug}/admin`)
   }
 
-  if (tenantSlug === "wesshinn") {
-    return <PlasmiPageEditor />
+  const hasPlasmic = !!(tenant.plasmic_project_id && tenant.plasmic_api_token)
+
+  if (hasPlasmic) {
+    return (
+      <PlasmiPageEditor
+        tenantProjectId={tenant.plasmic_project_id}
+        tenantApiToken={tenant.plasmic_api_token}
+        tenantSlug={tenantSlug}
+      />
+    )
   }
 
   return <PageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />

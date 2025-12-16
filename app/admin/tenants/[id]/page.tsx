@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { DeleteTenantButton } from "@/components/admin/delete-tenant-button"
+import { PlasmiCredentialsForm } from "@/components/admin/tenants/plasmic-credentials-form"
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +36,11 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
     redirect("/auth/login")
   }
 
-  const { data: tenant, error: tenantError } = await supabase.from("tenants").select("*").eq("id", id).single()
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .select("*, plasmic_project_id, plasmic_api_token, page_builder_requested")
+    .eq("id", id)
+    .single()
 
   if (tenantError || !tenant) {
     redirect("/admin/tenants")
@@ -155,6 +160,15 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
           )}
         </div>
       </Card>
+
+      {/* Plasmic credentials management section */}
+      <PlasmiCredentialsForm
+        tenantId={id}
+        tenantName={tenant.full_name || tenant.subdomain}
+        currentProjectId={tenant.plasmic_project_id}
+        currentApiToken={tenant.plasmic_api_token}
+        hasRequested={tenant.page_builder_requested || false}
+      />
 
       <Card className="border-red-200">
         <CardHeader>
