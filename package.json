@@ -111,7 +111,7 @@
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.0",
     "react-dropzone": "latest",
-    "react-email-editor": "1.7.11",
+    "react-email-editor": "latest",
     "react-final-form": "latest",
     "react-hook-form": "^7.60.0",
     "react-icons": "5.5.0",
