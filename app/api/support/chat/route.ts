@@ -1,5 +1,4 @@
-import { streamText, convertToCoreMessages } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { streamText } from "ai"
 import { createServerClient } from "@/lib/supabase/server"
 
 export const maxDuration = 30
@@ -8,8 +7,21 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
 
-    // AI SDK v4 expects messages with 'role' and 'content' properties, not 'parts'
-    const messages = body.messages || []
+    const rawMessages = body.messages || []
+    const messages = rawMessages.map((msg: { role: string; content: string | { type: string; text: string }[] }) => {
+      let content = msg.content
+      // If content is an array (parts format), extract the text
+      if (Array.isArray(content)) {
+        content = content
+          .filter((part: { type: string; text?: string }) => part.type === "text")
+          .map((part: { text?: string }) => part.text || "")
+          .join("")
+      }
+      return {
+        role: msg.role as "user" | "assistant" | "system",
+        content: String(content || ""),
+      }
+    })
 
     // Ensure we have at least one message
     if (messages.length === 0) {
@@ -202,9 +214,9 @@ QUICK FACTS (share ONE at a time, only if asked):
 ${knowledgeBase}${tenantContent}`
 
     const result = await streamText({
-      model: openai("gpt-4o-mini"),
+      model: "openai/gpt-4o-mini" as any,
       system: systemPrompt,
-      messages: convertToCoreMessages(messages),
+      messages: messages,
       maxTokens: 150,
       temperature: 0.85,
       abortSignal: req.signal,
@@ -229,7 +241,7 @@ ${knowledgeBase}${tenantContent}`
       }
     }
 
-    return result.toDataStreamResponse() // Use toDataStreamResponse() instead of toUIMessageStreamResponse() for AI SDK v4
+    return result.toUIMessageStreamResponse()
   } catch (error) {
     console.error("Chat API Error:", error)
     return new Response(JSON.stringify({ error: "Failed to process chat" }), {

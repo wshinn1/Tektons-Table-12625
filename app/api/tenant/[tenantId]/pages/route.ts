@@ -7,20 +7,26 @@ export async function POST(request: NextRequest, { params }: { params: { tenantI
     const { tenantId } = params
     const body = await request.json()
 
-    const { title, slug, content } = body
+    console.log("[v0] Creating page for tenant:", tenantId)
+    console.log("[v0] Request body:", JSON.stringify(body).slice(0, 200))
 
-    if (!title || !slug) {
-      return NextResponse.json({ error: "Title and slug are required" }, { status: 400 })
-    }
+    const { title, slug, content, tenant_id } = body
+
+    // Use provided tenant_id if available, otherwise use from params
+    const actualTenantId = tenant_id || tenantId
+
+    // Generate title and slug if not provided
+    const pageTitle = title || `Page ${Date.now()}`
+    const pageSlug = slug || `page-${Date.now()}`
 
     // Create the page
     const { data: page, error } = await supabase
       .from("tenant_pages")
       .insert({
-        tenant_id: tenantId,
-        title,
-        slug,
-        html_content: content || "",
+        tenant_id: actualTenantId,
+        title: pageTitle,
+        slug: pageSlug,
+        html_content: typeof content === "string" ? content : JSON.stringify(content),
         status: "draft",
       })
       .select()
@@ -31,6 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: { tenantI
       return NextResponse.json({ error: "Failed to create page", details: error.message }, { status: 500 })
     }
 
+    console.log("[v0] Page created successfully:", page.id)
     return NextResponse.json({ page }, { status: 201 })
   } catch (error) {
     console.error("[v0] Error in POST /api/tenant/[tenantId]/pages:", error)
