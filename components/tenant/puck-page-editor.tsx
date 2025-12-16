@@ -1,11 +1,8 @@
 "use client"
-
-import type React from "react"
-
-import { Puck, Render } from "@measured/puck"
+import { Puck } from "@measured/puck"
 import "@measured/puck/puck.css"
 import { puckConfig } from "@/lib/puck-config"
-import { useState, useMemo } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Sparkles, Layers, FileText } from "lucide-react"
@@ -21,9 +18,11 @@ interface PuckPageEditorProps {
 export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSave }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-  const [aiPrompt, setAiPrompt] = useState("")
+  const [activeTab, setActiveTab] = useState<"blocks" | "outline" | "ai">("blocks")
+
+  const aiPromptRef = useRef<HTMLTextAreaElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [activeTab, setActiveTab] = useState<"blocks" | "outline" | "fields" | "ai">("blocks")
+  const [generatedContent, setGeneratedContent] = useState<any>(null)
 
   const defaultData = {
     content: [],
@@ -36,7 +35,12 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
       if (onSave) {
         await onSave(data)
       } else {
-        const response = await fetch(`/api/tenant/${tenantId}/pages${pageId ? `/${pageId}` : ""}`, {
+        const url = pageId ? `/api/tenant/${tenantId}/pages/${pageId}` : `/api/tenant/${tenantId}/pages`
+
+        console.log("[v0] Saving page to:", url)
+        console.log("[v0] Tenant ID:", tenantId)
+
+        const response = await fetch(url, {
           method: pageId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -45,69 +49,90 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
           }),
         })
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          console.error("[v0] Save error:", errorData)
-          throw new Error(errorData.error || "Failed to save page")
+        const responseText = await response.text()
+        console.log("[v0] Response status:", response.status)
+        console.log("[v0] Response body:", responseText)
+
+        let responseData
+        try {
+          responseData = JSON.parse(responseText)
+        } catch {
+          responseData = { error: responseText }
         }
 
+        if (!response.ok) {
+          console.error("[v0] Save error response:", responseData)
+          throw new Error(responseData.error || responseData.details || "Failed to save page")
+        }
+
+        console.log("[v0] Page saved successfully:", responseData)
         toast.success("Page saved successfully!")
         router.push(`/${tenantSlug}/admin/pages`)
       }
     } catch (error) {
       console.error("[v0] Error saving page:", error)
-      toast.error("Failed to save page")
+      toast.error(error instanceof Error ? error.message : "Failed to save page")
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleAiGenerate = async () => {
-    if (!aiPrompt.trim()) {
+  const handleAiGenerate = useCallback(async () => {
+    const prompt = aiPromptRef.current?.value?.trim()
+    if (!prompt) {
       toast.error("Please enter a prompt")
       return
     }
 
     setIsGenerating(true)
+    setGeneratedContent(null)
     try {
+      console.log("[v0] Generating content for prompt:", prompt)
       const response = await fetch("/api/ai/generate-page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt }),
+        body: JSON.stringify({ prompt }),
       })
 
-      if (!response.ok) throw new Error("Failed to generate content")
+      console.log("[v0] AI response status:", response.status)
+      const responseText = await response.text()
+      console.log("[v0] AI response text:", responseText)
 
-      const data = await response.json()
-      toast.success("Content generated! Drag blocks from the panel.")
+      if (!response.ok) {
+        let errorData
+        try {
+          errorData = JSON.parse(responseText)
+        } catch {
+          errorData = { error: responseText }
+        }
+        throw new Error(errorData.error || "Failed to generate content")
+      }
+
+      const data = JSON.parse(responseText)
+      console.log("[v0] AI generated content:", data)
+      setGeneratedContent(data)
+      toast.success("Content generated! You can copy the suggestions below.")
     } catch (error) {
       console.error("[v0] AI generation error:", error)
-      toast.error("Failed to generate content")
+      toast.error(error instanceof Error ? error.message : "Failed to generate content")
     } finally {
       setIsGenerating(false)
     }
-  }
-
-  const overrides = useMemo(
-    () => ({
-      headerActions: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    }),
-    [],
-  )
+  }, [])
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col fixed inset-0 z-50 bg-white">
       <Puck
         config={puckConfig}
         data={initialData || defaultData}
         onPublish={handlePublish}
         overrides={{
-          // Add AI tab to the component list sidebar
-          components: ({ children }) => (
+          drawer: ({ children }) => (
             <div className="flex flex-col h-full">
               {/* Custom tabs */}
               <div className="flex border-b border-gray-200 bg-white">
                 <button
+                  type="button"
                   onClick={() => setActiveTab("blocks")}
                   className={`flex-1 px-3 py-2 text-xs font-medium flex flex-col items-center gap-1 ${
                     activeTab === "blocks"
@@ -119,6 +144,7 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
                   Blocks
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveTab("outline")}
                   className={`flex-1 px-3 py-2 text-xs font-medium flex flex-col items-center gap-1 ${
                     activeTab === "outline"
@@ -130,6 +156,7 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
                   Outline
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveTab("ai")}
                   className={`flex-1 px-3 py-2 text-xs font-medium flex flex-col items-center gap-1 ${
                     activeTab === "ai"
@@ -158,20 +185,24 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">AI Content Generator</label>
                       <textarea
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
+                        ref={aiPromptRef}
                         placeholder="Describe what you want to create, e.g., 'A hero section with a heading about missions and a donation button'"
-                        className="w-full h-32 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full h-32 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        onKeyDown={(e) => {
+                          // Prevent Puck from capturing keyboard events
+                          e.stopPropagation()
+                        }}
                       />
                     </div>
                     <button
+                      type="button"
                       onClick={handleAiGenerate}
-                      disabled={isGenerating || !aiPrompt.trim()}
-                      className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      disabled={isGenerating}
+                      className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isGenerating ? (
                         <>
-                          <span className="animate-spin">⟳</span>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Generating...
                         </>
                       ) : (
@@ -184,6 +215,15 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
                     <p className="text-xs text-gray-500">
                       AI will suggest content based on your description. You can then customize it in the editor.
                     </p>
+
+                    {generatedContent && (
+                      <div className="mt-4 p-3 bg-gray-50 rounded-md border">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Generated Suggestions:</p>
+                        <pre className="text-xs text-gray-600 whitespace-pre-wrap overflow-auto max-h-48">
+                          {JSON.stringify(generatedContent, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -196,6 +236,4 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
 }
 
 // Render component for displaying published pages
-export function PuckPageRender({ data }: { data: any }) {
-  return <Render config={puckConfig} data={data} />
-}
+export { PuckPageRender } from "@/lib/puck-config"

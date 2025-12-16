@@ -28,7 +28,7 @@ export default async function NewPagePage({ params }: Props) {
   }
 
   return (
-    <div className="h-screen">
+    <div className="fixed inset-0 z-50 bg-white">
       <PuckPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
     </div>
   )

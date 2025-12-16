@@ -1,4 +1,5 @@
 import type { Config } from "@measured/puck"
+import { Render } from "@measured/puck"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { JSX } from "react"
@@ -343,10 +344,24 @@ export const puckConfig: Config = {
       },
       render: ({ columns, gap, puck }) => {
         const cols = Number.parseInt(columns)
+        const gridClasses: Record<string, string> = {
+          "2": "grid-cols-1 md:grid-cols-2",
+          "3": "grid-cols-1 md:grid-cols-3",
+          "4": "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+        }
+        const gapClasses: Record<string, string> = {
+          "4": "gap-4",
+          "6": "gap-6",
+          "8": "gap-8",
+        }
         return (
-          <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-${gap}`}>
+          <div className={`grid ${gridClasses[columns] || gridClasses["2"]} ${gapClasses[gap] || gapClasses["6"]}`}>
             {Array.from({ length: cols }).map((_, i) => (
-              <div key={i}>{(puck as any)?.renderDropZone?.({ zone: `column-${i}` })}</div>
+              <div key={i} className="min-h-[100px] border-2 border-dashed border-gray-200 rounded-lg p-4">
+                {(puck as any)?.renderDropZone?.({ zone: `column-${i}` }) || (
+                  <p className="text-gray-400 text-sm text-center">Drop blocks here</p>
+                )}
+              </div>
             ))}
           </div>
         )
@@ -645,4 +660,8 @@ export const puckConfig: Config = {
       title: "Forms",
     },
   },
+}
+
+export function PuckPageRender({ data }: { data: any }) {
+  return <Render config={puckConfig} data={data} />
 }

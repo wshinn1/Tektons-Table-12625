@@ -171,6 +171,24 @@ export function TenantSidebar({
     return Math.min(Math.round((current / goal) * 100), 100)
   }
 
+  const renderNavLink = (item: NavItem) => {
+    const active = isActive(item.href)
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={handleNavigation}
+        className={cn(
+          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors duration-200",
+          active ? "bg-gray-100 text-black" : "text-black hover:bg-[#1e3a8a] hover:text-white",
+        )}
+      >
+        {item.label}
+      </Link>
+    )
+  }
+
   return (
     <>
       <Button
@@ -268,33 +286,7 @@ export function TenantSidebar({
                   {section.title}
                 </div>
               )}
-              <div className="space-y-0.5">
-                {section.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={handleNavigation}
-                    className={cn(
-                      "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-all duration-300 relative overflow-hidden group",
-                      isActive(item.href)
-                        ? "bg-gray-100 text-black"
-                        : "text-black hover:bg-gray-50 hover:text-gray-900",
-                    )}
-                  >
-                    {!isActive(item.href) && (
-                      <span className="absolute inset-0 bg-[#1e3a8a] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
-                    )}
-                    <span
-                      className={cn(
-                        "relative z-10 transition-colors duration-300",
-                        !isActive(item.href) && "group-hover:text-white",
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              <div className="space-y-0.5">{section.items.map((item) => renderNavLink(item))}</div>
             </div>
           ))}
 

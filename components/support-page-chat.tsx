@@ -108,6 +108,22 @@ export function SupportPageChat() {
         throw new Error(`API error: ${response.status}`)
       }
 
+      const contentType = response.headers.get("content-type")
+
+      if (contentType?.includes("application/json")) {
+        // Handle JSON response
+        const data = await response.json()
+        const assistantMessage: Message = {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: data.content || data.text || "Sorry, I couldn't process that request.",
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+        bellSoundRef.current?.play().catch(() => {})
+        return
+      }
+
+      // Handle streaming response
       const reader = response.body?.getReader()
       if (!reader) {
         throw new Error("No response body")
@@ -129,65 +145,45 @@ export function SupportPageChat() {
 
         const chunk = decoder.decode(value, { stream: true })
 
-        const lines = chunk.split("\n")
-        for (const line of lines) {
-          const trimmedLine = line.trim()
-          if (!trimmedLine) continue
-
-          if (trimmedLine.startsWith("data: ")) {
-            const jsonStr = trimmedLine.slice(6)
-            if (jsonStr === "[DONE]") continue
-            try {
-              const data = JSON.parse(jsonStr)
-              // Handle AI SDK v5 format: { type: "text-delta", textDelta: "..." }
-              if (data.type === "text-delta" && data.textDelta) {
-                accumulatedContent += data.textDelta
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const lastIndex = updated.length - 1
-                  if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-                    updated[lastIndex] = {
-                      ...updated[lastIndex],
-                      content: accumulatedContent,
-                    }
-                  }
-                  return updated
-                })
-              }
-              // Also handle legacy format with "delta" for backwards compatibility
-              else if (data.type === "text-delta" && data.delta) {
-                accumulatedContent += data.delta
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const lastIndex = updated.length - 1
-                  if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-                    updated[lastIndex] = {
-                      ...updated[lastIndex],
-                      content: accumulatedContent,
-                    }
-                  }
-                  return updated
-                })
-              }
-            } catch {}
-          } else if (trimmedLine.startsWith('0:"')) {
-            try {
-              // Format: 0:"text content"
-              const textContent = trimmedLine.slice(3, -1).replace(/\\n/g, "\n").replace(/\\"/g, '"')
+        // Handle SSE data format
+        if (chunk.startsWith("data: ")) {
+          const jsonStr = chunk.slice(6)
+          if (jsonStr === "[DONE]") continue
+          try {
+            const data = JSON.parse(jsonStr)
+            if (data.type === "text-delta" && data.textDelta) {
+              accumulatedContent += data.textDelta
+            } else if (data.choices?.[0]?.delta?.content) {
+              accumulatedContent += data.choices[0].delta.content
+            }
+          } catch {}
+        }
+        // Handle AI SDK v5 format: 0:"text"
+        else if (/^[0-9]+:/.test(chunk)) {
+          try {
+            const colonIndex = chunk.indexOf(":")
+            const content = chunk.slice(colonIndex + 1)
+            // Parse the JSON string value
+            if (content.startsWith('"') && content.endsWith('"')) {
+              const textContent = JSON.parse(content)
               accumulatedContent += textContent
-              setMessages((prev) => {
-                const updated = [...prev]
-                const lastIndex = updated.length - 1
-                if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-                  updated[lastIndex] = {
-                    ...updated[lastIndex],
-                    content: accumulatedContent,
-                  }
-                }
-                return updated
-              })
-            } catch {}
-          }
+            }
+          } catch {}
+        }
+
+        // Update message content
+        if (accumulatedContent) {
+          setMessages((prev) => {
+            const updated = [...prev]
+            const lastIndex = updated.length - 1
+            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: accumulatedContent,
+              }
+            }
+            return updated
+          })
         }
       }
 

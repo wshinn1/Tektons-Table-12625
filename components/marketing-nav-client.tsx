@@ -81,16 +81,6 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
     "radial-gradient(circle, rgba(14,165,233,0.15) 0%, rgba(2,132,199,0.06) 50%, rgba(3,105,161,0) 100%)", // cyan
   ]
 
-  const itemVariants = {
-    initial: { rotateX: 0, opacity: 1 },
-    hover: { rotateX: -90, opacity: 0 },
-  }
-
-  const backVariants = {
-    initial: { rotateX: 90, opacity: 0 },
-    hover: { rotateX: 0, opacity: 1 },
-  }
-
   const glowVariants = {
     initial: { opacity: 0, scale: 0.8 },
     hover: {
@@ -103,25 +93,12 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
     },
   }
 
-  const sharedTransition = {
-    type: "spring",
-    stiffness: 100,
-    damping: 20,
-    duration: 0.5,
-  }
-
   const renderAnimatedNavLink = (item: MenuItem, index: number) => {
     const gradient = menuItemGradients[index % menuItemGradients.length]
     const isExternal = isExternalUrl(item.url)
 
     return (
-      <motion.div
-        key={item.id}
-        className="relative"
-        style={{ perspective: "600px" }}
-        whileHover="hover"
-        initial="initial"
-      >
+      <motion.div key={item.id} className="relative" whileHover="hover" initial="initial">
         {/* Glow effect */}
         <motion.div
           className="absolute inset-0 z-0 pointer-events-none rounded-xl"
@@ -132,39 +109,11 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
           }}
         />
 
-        {/* Front face */}
+        {/* Single clickable link - no more front/back face flip that blocked clicks */}
         <motion.div
-          variants={itemVariants}
-          transition={sharedTransition}
-          style={{ transformStyle: "preserve-3d", transformOrigin: "center bottom" }}
           className="relative z-10"
-        >
-          {isExternal ? (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
-            >
-              {item.label}
-              <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-50" />
-            </a>
-          ) : (
-            <Link
-              href={item.url}
-              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
-            >
-              {item.label}
-            </Link>
-          )}
-        </motion.div>
-
-        {/* Back face */}
-        <motion.div
-          variants={backVariants}
-          transition={sharedTransition}
-          style={{ transformStyle: "preserve-3d", transformOrigin: "center top", position: "absolute", inset: 0 }}
-          className="z-10"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           {isExternal ? (
             <a
