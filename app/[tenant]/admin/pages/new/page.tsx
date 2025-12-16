@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server"
-import { notFound, redirect } from 'next/navigation'
+import { notFound, redirect } from "next/navigation"
 import { PuckPageEditor } from "@/components/tenant/puck-page-editor"
 
 interface Props {
