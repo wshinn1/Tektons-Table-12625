@@ -241,7 +241,7 @@ ${knowledgeBase}${tenantContent}`
       }
     }
 
-    return result.toUIMessageStreamResponse()
+    return result.toTextStreamResponse()
   } catch (error) {
     console.error("Chat API Error:", error)
     return new Response(JSON.stringify({ error: "Failed to process chat" }), {

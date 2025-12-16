@@ -123,7 +123,6 @@ export function SupportPageChat() {
         return
       }
 
-      // Handle streaming response
       const reader = response.body?.getReader()
       if (!reader) {
         throw new Error("No response body")
@@ -144,52 +143,25 @@ export function SupportPageChat() {
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
+        // Plain text stream - just append the chunk directly
+        accumulatedContent += chunk
 
-        // Handle SSE data format
-        if (chunk.startsWith("data: ")) {
-          const jsonStr = chunk.slice(6)
-          if (jsonStr === "[DONE]") continue
-          try {
-            const data = JSON.parse(jsonStr)
-            if (data.type === "text-delta" && data.textDelta) {
-              accumulatedContent += data.textDelta
-            } else if (data.choices?.[0]?.delta?.content) {
-              accumulatedContent += data.choices[0].delta.content
+        setMessages((prev) => {
+          const updated = [...prev]
+          const lastIndex = updated.length - 1
+          if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              content: accumulatedContent,
             }
-          } catch {}
-        }
-        // Handle AI SDK v5 format: 0:"text"
-        else if (/^[0-9]+:/.test(chunk)) {
-          try {
-            const colonIndex = chunk.indexOf(":")
-            const content = chunk.slice(colonIndex + 1)
-            // Parse the JSON string value
-            if (content.startsWith('"') && content.endsWith('"')) {
-              const textContent = JSON.parse(content)
-              accumulatedContent += textContent
-            }
-          } catch {}
-        }
-
-        // Update message content
-        if (accumulatedContent) {
-          setMessages((prev) => {
-            const updated = [...prev]
-            const lastIndex = updated.length - 1
-            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-              updated[lastIndex] = {
-                ...updated[lastIndex],
-                content: accumulatedContent,
-              }
-            }
-            return updated
-          })
-        }
+          }
+          return updated
+        })
       }
 
       bellSoundRef.current?.play().catch(() => {})
     } catch (err) {
-      console.error("Error sending message:", err)
+      console.error("[v0] Chat error:", err)
       setError(err instanceof Error ? err.message : "Failed to send message")
       setMessages((prev) => prev.filter((m) => m.content !== "" || m.role !== "assistant"))
     } finally {
