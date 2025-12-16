@@ -7,6 +7,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { motion } from "framer-motion"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,28 +69,53 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
   const renderNavLink = (item: MenuItem) => {
     const isExternal = isExternalUrl(item.url)
 
+    const content = (
+      <motion.div
+        className="relative px-4 py-2 cursor-pointer"
+        style={{ perspective: 600 }}
+        whileHover="hover"
+        initial="rest"
+      >
+        {/* Glow effect */}
+        <motion.div
+          className="absolute inset-0 rounded-lg bg-primary/20 blur-md pointer-events-none"
+          variants={{
+            rest: { opacity: 0, scale: 0.8 },
+            hover: { opacity: 1, scale: 1.1 },
+          }}
+          transition={{ duration: 0.3 }}
+        />
+
+        {/* 3D Flip Container */}
+        <motion.div
+          className="relative"
+          style={{ transformStyle: "preserve-3d" }}
+          variants={{
+            rest: { rotateX: 0 },
+            hover: { rotateX: 360 },
+          }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+        >
+          {/* Front face */}
+          <span className="relative z-10 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            {item.label}
+            {isExternal && <ExternalLink className="h-3 w-3 opacity-50" />}
+          </span>
+        </motion.div>
+      </motion.div>
+    )
+
     if (isExternal) {
       return (
-        <a
-          key={item.id}
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-lg"
-        >
-          {item.label}
-          <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-50" />
+        <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer">
+          {content}
         </a>
       )
     }
 
     return (
-      <Link
-        key={item.id}
-        href={item.url}
-        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-lg"
-      >
-        {item.label}
+      <Link key={item.id} href={item.url}>
+        {content}
       </Link>
     )
   }

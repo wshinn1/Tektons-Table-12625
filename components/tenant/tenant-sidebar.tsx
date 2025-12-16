@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion"
 import type { User } from "@supabase/supabase-js"
 import { tenantSignOut } from "@/app/actions/tenant-auth"
 
@@ -163,15 +164,17 @@ export function TenantSidebar({
     const active = isActive(item.href)
 
     return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={cn(
-          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors",
-          active ? "bg-gray-100 text-black" : "text-black hover:bg-[#1e3a8a] hover:text-white",
-        )}
-      >
-        {item.label}
+      <Link key={item.href} href={item.href} legacyBehavior passHref>
+        <motion.a
+          className={cn(
+            "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors cursor-pointer",
+            active ? "bg-gray-100 text-black" : "text-black hover:bg-[#1e3a8a] hover:text-white",
+          )}
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {item.label}
+        </motion.a>
       </Link>
     )
   }
