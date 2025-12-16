@@ -1,70 +1,40 @@
-"use client"
+'use client'
 
-import { Puck, Render } from "@measured/puck"
-import "@measured/puck/puck.css"
-import { createAiPlugin } from "@measured/puck-plugin-ai"
-import "@measured/puck-plugin-ai/styles.css"
-import { puckConfig } from "@/lib/puck-config"
-import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { Puck } from '@measured/puck'
+import '@measured/puck/puck.css'
+import { config } from '@/lib/puck-config'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 interface PuckPageEditorProps {
+  tenant: string
   pageId?: string
   initialData?: any
-  tenantId: string
-  tenantSlug: string
-  onSave?: (data: any) => Promise<void>
 }
 
-export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSave }: PuckPageEditorProps) {
+export function PuckPageEditor({ tenant, pageId, initialData }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-
-  const aiPlugin = useMemo(() => {
-    const apiKey = process.env.NEXT_PUBLIC_PUCK_AI_KEY
-    if (!apiKey) {
-      console.warn("[v0] Puck AI key not found. AI features will be disabled.")
-      return null
-    }
-    return createAiPlugin({ apiKey })
-  }, [])
-
-  const configWithPlugins = useMemo(() => {
-    return {
-      ...puckConfig,
-      plugins: aiPlugin ? [aiPlugin] : [],
-    }
-  }, [aiPlugin])
-
-  const defaultData = {
-    content: [],
-    root: { props: {} },
-  }
 
   const handlePublish = async (data: any) => {
     setIsSaving(true)
     try {
-      if (onSave) {
-        await onSave(data)
+      const response = await fetch(`/api/pages${pageId ? `/${pageId}` : ''}`, {
+        method: pageId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant,
+          content: data,
+        }),
+      })
+
+      if (response.ok) {
+        router.push(`/${tenant}/admin/pages`)
       } else {
-        const response = await fetch(`/api/tenant/${tenantSlug}/pages${pageId ? `/${pageId}` : ""}`, {
-          method: pageId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: JSON.stringify(data),
-            tenant_id: tenantId,
-          }),
-        })
-
-        if (!response.ok) throw new Error("Failed to save page")
-
-        toast.success("Page saved successfully!")
-        router.push(`/${tenantSlug}/admin/pages`)
+        console.error('Failed to save page')
       }
     } catch (error) {
-      console.error("[v0] Error saving page:", error)
-      toast.error("Failed to save page")
+      console.error('Error saving page:', error)
     } finally {
       setIsSaving(false)
     }
@@ -72,12 +42,11 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
 
   return (
     <div className="h-screen">
-      <Puck config={configWithPlugins} data={initialData || defaultData} onPublish={handlePublish} />
+      <Puck
+        config={config}
+        data={initialData || { content: [], root: {} }}
+        onPublish={handlePublish}
+      />
     </div>
   )
-}
-
-// Render component for displaying published pages
-export function PuckPageRender({ data }: { data: any }) {
-  return <Render config={puckConfig} data={data} />
 }
