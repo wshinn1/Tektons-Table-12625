@@ -1,31 +1,38 @@
-import { createServerClient } from "@/lib/supabase/server"
-import { notFound, redirect } from "next/navigation"
-import { PuckPageEditor } from "@/components/tenant/puck-page-editor"
+import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
+import { PuckPageEditor } from '@/components/tenant/puck-page-editor'
+import { createServerClient } from '@/lib/supabase/server'
 
-interface Props {
-  params: Promise<{
-    tenant: string
-  }>
-}
-
-export default async function NewPagePage({ params }: Props) {
-  const { tenant: tenantSlug } = await params
-
+export default async function NewCustomPagePage({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant } = await params
   const supabase = await createServerClient()
-  const { data: tenant } = await supabase
-    .from("tenants")
-    .select("id, page_builder_enabled")
-    .eq("subdomain", tenantSlug)
-    .limit(1)
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect(`/${tenant}/admin/login`)
+  }
+
+  // Check if user is an admin
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
     .single()
 
-  if (!tenant) {
-    notFound()
+  if (!profile || profile.role !== 'admin') {
+    redirect(`/${tenant}`)
   }
 
-  if (!tenant.page_builder_enabled) {
-    redirect(`/${tenantSlug}/admin`)
-  }
-
-  return <PuckPageEditor tenantId={tenant.id} tenantSlug={tenantSlug} />
+  return (
+    <Suspense fallback={<div>Loading editor...</div>}>
+      <PuckPageEditor tenant={tenant} />
+    </Suspense>
+  )
 }
