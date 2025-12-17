@@ -90,6 +90,13 @@ export function SupportPageChat() {
     setIsLoading(true)
     setError(null)
 
+    const assistantMessage: Message = {
+      id: `assistant-${Date.now()}`,
+      role: "assistant",
+      content: "",
+    }
+    setMessages((prev) => [...prev, assistantMessage])
+
     try {
       const response = await fetch("/api/support/chat", {
         method: "POST",
@@ -108,18 +115,11 @@ export function SupportPageChat() {
         throw new Error(`API error: ${response.status}`)
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) {
+      if (!response.body) {
         throw new Error("No response body")
       }
 
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: "",
-      }
-      setMessages((prev) => [...prev, assistantMessage])
-
+      const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let accumulatedContent = ""
 
@@ -147,7 +147,7 @@ export function SupportPageChat() {
     } catch (err) {
       console.error("[v0] Chat error:", err)
       setError(err instanceof Error ? err.message : "Failed to send message")
-      setMessages((prev) => prev.filter((m) => m.content !== "" || m.role !== "assistant"))
+      setMessages((prev) => prev.filter((m) => !(m.content === "" && m.role === "assistant")))
     } finally {
       setIsLoading(false)
     }
