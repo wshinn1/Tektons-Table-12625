@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, { params }: { params: { tenantI
 
     console.log("[v0] Current user:", user.id)
 
-    const { title, slug, content, tenant_id } = body
+    const { title, slug, content, design_json, tenant_id, status } = body
 
     // Use provided tenant_id if available, otherwise use from params
     const actualTenantId = tenant_id || tenantId
@@ -31,16 +31,18 @@ export async function POST(request: NextRequest, { params }: { params: { tenantI
     const pageTitle = title || `Page ${Date.now()}`
     const pageSlug = slug || `page-${Date.now()}`
 
+    const pageDesignJson = design_json || (typeof content === "object" ? content : null)
+
     const pageData = {
       tenant_id: actualTenantId,
       title: pageTitle,
       slug: pageSlug,
       html_content: typeof content === "string" ? content : "",
-      design_json: typeof content === "object" ? content : null,
-      status: "draft",
+      design_json: pageDesignJson,
+      status: status || "draft",
     }
 
-    console.log("[v0] Inserting page data:", JSON.stringify(pageData).slice(0, 200))
+    console.log("[v0] Inserting page data:", JSON.stringify(pageData).slice(0, 500))
 
     // Create the page
     const { data: page, error } = await supabase.from("tenant_pages").insert(pageData).select().single()

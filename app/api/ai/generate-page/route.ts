@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     const systemPrompt = `You are an expert web designer that generates Puck page builder JSON configurations.
 
-When given a prompt, generate a JSON object with this structure:
+When given a prompt, generate a JSON object with this EXACT structure:
 {
   "content": [
     {
@@ -31,48 +31,123 @@ When given a prompt, generate a JSON object with this structure:
 }
 
 Available blocks:
-- HeadingBlock: {title, level: "h1"|"h2"|"h3"|"h4", align: "left"|"center"|"right"}
-- TextBlock: {content, align: "left"|"center"|"right"}
-- RichTextBlock: {content}
-- ButtonBlock: {label, href, variant: "default"|"secondary"|"outline", size: "sm"|"default"|"lg"}
-- LinkBlock: {text, href, external: boolean}
-- ImageBlock: {src, alt, width, height, rounded: "none"|"sm"|"md"|"lg"|"full"}
-- VideoBlock: {src, poster, autoplay: boolean, loop: boolean}
-- EmbedBlock: {code}
+- HeadingBlock: {title: "string", level: "h1"|"h2"|"h3"|"h4", align: "left"|"center"|"right"}
+- TextBlock: {content: "string", align: "left"|"center"|"right"}
+- RichTextBlock: {content: "string"}
+- ButtonBlock: {label: "string", href: "string", variant: "default"|"secondary"|"outline", size: "sm"|"default"|"lg"}
+- LinkBlock: {text: "string", href: "string", external: boolean}
+- ImageBlock: {src: "string", alt: "string", width: number, height: number, rounded: "none"|"sm"|"md"|"lg"|"full"}
+- VideoBlock: {src: "string", poster: "string", autoplay: boolean, loop: boolean}
+- EmbedBlock: {code: "string"}
 - ContainerBlock: {maxWidth: "sm"|"md"|"lg"|"xl"|"2xl"|"full", padding: "none"|"sm"|"md"|"lg"}
 - ColumnsBlock: {columns: 2|3|4, gap: "sm"|"md"|"lg"}
-- CardBlock: {title, description, content}
+- CardBlock: {title: "string", description: "string", content: "string"}
 - SpacerBlock: {height: "16"|"32"|"64"|"96"}
-- DividerBlock: {color, thickness: "1"|"2"|"4"}
-- HeroBlock: {title, subtitle, buttonText, buttonHref, backgroundColor, textColor, align: "left"|"center"|"right"}
-- FeatureGridBlock: {title, subtitle, features: [{title: "Feature 1", description: "Description text", icon: "✓"}]} 
-- TestimonialBlock: {quote, author, role, avatar}
-- CTABlock: {title, subtitle, buttonText, buttonHref, backgroundColor, textColor}
-- ContactFormBlock: {title, submitText, successMessage}
-- DonationBlock: {title, description, amounts: "25,50,100,250", buttonText}
+- DividerBlock: {color: "string", thickness: "1"|"2"|"4"}
+- HeroBlock: {title: "string", subtitle: "string", buttonText: "string", buttonHref: "string", backgroundColor: "string", textColor: "string", align: "left"|"center"|"right"}
+- FeatureGridBlock: {title: "string", subtitle: "string", features: [{title: "string", description: "string", icon: "string"}]} 
+- TestimonialBlock: {quote: "string", author: "string", role: "string", avatar: "string"}
+- CTABlock: {title: "string", subtitle: "string", buttonText: "string", buttonHref: "string", backgroundColor: "string", textColor: "string"}
+- ContactFormBlock: {title: "string", submitText: "string", successMessage: "string"}
+- DonationBlock: {title: "string", description: "string", amounts: "string", buttonText: "string"}
 
-CRITICAL RULES FOR LANDING PAGES:
-- A landing page should have 4-6 different sections with diverse block types
-- ALWAYS start with a HeroBlock for landing pages
-- Include FeatureGridBlock or benefits section
-- End with a CTABlock
-- Use ContactFormBlock only if specifically requested
-- Add SpacerBlocks between major sections for breathing room
+CRITICAL LANDING PAGE RULES:
+1. Generate 4-6 DIFFERENT blocks for a landing page
+2. ALWAYS start with ONE HeroBlock
+3. Add ONE FeatureGridBlock or benefits section
+4. Include ONE TestimonialBlock for social proof
+5. End with ONE CTABlock
+6. Add SpacerBlock between major sections
+7. NEVER repeat the same block type multiple times (especially CTABlock or ContactFormBlock)
+8. Use ContactFormBlock ONLY if explicitly asked for a contact form
 
 CRITICAL JSON RULES:
-- Output ONLY valid JSON with actual values, NO JavaScript code or functions
-- Do NOT use JSON.stringify(), JSON.parse(), or any JavaScript functions
-- For array properties like "features", provide the array directly: [{"title": "Feature 1", "description": "Description text", "icon": "✓"}]
-- Use appropriate blocks for the requested content
-- Set reasonable default values for all props
-- For images, use /placeholder.svg?height=X&width=Y&query=description`
+- Output ONLY valid JSON with actual primitive values
+- NEVER use JavaScript functions like JSON.stringify(), JSON.parse(), etc.
+- For array properties, provide the ACTUAL array: [{"title": "Feature", "description": "Text", "icon": "✓"}]
+- For string properties, provide the ACTUAL string: "Get Started Today"
+- For number properties, provide the ACTUAL number: 400
+- For boolean properties, provide the ACTUAL boolean: true or false
+- Do NOT wrap values in any functions
+
+EXAMPLE LANDING PAGE (use as template):
+{
+  "content": [
+    {
+      "type": "HeroBlock",
+      "props": {
+        "title": "Transform Your Business Today",
+        "subtitle": "Join thousands of successful companies",
+        "buttonText": "Get Started Free",
+        "buttonHref": "#signup",
+        "backgroundColor": "#1e40af",
+        "textColor": "#ffffff",
+        "align": "center"
+      }
+    },
+    {
+      "type": "SpacerBlock",
+      "props": { "height": "64" }
+    },
+    {
+      "type": "FeatureGridBlock",
+      "props": {
+        "title": "Why Choose Us",
+        "subtitle": "Everything you need to succeed",
+        "features": [
+          {"title": "Fast Setup", "description": "Get started in minutes", "icon": "⚡"},
+          {"title": "24/7 Support", "description": "We're here to help", "icon": "💬"},
+          {"title": "Secure", "description": "Bank-level security", "icon": "🔒"}
+        ]
+      }
+    },
+    {
+      "type": "SpacerBlock",
+      "props": { "height": "64" }
+    },
+    {
+      "type": "TestimonialBlock",
+      "props": {
+        "quote": "This product changed everything for us!",
+        "author": "Jane Smith",
+        "role": "CEO at TechCorp",
+        "avatar": "/professional-headshot.png"
+      }
+    },
+    {
+      "type": "SpacerBlock",
+      "props": { "height": "64" }
+    },
+    {
+      "type": "CTABlock",
+      "props": {
+        "title": "Ready to Get Started?",
+        "subtitle": "Join our community today",
+        "buttonText": "Sign Up Now",
+        "buttonHref": "#signup",
+        "backgroundColor": "#059669",
+        "textColor": "#ffffff"
+      }
+    }
+  ],
+  "root": {
+    "props": {}
+  }
+}`
 
     console.log("[v0] Calling generateText with model: openai/gpt-4o")
 
     const { text } = await generateText({
       model: "openai/gpt-4o",
       system: systemPrompt,
-      prompt: `Generate Puck blocks configuration for: ${prompt}`,
+      prompt: `Generate a Puck blocks configuration for: ${prompt}
+
+Remember:
+- Use 4-6 DIFFERENT block types
+- Do NOT repeat blocks (especially CTABlock or ContactFormBlock)
+- Start with HeroBlock for landing pages
+- Use actual JSON values, NO JavaScript functions
+- Follow the landing page template structure`,
       responseFormat: { type: "json_object" },
     })
 
@@ -97,7 +172,9 @@ CRITICAL JSON RULES:
         puckData.root = { props: {} }
       }
 
-      console.log("[v0] Parsed Puck data:", JSON.stringify(puckData, null, 2))
+      console.log("[v0] Parsed Puck data successfully")
+      console.log("[v0] Number of blocks:", puckData.content.length)
+      console.log("[v0] Block types:", puckData.content.map((b: any) => b.type).join(", "))
     } catch (parseError) {
       console.error("[v0] Failed to parse AI response as JSON:", parseError)
       // Fallback to a simple heading block

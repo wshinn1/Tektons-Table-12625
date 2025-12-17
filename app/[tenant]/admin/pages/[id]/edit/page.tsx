@@ -35,13 +35,16 @@ export default async function EditPagePage({ params }: Props) {
     notFound()
   }
 
-  let initialData
-  try {
-    initialData = page.content ? JSON.parse(page.content) : undefined
-  } catch (error) {
-    console.error("[v0] Failed to parse page content:", error)
-    initialData = undefined
-  }
+  const initialData = page.design_json || { content: [], root: { props: {} } }
 
-  return <PuckPageEditor pageId={pageId} initialData={initialData} tenantId={tenant.id} tenantSlug={tenantSlug} />
+  return (
+    <PuckPageEditor
+      pageId={pageId}
+      initialData={initialData}
+      tenantId={tenant.id}
+      tenantSlug={tenantSlug}
+      pageTitle={page.title}
+      pageSlug={page.slug}
+    />
+  )
 }
