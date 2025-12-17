@@ -166,8 +166,9 @@ export function TenantSidebar({
       <Link
         key={item.href}
         href={item.href}
+        prefetch={true}
         className={cn(
-          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-all duration-200",
+          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-all duration-200 pointer-events-auto",
           active
             ? "bg-gray-100 text-black"
             : "text-black hover:bg-blue-500/10 hover:backdrop-blur-sm hover:shadow-[0_0_10px_rgba(59,130,246,0.2)]",

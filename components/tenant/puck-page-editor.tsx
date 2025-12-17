@@ -98,9 +98,14 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
       }
 
       if (data.data && data.data.content) {
-        setPuckData(data.data)
+        const newData = {
+          content: [...data.data.content],
+          root: { ...data.data.root },
+        }
+        setPuckData(newData)
         setPuckKey((prev) => prev + 1)
         console.log("[v0] Updated puckData with", data.data.content.length, "blocks")
+        console.log("[v0] New puckKey:", puckKey + 1)
         toast.success(data.message || "Content generated and added to canvas!")
         if (aiPromptRef.current) {
           aiPromptRef.current.value = ""
@@ -115,7 +120,7 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
     } finally {
       setIsGenerating(false)
     }
-  }, [])
+  }, [puckKey])
 
   return (
     <div className="h-screen flex flex-col">
