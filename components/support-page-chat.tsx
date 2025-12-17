@@ -98,6 +98,8 @@ export function SupportPageChat() {
     setMessages((prev) => [...prev, assistantMessage])
 
     try {
+      console.log("[v0] Sending chat request with messages:", messages.length + 1)
+
       const response = await fetch("/api/support/chat", {
         method: "POST",
         headers: {
@@ -111,6 +113,9 @@ export function SupportPageChat() {
         }),
       })
 
+      console.log("[v0] Response status:", response.status)
+      console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`)
       }
@@ -119,15 +124,20 @@ export function SupportPageChat() {
         throw new Error("No response body")
       }
 
+      console.log("[v0] Starting to read stream...")
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let accumulatedContent = ""
+      let chunkCount = 0
 
       while (true) {
         const { done, value } = await reader.read()
+        console.log("[v0] Stream chunk", ++chunkCount, "done:", done, "value length:", value?.length)
+
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
+        console.log("[v0] Decoded chunk:", chunk.substring(0, 50), "...")
         accumulatedContent += chunk
 
         setMessages((prev) => {
@@ -143,9 +153,11 @@ export function SupportPageChat() {
         })
       }
 
+      console.log("[v0] Stream complete, total content length:", accumulatedContent.length)
       bellSoundRef.current?.play().catch(() => {})
     } catch (err) {
       console.error("[v0] Chat error:", err)
+      console.error("[v0] Error stack:", err instanceof Error ? err.stack : "No stack")
       setError(err instanceof Error ? err.message : "Failed to send message")
       setMessages((prev) => prev.filter((m) => !(m.content === "" && m.role === "assistant")))
     } finally {
