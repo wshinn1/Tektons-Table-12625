@@ -27,6 +27,7 @@ export function SupportChatbot() {
   const [messages, setMessages] = useState<Array<{ id: string; role: string; content: string }>>([])
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
+  const [isHidden, setIsHidden] = useState(false)
 
   const sendSoundRef = useRef<HTMLAudioElement | null>(null)
   const receiveSoundRef = useRef<HTMLAudioElement | null>(null)
@@ -127,19 +128,40 @@ export function SupportChatbot() {
 
   return (
     <>
-      {!isOpen && (
-        <button
-          onClick={handleOpenChat}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-2xl z-50 transition-all duration-300 hover:scale-110 bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center group animate-subtle-bounce"
-          aria-label="Open chat"
-        >
-          <MessageSquare className="h-6 w-6 sm:h-7 sm:w-7 text-white" strokeWidth={2} />
+      {!isOpen && !isHidden && (
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2">
+          <button
+            onClick={() => setIsHidden(true)}
+            className="h-8 w-8 rounded-full bg-gray-200/80 backdrop-blur-md border border-gray-300/50 shadow-lg flex items-center justify-center hover:bg-gray-300/80 transition-all duration-300 text-gray-600 hover:text-gray-800"
+            aria-label="Hide chat"
+            title="Hide chat widget"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleOpenChat}
+            className="h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 bg-blue-500/40 backdrop-blur-sm border border-blue-400/50 flex items-center justify-center group animate-subtle-bounce"
+            aria-label="Open chat"
+          >
+            <MessageSquare className="h-6 w-6 sm:h-7 sm:w-7 text-white" strokeWidth={2} />
 
-          {showNotificationBadge && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-lg">
-              1
-            </span>
-          )}
+            {showNotificationBadge && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-lg">
+                1
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {isHidden && !isOpen && (
+        <button
+          onClick={() => setIsHidden(false)}
+          className="fixed bottom-0 right-0 h-12 w-12 rounded-tl-2xl bg-blue-500/40 backdrop-blur-sm border-l border-t border-blue-400/50 shadow-lg flex items-center justify-center hover:scale-105 transition-all duration-300 z-50"
+          aria-label="Show chat"
+          title="Show chat widget"
+        >
+          <MessageSquare className="h-5 w-5 text-white" />
         </button>
       )}
 

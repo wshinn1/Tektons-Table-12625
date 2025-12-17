@@ -108,21 +108,6 @@ export function SupportPageChat() {
         throw new Error(`API error: ${response.status}`)
       }
 
-      const contentType = response.headers.get("content-type")
-
-      if (contentType?.includes("application/json")) {
-        // Handle JSON response
-        const data = await response.json()
-        const assistantMessage: Message = {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: data.content || data.text || "Sorry, I couldn't process that request.",
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-        bellSoundRef.current?.play().catch(() => {})
-        return
-      }
-
       const reader = response.body?.getReader()
       if (!reader) {
         throw new Error("No response body")
@@ -143,7 +128,6 @@ export function SupportPageChat() {
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        // Plain text stream - just append the chunk directly
         accumulatedContent += chunk
 
         setMessages((prev) => {
@@ -234,32 +218,43 @@ export function SupportPageChat() {
   return (
     <>
       <Card className="overflow-hidden">
-        <div className="bg-primary/5 border-b px-6 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-primary" />
+        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-6 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold">Tekton's Table - Support</h3>
-            <p className="text-sm text-muted-foreground">Ask me anything about Tekton's Table</p>
+            <h3 className="font-semibold text-white">Tekton's Table - Support</h3>
+            <p className="text-sm text-white/80">Ask me anything about Tekton's Table</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowEscalateModal(true)} className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEscalateModal(true)}
+              className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
               <MessageCircle className="h-4 w-4" />
               Contact Support
             </Button>
             {messages.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={handleNewConversation} title="Start new conversation">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNewConversation}
+                title="Start new conversation"
+                className="text-white hover:bg-white/20"
+              >
                 <RefreshCw className="h-4 w-4" />
               </Button>
             )}
           </div>
         </div>
 
-        <div ref={messagesContainerRef} className="h-[400px] overflow-y-auto p-6 space-y-4 bg-muted/30">
+        <div ref={messagesContainerRef} className="h-[400px] overflow-y-auto p-6 space-y-4">
           {messages.length === 0 && (
             <div className="space-y-4">
               <div className="flex justify-start">
-                <div className="bg-background rounded-2xl px-4 py-3 shadow-sm max-w-[85%] border">
+                <div className="bg-muted rounded-2xl px-4 py-3 shadow-sm max-w-[85%]">
                   <p className="text-sm">
                     Hey there! I'm Hyperetes, your friendly guide to Tekton's Table. What can I help you with today?
                   </p>
@@ -275,7 +270,7 @@ export function SupportPageChat() {
                       type="button"
                       onClick={() => handleSuggestedQuestion(question)}
                       disabled={isLoading}
-                      className="text-xs px-3 py-2 rounded-full bg-background border hover:bg-accent transition-colors text-left disabled:opacity-50"
+                      className="text-xs px-3 py-2 rounded-full bg-muted hover:bg-muted/80 transition-colors text-left disabled:opacity-50"
                     >
                       {question}
                     </button>
@@ -289,7 +284,7 @@ export function SupportPageChat() {
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-background border"
+                  message.role === "user" ? "bg-blue-600 text-white" : "bg-muted"
                 }`}
               >
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
@@ -299,7 +294,7 @@ export function SupportPageChat() {
 
           {isLoading && messages[messages.length - 1]?.content === "" && (
             <div className="flex justify-start">
-              <div className="bg-background border rounded-2xl px-4 py-3 shadow-sm">
+              <div className="bg-muted rounded-2xl px-4 py-3 shadow-sm">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
                   <div
@@ -318,7 +313,7 @@ export function SupportPageChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleFormSubmit} className="p-4 border-t bg-background">
+        <form onSubmit={handleFormSubmit} className="p-4 border-t">
           <div className="flex gap-2">
             <Input
               type="text"

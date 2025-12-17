@@ -56,9 +56,11 @@ IMPORTANT:
       model: "openai/gpt-4o",
       system: systemPrompt,
       prompt: `Generate Puck blocks configuration for: ${prompt}`,
+      responseFormat: { type: "json_object" },
     })
 
     console.log("[v0] Generated text length:", text?.length)
+    console.log("[v0] Raw AI response:", text)
 
     let puckData
     try {
