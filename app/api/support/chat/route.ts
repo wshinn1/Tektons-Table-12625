@@ -5,6 +5,7 @@ export const maxDuration = 30
 
 export async function POST(req: Request) {
   try {
+    console.log("[v0] Chat API: Starting request processing")
     const body = await req.json()
 
     const rawMessages = body.messages || []
@@ -213,6 +214,7 @@ QUICK FACTS (share ONE at a time, only if asked):
 
 ${knowledgeBase}${tenantContent}`
 
+    console.log("[v0] Chat API: Calling streamText")
     const result = await streamText({
       model: "openai/gpt-4o-mini" as any,
       system: systemPrompt,
@@ -222,28 +224,30 @@ ${knowledgeBase}${tenantContent}`
       abortSignal: req.signal,
     })
 
-    if (user && messages.length > 0) {
-      if (lastMessageContent) {
-        let context = "general"
-        if (lastMessageContent.includes("stripe") || lastMessageContent.includes("nonprofit")) {
-          context = "stripe-nonprofit-setup"
-        } else if (isLegalQuery) {
-          context = "legal-terms-privacy"
+    console.log("[v0] Chat API: streamText completed, creating response")
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const textPart of result.textStream) {
+            controller.enqueue(new TextEncoder().encode(textPart))
+          }
+          controller.close()
+        } catch (error) {
+          console.error("[v0] Chat API: Stream error:", error)
+          controller.error(error)
         }
+      },
+    })
 
-        // Fire and forget - don't await this as it would delay the response
-        supabase.from("chat_logs").insert({
-          user_id: user.id,
-          tenant_id: tenantSubdomain,
-          message: lastMessageContent,
-          context: context,
-        })
-      }
-    }
-
-    return result.toTextStreamResponse()
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+      },
+    })
   } catch (error) {
-    console.error("Chat API Error:", error)
+    console.error("[v0] Chat API Error:", error)
     return new Response(JSON.stringify({ error: "Failed to process chat" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
