@@ -23,6 +23,7 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
   const aiPromptRef = useRef<HTMLTextAreaElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [puckData, setPuckData] = useState(initialData || { content: [], root: { props: {} } })
+  const [puckKey, setPuckKey] = useState(0)
 
   const handlePublish = async (data: any) => {
     setIsSaving(true)
@@ -98,6 +99,8 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
 
       if (data.data && data.data.content) {
         setPuckData(data.data)
+        setPuckKey((prev) => prev + 1)
+        console.log("[v0] Updated puckData with", data.data.content.length, "blocks")
         toast.success(data.message || "Content generated and added to canvas!")
         if (aiPromptRef.current) {
           aiPromptRef.current.value = ""
@@ -117,6 +120,7 @@ export function PuckPageEditor({ pageId, initialData, tenantId, tenantSlug, onSa
   return (
     <div className="h-screen flex flex-col">
       <Puck
+        key={puckKey}
         config={puckConfig}
         data={puckData}
         onChange={(data) => setPuckData(data)}
