@@ -33,21 +33,36 @@ When given a prompt, generate a JSON object with this structure:
 Available blocks:
 - HeadingBlock: {title, level: "h1"|"h2"|"h3"|"h4", align: "left"|"center"|"right"}
 - TextBlock: {content, align: "left"|"center"|"right"}
+- RichTextBlock: {content}
 - ButtonBlock: {label, href, variant: "default"|"secondary"|"outline", size: "sm"|"default"|"lg"}
+- LinkBlock: {text, href, external: boolean}
 - ImageBlock: {src, alt, width, height, rounded: "none"|"sm"|"md"|"lg"|"full"}
+- VideoBlock: {src, poster, autoplay: boolean, loop: boolean}
+- EmbedBlock: {code}
+- ContainerBlock: {maxWidth: "sm"|"md"|"lg"|"xl"|"2xl"|"full", padding: "none"|"sm"|"md"|"lg"}
+- ColumnsBlock: {columns: 2|3|4, gap: "sm"|"md"|"lg"}
 - CardBlock: {title, description, content}
+- SpacerBlock: {height: "16"|"32"|"64"|"96"}
+- DividerBlock: {color, thickness: "1"|"2"|"4"}
 - HeroBlock: {title, subtitle, buttonText, buttonHref, backgroundColor, textColor, align: "left"|"center"|"right"}
-- FeatureGridBlock: {title, subtitle, features: [{title, description, icon}]} 
+- FeatureGridBlock: {title, subtitle, features: [{title: "Feature 1", description: "Description text", icon: "✓"}]} 
+- TestimonialBlock: {quote, author, role, avatar}
 - CTABlock: {title, subtitle, buttonText, buttonHref, backgroundColor, textColor}
 - ContactFormBlock: {title, submitText, successMessage}
 - DonationBlock: {title, description, amounts: "25,50,100,250", buttonText}
-- SpacerBlock: {height: "16"|"32"|"64"|"96"}
-- DividerBlock: {color, thickness: "1"|"2"|"4"}
 
-CRITICAL RULES:
+CRITICAL RULES FOR LANDING PAGES:
+- A landing page should have 4-6 different sections with diverse block types
+- ALWAYS start with a HeroBlock for landing pages
+- Include FeatureGridBlock or benefits section
+- End with a CTABlock
+- Use ContactFormBlock only if specifically requested
+- Add SpacerBlocks between major sections for breathing room
+
+CRITICAL JSON RULES:
 - Output ONLY valid JSON with actual values, NO JavaScript code or functions
 - Do NOT use JSON.stringify(), JSON.parse(), or any JavaScript functions
-- For array properties like "features", provide the array directly: [{"title": "...", "description": "..."}]
+- For array properties like "features", provide the array directly: [{"title": "Feature 1", "description": "Description text", "icon": "✓"}]
 - Use appropriate blocks for the requested content
 - Set reasonable default values for all props
 - For images, use /placeholder.svg?height=X&width=Y&query=description`
