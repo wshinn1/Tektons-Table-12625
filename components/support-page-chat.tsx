@@ -114,46 +114,31 @@ export function SupportPageChat() {
       })
 
       console.log("[v0] Response status:", response.status)
-      console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`)
       }
 
-      if (!response.body) {
-        throw new Error("No response body")
+      const data = await response.json()
+      console.log("[v0] Received response data:", data)
+
+      if (!data.content) {
+        throw new Error("No content in response")
       }
 
-      console.log("[v0] Starting to read stream...")
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let accumulatedContent = ""
-      let chunkCount = 0
-
-      while (true) {
-        const { done, value } = await reader.read()
-        console.log("[v0] Stream chunk", ++chunkCount, "done:", done, "value length:", value?.length)
-
-        if (done) break
-
-        const chunk = decoder.decode(value, { stream: true })
-        console.log("[v0] Decoded chunk:", chunk.substring(0, 50), "...")
-        accumulatedContent += chunk
-
-        setMessages((prev) => {
-          const updated = [...prev]
-          const lastIndex = updated.length - 1
-          if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: accumulatedContent,
-            }
+      setMessages((prev) => {
+        const updated = [...prev]
+        const lastIndex = updated.length - 1
+        if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            content: data.content,
           }
-          return updated
-        })
-      }
+        }
+        return updated
+      })
 
-      console.log("[v0] Stream complete, total content length:", accumulatedContent.length)
+      console.log("[v0] Response complete, content length:", data.content.length)
       bellSoundRef.current?.play().catch(() => {})
     } catch (err) {
       console.error("[v0] Chat error:", err)

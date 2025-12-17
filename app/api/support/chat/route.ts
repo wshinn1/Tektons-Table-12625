@@ -224,26 +224,19 @@ ${knowledgeBase}${tenantContent}`
       abortSignal: req.signal,
     })
 
-    console.log("[v0] Chat API: streamText completed, creating response")
+    console.log("[v0] Chat API: streamText completed, accumulating response")
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const textPart of result.textStream) {
-            controller.enqueue(new TextEncoder().encode(textPart))
-          }
-          controller.close()
-        } catch (error) {
-          console.error("[v0] Chat API: Stream error:", error)
-          controller.error(error)
-        }
-      },
-    })
+    let fullText = ""
+    for await (const textPart of result.textStream) {
+      fullText += textPart
+    }
 
-    return new Response(stream, {
+    console.log("[v0] Chat API: Full response length:", fullText.length)
+
+    return new Response(JSON.stringify({ content: fullText }), {
+      status: 200,
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
+        "Content-Type": "application/json",
       },
     })
   } catch (error) {
