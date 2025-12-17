@@ -19,6 +19,21 @@ const createExternalFetcher = (type: string, tenantId?: string) => ({
   },
 })
 
+const createExternalFieldWithSchema = (type: string, tenantId: string, label: string) => ({
+  type: "external" as const,
+  label,
+  placeholder: `Select ${label.toLowerCase()}...`,
+  ...createExternalFetcher(type, tenantId),
+  getItemSummary: (item: any) => item?.label || `Select ${label}`,
+  // AI schema for Puck AI to understand the field
+  ai: {
+    schema: {
+      type: "string",
+      description: `The ${label.toLowerCase()} to display. This is fetched from the database.`,
+    },
+  },
+})
+
 export const createPuckConfig = (tenantId?: string): Config => ({
   root: {
     fields: {
@@ -67,7 +82,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
     },
     forms: {
       title: "Forms",
-      components: ["ContactFormBlock", "DonationBlock"],
+      components: ["ContactFormBlock", "DonationBlock", "GivingWidgetBlock"],
     },
   },
   components: {
@@ -1044,13 +1059,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
       fields: {
         title: { type: "text", label: "Section Title" },
         category: tenantId
-          ? {
-              type: "external",
-              label: "Filter by Category",
-              placeholder: "Select a category...",
-              ...createExternalFetcher("blog-categories", tenantId),
-              getItemSummary: (item: any) => item?.label || "All Categories",
-            }
+          ? createExternalFieldWithSchema("blog-categories", tenantId, "Filter by Category")
           : { type: "text", label: "Category ID" },
         limit: {
           type: "select",
@@ -1239,78 +1248,58 @@ export const createPuckConfig = (tenantId?: string): Config => ({
     GivingWidgetBlock: {
       label: "Giving Widget",
       fields: {
+        title: { type: "text", label: "Widget Title" },
+        description: { type: "textarea", label: "Description" },
         source: {
-          type: "select",
+          type: "radio",
           label: "Donation Source",
           options: [
-            { label: "Main Giving Page", value: "giving" },
+            { label: "Main Giving Page", value: "main" },
             { label: "Campaign", value: "campaign" },
           ],
         },
-        campaignId: {
-          type: "external",
-          label: "Select Campaign",
-          placeholder: "Choose a campaign",
-          fetchList: async () => {
-            try {
-              const tenantId = typeof window !== "undefined" ? window.location.pathname.split("/")[1] : ""
-              if (!tenantId) return []
-              const res = await fetch(`/api/tenant/${tenantId}/puck-external?type=campaigns`)
-              if (!res.ok) return []
-              return await res.json()
-            } catch {
-              return []
+        campaignId: tenantId
+          ? {
+              ...createExternalFieldWithSchema("campaigns", tenantId, "Select Campaign"),
+              // Only show when source is "campaign"
             }
-          },
-          getItemSummary: (item: any) => item?.label || "Select campaign",
-        },
-        displayStyle: {
-          type: "select",
-          label: "Display Style",
+          : { type: "text", label: "Campaign ID" },
+        style: {
+          type: "radio",
+          label: "Widget Style",
           options: [
-            { label: "Full Widget", value: "full" },
+            { label: "Full", value: "full" },
             { label: "Compact", value: "compact" },
-            { label: "Inline Form", value: "inline" },
+            { label: "Inline", value: "inline" },
           ],
         },
         showProgress: {
           type: "radio",
           label: "Show Progress Bar",
           options: [
-            { label: "Yes", value: "yes" },
-            { label: "No", value: "no" },
-          ],
-        },
-        showGoal: {
-          type: "radio",
-          label: "Show Goal Amount",
-          options: [
-            { label: "Yes", value: "yes" },
-            { label: "No", value: "no" },
+            { label: "Yes", value: true },
+            { label: "No", value: false },
           ],
         },
         buttonText: { type: "text", label: "Button Text" },
-        customTitle: { type: "text", label: "Custom Title (optional)" },
-        customDescription: { type: "textarea", label: "Custom Description (optional)" },
       },
       defaultProps: {
-        source: "giving",
+        source: "main",
         campaignId: null,
-        displayStyle: "full",
-        showProgress: "yes",
-        showGoal: "yes",
+        style: "full",
+        showProgress: true,
         buttonText: "Donate Now",
-        customTitle: "",
-        customDescription: "",
       },
       resolveFields: async (data: any) => {
         // Show campaign selector only when source is "campaign"
         const fields: any = {
+          title: { type: "text", label: "Widget Title" },
+          description: { type: "textarea", label: "Description" },
           source: {
-            type: "select",
+            type: "radio",
             label: "Donation Source",
             options: [
-              { label: "Main Giving Page", value: "giving" },
+              { label: "Main Giving Page", value: "main" },
               { label: "Campaign", value: "campaign" },
             ],
           },
@@ -1333,39 +1322,35 @@ export const createPuckConfig = (tenantId?: string): Config => ({
               }
             },
             getItemSummary: (item: any) => item?.label || "Select campaign",
+            ai: {
+              schema: {
+                type: "string",
+                description: "The campaign to display. This is fetched from the database.",
+              },
+            },
           }
         }
 
         return {
           ...fields,
-          displayStyle: {
-            type: "select",
-            label: "Display Style",
+          style: {
+            type: "radio",
+            label: "Widget Style",
             options: [
-              { label: "Full Widget", value: "full" },
+              { label: "Full", value: "full" },
               { label: "Compact", value: "compact" },
-              { label: "Inline Form", value: "inline" },
+              { label: "Inline", value: "inline" },
             ],
           },
           showProgress: {
             type: "radio",
             label: "Show Progress Bar",
             options: [
-              { label: "Yes", value: "yes" },
-              { label: "No", value: "no" },
-            ],
-          },
-          showGoal: {
-            type: "radio",
-            label: "Show Goal Amount",
-            options: [
-              { label: "Yes", value: "yes" },
-              { label: "No", value: "no" },
+              { label: "Yes", value: true },
+              { label: "No", value: false },
             ],
           },
           buttonText: { type: "text", label: "Button Text" },
-          customTitle: { type: "text", label: "Custom Title (optional)" },
-          customDescription: { type: "textarea", label: "Custom Description (optional)" },
         }
       },
       permissions: {
@@ -1373,25 +1358,16 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         duplicate: true,
         drag: true,
       },
-      render: ({
-        source,
-        campaignId,
-        displayStyle,
-        showProgress,
-        showGoal,
-        buttonText,
-        customTitle,
-        customDescription,
-      }) => {
-        const isCompact = displayStyle === "compact"
-        const isInline = displayStyle === "inline"
+      render: ({ source, campaignId, style, showProgress, buttonText, title, description }) => {
+        const isCompact = style === "compact"
+        const isInline = style === "inline"
         const isCampaign = source === "campaign"
         const campaign = campaignId as any
 
         // Default values for preview
-        const title = customTitle || (isCampaign && campaign?.label ? campaign.label : "Support Our Mission")
-        const description =
-          customDescription ||
+        const widgetTitle = title || (isCampaign && campaign?.label ? campaign.label : "Support Our Mission")
+        const widgetDescription =
+          description ||
           (isCampaign && campaign?.description
             ? campaign.description
             : "Your generous donation helps us continue our important work in the community.")
@@ -1406,14 +1382,14 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             <div className="w-full p-4 bg-primary/5 rounded-lg border border-primary/20">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{title}</h3>
-                  {showGoal === "yes" && (
+                  <h3 className="font-semibold text-lg">{widgetTitle}</h3>
+                  {showProgress === true && (
                     <p className="text-sm text-muted-foreground">
                       ${currentAmount.toLocaleString()} of ${goalAmount.toLocaleString()} raised
                     </p>
                   )}
                 </div>
-                {showProgress === "yes" && (
+                {showProgress === true && (
                   <div className="w-full sm:w-32 h-2 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
                   </div>
@@ -1430,14 +1406,14 @@ export const createPuckConfig = (tenantId?: string): Config => ({
           >
             {/* Header */}
             <div className={`bg-primary/5 ${isCompact ? "p-4" : "p-6"}`}>
-              <h3 className={`font-bold text-center ${isCompact ? "text-lg" : "text-xl"}`}>{title}</h3>
-              {description && !isCompact && (
-                <p className="text-muted-foreground text-center mt-2 text-sm">{description}</p>
+              <h3 className={`font-bold text-center ${isCompact ? "text-lg" : "text-xl"}`}>{widgetTitle}</h3>
+              {widgetDescription && !isCompact && (
+                <p className="text-muted-foreground text-center mt-2 text-sm">{widgetDescription}</p>
               )}
             </div>
 
             {/* Progress Section */}
-            {showProgress === "yes" && (
+            {showProgress === true && (
               <div className={`${isCompact ? "px-4 py-3" : "px-6 py-4"} border-b`}>
                 <div className="flex justify-center mb-3">
                   <div className={`relative ${isCompact ? "w-20 h-20" : "w-24 h-24"}`}>
@@ -1471,7 +1447,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
                     </div>
                   </div>
                 </div>
-                {showGoal === "yes" && (
+                {showProgress === true && (
                   <div className="text-center">
                     <p className={`font-semibold ${isCompact ? "text-base" : "text-lg"}`}>
                       ${currentAmount.toLocaleString()} raised

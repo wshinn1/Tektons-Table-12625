@@ -77,7 +77,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-blue-500/10 hover:backdrop-blur-sm hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] cursor-pointer flex items-center gap-1"
+          className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent flex items-center gap-1"
         >
           {item.label}
           <ExternalLink className="h-3 w-3 opacity-50" />
@@ -89,7 +89,8 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
       <Link
         key={item.id}
         href={item.url}
-        className="relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-blue-500/10 hover:backdrop-blur-sm hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] cursor-pointer"
+        prefetch={false}
+        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
       >
         {item.label}
       </Link>
