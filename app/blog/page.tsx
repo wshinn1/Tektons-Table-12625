@@ -114,14 +114,14 @@ async function getPublishedBlogPosts(filters: {
       if (blogCatData) {
         const { data: postIds } = await supabase
           .from("blog_post_categories")
-          .select("post_id")
+          .select("blog_post_id")
           .eq("category_id", blogCatData.id)
 
         if (postIds && postIds.length > 0) {
           // Only show posts that are in this specific blog category
           query = query.in(
             "id",
-            postIds.map((p) => p.post_id),
+            postIds.map((p) => p.blog_post_id),
           )
         } else {
           // No posts in this category, return empty result
@@ -135,12 +135,12 @@ async function getPublishedBlogPosts(filters: {
     const { data: tagData } = await supabase.from("blog_tags").select("id").eq("slug", filters.tag).single()
 
     if (tagData) {
-      const { data: postIds } = await supabase.from("blog_post_tags").select("post_id").eq("tag_id", tagData.id)
+      const { data: postIds } = await supabase.from("blog_post_tags").select("blog_post_id").eq("tag_id", tagData.id)
 
       if (postIds && postIds.length > 0) {
         query = query.in(
           "id",
-          postIds.map((p) => p.post_id),
+          postIds.map((p) => p.blog_post_id),
         )
       }
     }

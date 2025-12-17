@@ -37,17 +37,19 @@ Available blocks:
 - ImageBlock: {src, alt, width, height, rounded: "none"|"sm"|"md"|"lg"|"full"}
 - CardBlock: {title, description, content}
 - HeroBlock: {title, subtitle, buttonText, buttonHref, backgroundColor, textColor, align: "left"|"center"|"right"}
-- FeatureGridBlock: {title, subtitle, features: JSON.stringify([{title, description, icon}])}
+- FeatureGridBlock: {title, subtitle, features: [{title, description, icon}]} 
 - CTABlock: {title, subtitle, buttonText, buttonHref, backgroundColor, textColor}
 - ContactFormBlock: {title, submitText, successMessage}
 - DonationBlock: {title, description, amounts: "25,50,100,250", buttonText}
 - SpacerBlock: {height: "16"|"32"|"64"|"96"}
 - DividerBlock: {color, thickness: "1"|"2"|"4"}
 
-IMPORTANT: 
-- Only output valid JSON, no markdown, no code blocks, no explanations.
-- Use appropriate blocks for the requested content.
-- Set reasonable default values for all props.
+CRITICAL RULES:
+- Output ONLY valid JSON with actual values, NO JavaScript code or functions
+- Do NOT use JSON.stringify(), JSON.parse(), or any JavaScript functions
+- For array properties like "features", provide the array directly: [{"title": "...", "description": "..."}]
+- Use appropriate blocks for the requested content
+- Set reasonable default values for all props
 - For images, use /placeholder.svg?height=X&width=Y&query=description`
 
     console.log("[v0] Calling generateText with model: openai/gpt-4o")
