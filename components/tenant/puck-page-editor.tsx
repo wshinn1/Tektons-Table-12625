@@ -31,7 +31,7 @@ export function PuckPageEditor({
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-  const [puckData, setPuckData] = useState(initialData || { content: [], root: { props: {} } })
+  const [puckData, setPuckData] = useState(initialData || { content: [], root: {} })
 
   const config = useMemo(() => createPuckConfig(tenantId), [tenantId])
 
@@ -53,20 +53,16 @@ export function PuckPageEditor({
 
         const payload = pageId
           ? {
-              // Update existing page
               design_json: data,
               status: "published",
             }
           : {
-              // Create new page
               title: pageTitle || `Page ${Date.now()}`,
               slug: pageSlug || `page-${Date.now()}`,
               design_json: data,
               tenant_id: tenantId,
               status: "draft",
             }
-
-        console.log("[v0] Saving page with payload:", JSON.stringify(payload).slice(0, 500))
 
         const response = await fetch(url, {
           method: pageId ? "PUT" : "POST",
@@ -86,7 +82,6 @@ export function PuckPageEditor({
           throw new Error(responseData.error || responseData.details || "Failed to save page")
         }
 
-        console.log("[v0] Page saved successfully:", responseData)
         toast.success("Page saved successfully!")
         router.push(`/${tenantSlug}/admin/pages`)
       }
@@ -99,15 +94,15 @@ export function PuckPageEditor({
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <Puck
-        config={config}
-        data={puckData}
-        onChange={(data) => setPuckData(data)}
-        onPublish={handlePublish}
-        plugins={[aiPlugin, headingAnalyzer]}
-      />
-    </div>
+    <Puck
+      config={config}
+      data={puckData}
+      onChange={(data) => setPuckData(data)}
+      onPublish={handlePublish}
+      plugins={[aiPlugin, headingAnalyzer]}
+      iframe={{ enabled: true }}
+      headerTitle={pageTitle || "Page"}
+    />
   )
 }
 

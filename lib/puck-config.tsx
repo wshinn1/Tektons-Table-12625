@@ -3,8 +3,11 @@ import { DropZone } from "@measured/puck"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { JSX } from "react"
+import { cn } from "@/lib/utils" // Assuming cn is available for class merging
 
-const createExternalFetcher = (type: string, tenantId?: string) => ({
+import { createImagePickerField } from "@/components/puck/image-picker-field"
+
+const createExternalFetcher = (type: string, tenantId?: string, schemaType: "string" | "object" = "string") => ({
   fetchList: async ({ query }: { query?: string }) => {
     if (!tenantId) return []
     try {
@@ -16,6 +19,9 @@ const createExternalFetcher = (type: string, tenantId?: string) => ({
     } catch {
       return []
     }
+  },
+  ai: {
+    schema: { type: schemaType },
   },
 })
 
@@ -47,22 +53,10 @@ export const createPuckConfig = (tenantId?: string): Config => ({
     },
   },
   categories: {
-    layout: {
-      title: "Layout",
-      components: ["Flex", "Columns", "ColumnsBlock", "ContainerBlock", "VerticalSpace", "SpacerBlock", "DividerBlock"],
-    },
-    typography: {
-      title: "Typography",
-      components: ["HeadingBlock", "TextBlock", "RichTextBlock"],
-    },
-    actions: {
-      title: "Actions",
-      components: ["ButtonBlock", "ButtonGroup", "LinkBlock"],
-    },
-    media: {
-      title: "Media",
-      components: ["ImageBlock", "VideoBlock", "EmbedBlock"],
-    },
+    layout: { title: "Layout", components: ["Columns", "ColumnsBlock", "Flex", "ContainerBlock", "DividerBlock"] },
+    typography: { title: "Typography", components: ["HeadingBlock", "TextBlock", "RichTextBlock"] },
+    actions: { title: "Actions", components: ["ButtonBlock", "ButtonGroup", "LinkBlock"] },
+    media: { title: "Media", components: ["ImageBlock", "VideoBlock", "EmbedBlock"] },
     sections: {
       title: "Sections",
       components: [
@@ -76,14 +70,8 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         "CardBlock",
       ],
     },
-    content: {
-      title: "Content",
-      components: ["BlogPostsBlock", "BlogCategoriesBlock"],
-    },
-    forms: {
-      title: "Forms",
-      components: ["ContactFormBlock", "DonationBlock", "GivingWidgetBlock"],
-    },
+    content: { title: "Content", components: ["BlogPostsBlock", "BlogCategoriesBlock"] },
+    forms: { title: "Forms & Donations", components: ["ContactFormBlock", "DonationBlock", "GivingWidgetBlock"] },
   },
   components: {
     // ========== TYPOGRAPHY ==========
@@ -110,25 +98,88 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Right", value: "right" },
           ],
         },
+        color: {
+          type: "text",
+          label: "Text Color (hex or CSS color)",
+          placeholder: "#000000 or rgb(0,0,0)",
+        },
+        fontFamily: {
+          type: "select",
+          label: "Font Family",
+          options: [
+            { label: "Default", value: "inherit" },
+            { label: "Sans Serif", value: "sans-serif" },
+            { label: "Serif", value: "serif" },
+            { label: "Monospace", value: "monospace" },
+          ],
+        },
+        fontWeight: {
+          type: "select",
+          label: "Font Weight",
+          options: [
+            { label: "Normal", value: "400" },
+            { label: "Medium", value: "500" },
+            { label: "Semibold", value: "600" },
+            { label: "Bold", value: "700" },
+            { label: "Extra Bold", value: "800" },
+          ],
+        },
+        link: { type: "text", label: "Link URL (optional)" },
+        openInNewTab: {
+          type: "radio",
+          label: "Open link in",
+          options: [
+            { label: "Same tab", value: "false" },
+            { label: "New tab", value: "true" },
+          ],
+        },
       },
       defaultProps: {
         title: "Your Heading Here",
         level: "h2",
         align: "left",
+        color: "",
+        fontFamily: "inherit",
+        fontWeight: "700",
+        link: "",
+        openInNewTab: "false",
       },
-      render: ({ title, level, align }) => {
+      render: ({ title, level, align, color, fontFamily, fontWeight, link, openInNewTab }) => {
         const Tag = level as keyof JSX.IntrinsicElements
         const classes = {
-          h1: "text-4xl font-bold",
-          h2: "text-3xl font-bold",
-          h3: "text-2xl font-semibold",
-          h4: "text-xl font-semibold",
+          h1: "text-4xl",
+          h2: "text-3xl",
+          h3: "text-2xl",
+          h4: "text-xl",
         }
-        return (
-          <Tag className={classes[level as keyof typeof classes]} style={{ textAlign: align }}>
+
+        const style = {
+          textAlign: align as any,
+          color: color || undefined,
+          fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
+          fontWeight: fontWeight,
+        }
+
+        const content = (
+          <Tag className={classes[level as keyof typeof classes]} style={style}>
             {title}
           </Tag>
         )
+
+        if (link) {
+          return (
+            <a
+              href={link}
+              target={openInNewTab === "true" ? "_blank" : "_self"}
+              rel={openInNewTab === "true" ? "noopener noreferrer" : undefined}
+              className="hover:opacity-80 transition-opacity"
+            >
+              {content}
+            </a>
+          )
+        }
+
+        return content
       },
     },
     TextBlock: {
@@ -144,13 +195,100 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Right", value: "right" },
           ],
         },
+        fontSize: {
+          type: "select",
+          label: "Font Size",
+          options: [
+            { label: "Small (14px)", value: "14px" },
+            { label: "Normal (16px)", value: "16px" },
+            { label: "Medium (18px)", value: "18px" },
+            { label: "Large (20px)", value: "20px" },
+            { label: "Extra Large (24px)", value: "24px" },
+          ],
+        },
+        color: {
+          type: "text",
+          label: "Text Color (hex or CSS color)",
+          placeholder: "#000000 or rgb(0,0,0)",
+        },
+        fontFamily: {
+          type: "select",
+          label: "Font Family",
+          options: [
+            { label: "Default", value: "inherit" },
+            { label: "Sans Serif", value: "sans-serif" },
+            { label: "Serif", value: "serif" },
+            { label: "Monospace", value: "monospace" },
+          ],
+        },
+        fontWeight: {
+          type: "select",
+          label: "Font Weight",
+          options: [
+            { label: "Light", value: "300" },
+            { label: "Normal", value: "400" },
+            { label: "Medium", value: "500" },
+            { label: "Semibold", value: "600" },
+            { label: "Bold", value: "700" },
+          ],
+        },
+        lineHeight: {
+          type: "select",
+          label: "Line Height",
+          options: [
+            { label: "Tight (1.25)", value: "1.25" },
+            { label: "Normal (1.5)", value: "1.5" },
+            { label: "Relaxed (1.75)", value: "1.75" },
+            { label: "Loose (2)", value: "2" },
+          ],
+        },
+        link: { type: "text", label: "Link URL (optional)" },
+        openInNewTab: {
+          type: "radio",
+          label: "Open link in",
+          options: [
+            { label: "Same tab", value: "false" },
+            { label: "New tab", value: "true" },
+          ],
+        },
       },
       defaultProps: {
         content: "Enter your text here. This block is perfect for paragraphs and body content.",
         align: "left",
+        fontSize: "16px",
+        color: "",
+        fontFamily: "inherit",
+        fontWeight: "400",
+        lineHeight: "1.5",
+        link: "",
+        openInNewTab: "false",
       },
-      render: ({ content, align }) => {
-        return <p style={{ textAlign: align }}>{content}</p>
+      render: ({ content, align, fontSize, color, fontFamily, fontWeight, lineHeight, link, openInNewTab }) => {
+        const style = {
+          textAlign: align as any,
+          fontSize,
+          color: color || undefined,
+          fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
+          fontWeight,
+          lineHeight,
+        }
+
+        const textContent = <p style={style}>{content}</p>
+
+        if (link) {
+          return (
+            <a
+              href={link}
+              target={openInNewTab === "true" ? "_blank" : "_self"}
+              rel={openInNewTab === "true" ? "noopener noreferrer" : undefined}
+              className="hover:opacity-80 transition-opacity"
+            >
+              {textContent}
+            </a>
+          )
+        }
+
+        return textContent
       },
     },
     RichTextBlock: {
@@ -244,55 +382,162 @@ export const createPuckConfig = (tenantId?: string): Config => ({
     ImageBlock: {
       label: "Image",
       fields: {
+        // Use custom image picker with thumbnail grid
         src: tenantId
-          ? {
-              type: "external",
-              label: "Select Image",
-              placeholder: "Search media library...",
-              ...createExternalFetcher("media", tenantId),
-              getItemSummary: (item: any) => item?.label || "Select image",
-            }
-          : { type: "text", label: "Image URL" },
-        alt: { type: "text", label: "Alt Text" },
-        width: { type: "number", label: "Width (px)" },
-        height: { type: "number", label: "Height (px)" },
-        rounded: {
-          type: "select",
+          ? createImagePickerField(tenantId, "Select Image")
+          : { type: "text" as const, label: "Image URL" },
+        alt: { type: "text" as const, label: "Alt Text", placeholder: "Describe the image for accessibility" },
+        width: {
+          type: "select" as const,
+          label: "Width",
+          options: [
+            { label: "Auto", value: "auto" },
+            { label: "Full Width", value: "100%" },
+            { label: "3/4 Width", value: "75%" },
+            { label: "Half Width", value: "50%" },
+            { label: "1/3 Width", value: "33%" },
+            { label: "1/4 Width", value: "25%" },
+            { label: "Custom (px)", value: "custom" },
+          ],
+        },
+        customWidth: {
+          type: "number" as const,
+          label: "Custom Width (px)",
+        },
+        height: {
+          type: "select" as const,
+          label: "Height",
+          options: [
+            { label: "Auto", value: "auto" },
+            { label: "200px", value: "200px" },
+            { label: "300px", value: "300px" },
+            { label: "400px", value: "400px" },
+            { label: "500px", value: "500px" },
+            { label: "Custom (px)", value: "custom" },
+          ],
+        },
+        customHeight: {
+          type: "number" as const,
+          label: "Custom Height (px)",
+        },
+        objectFit: {
+          type: "select" as const,
+          label: "Image Fit",
+          options: [
+            { label: "Cover (fill, crop)", value: "cover" },
+            { label: "Contain (fit inside)", value: "contain" },
+            { label: "Fill (stretch)", value: "fill" },
+            { label: "None (original size)", value: "none" },
+          ],
+        },
+        borderRadius: {
+          type: "select" as const,
           label: "Border Radius",
           options: [
             { label: "None", value: "none" },
             { label: "Small", value: "sm" },
             { label: "Medium", value: "md" },
             { label: "Large", value: "lg" },
+            { label: "Extra Large", value: "xl" },
             { label: "Full (Circle)", value: "full" },
+          ],
+        },
+        shadow: {
+          type: "select" as const,
+          label: "Shadow",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+            { label: "Extra Large", value: "xl" },
+          ],
+        },
+        link: { type: "text" as const, label: "Link URL", placeholder: "https://..." },
+        linkTarget: {
+          type: "select" as const,
+          label: "Link Opens In",
+          options: [
+            { label: "Same Tab", value: "_self" },
+            { label: "New Tab", value: "_blank" },
           ],
         },
       },
       defaultProps: {
-        src: "/placeholder.svg?height=300&width=400",
-        alt: "Image description",
-        width: 400,
-        height: 300,
-        rounded: "md",
+        src: "",
+        alt: "",
+        width: "100%",
+        height: "auto",
+        objectFit: "cover",
+        borderRadius: "md",
+        shadow: "none",
+        link: "",
+        linkTarget: "_self",
       },
-      render: ({ src, alt, width, height, rounded }) => {
-        const imageSrc = typeof src === "object" ? (src as any)?.value || (src as any)?.url : src
-        const roundedClasses = {
-          none: "",
+      render: ({
+        src,
+        alt,
+        width,
+        customWidth,
+        height,
+        customHeight,
+        objectFit,
+        borderRadius,
+        shadow,
+        link,
+        linkTarget,
+      }) => {
+        const radiusMap: Record<string, string> = {
+          none: "rounded-none",
           sm: "rounded-sm",
           md: "rounded-md",
           lg: "rounded-lg",
+          xl: "rounded-xl",
           full: "rounded-full",
         }
-        return (
+        const shadowMap: Record<string, string> = {
+          none: "",
+          sm: "shadow-sm",
+          md: "shadow-md",
+          lg: "shadow-lg",
+          xl: "shadow-xl",
+        }
+
+        const finalWidth = width === "custom" && customWidth ? `${customWidth}px` : width
+        const finalHeight = height === "custom" && customHeight ? `${customHeight}px` : height
+
+        const imageElement = src ? (
           <img
-            src={imageSrc || "/placeholder.svg"}
-            alt={alt}
-            width={width}
-            height={height}
-            className={`max-w-full h-auto ${roundedClasses[rounded as keyof typeof roundedClasses]}`}
+            src={src || "/placeholder.svg"}
+            alt={alt || ""}
+            className={cn(radiusMap[borderRadius] || "", shadowMap[shadow] || "")}
+            style={{
+              width: finalWidth,
+              height: finalHeight,
+              objectFit: objectFit as any,
+            }}
           />
+        ) : (
+          <div
+            className={cn(
+              "bg-muted flex items-center justify-center text-muted-foreground",
+              radiusMap[borderRadius] || "",
+            )}
+            style={{ width: finalWidth || "100%", height: finalHeight || "200px" }}
+          >
+            <span>Select an image</span>
+          </div>
         )
+
+        if (link) {
+          return (
+            <a href={link} target={linkTarget} rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined}>
+              {imageElement}
+            </a>
+          )
+        }
+
+        return imageElement
       },
     },
     VideoBlock: {
@@ -463,20 +708,137 @@ export const createPuckConfig = (tenantId?: string): Config => ({
     CardBlock: {
       label: "Card",
       fields: {
-        title: { type: "text", label: "Title" },
-        description: { type: "textarea", label: "Description" },
-        content: { type: "textarea", label: "Content" },
+        title: { type: "text" as const, label: "Title" },
+        description: { type: "textarea" as const, label: "Description" },
+        content: { type: "textarea" as const, label: "Content" },
+        image: tenantId
+          ? createImagePickerField(tenantId, "Card Image")
+          : { type: "text" as const, label: "Image URL" },
+        titleColor: { type: "text", label: "Title Color" },
+        textColor: { type: "text", label: "Text Color" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        borderColor: { type: "text", label: "Border Color" },
+        borderWidth: {
+          type: "select",
+          label: "Border Width",
+          options: [
+            { label: "None", value: "0" },
+            { label: "1px", value: "1" },
+            { label: "2px", value: "2" },
+            { label: "4px", value: "4" },
+          ],
+        },
+        borderRadius: {
+          type: "select",
+          label: "Border Radius",
+          options: [
+            { label: "None", value: "0" },
+            { label: "Small", value: "4" },
+            { label: "Medium", value: "8" },
+            { label: "Large", value: "12" },
+            { label: "Extra Large", value: "16" },
+          ],
+        },
+        shadow: {
+          type: "select",
+          label: "Shadow",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+            { label: "Extra Large", value: "xl" },
+          ],
+        },
+        padding: {
+          type: "select",
+          label: "Padding",
+          options: [
+            { label: "Small", value: "4" },
+            { label: "Medium", value: "6" },
+            { label: "Large", value: "8" },
+            { label: "Extra Large", value: "10" },
+          ],
+        },
+        hoverEffect: {
+          type: "select",
+          label: "Hover Effect",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Lift", value: "lift" },
+            { label: "Shadow Grow", value: "shadow" },
+            { label: "Scale", value: "scale" },
+          ],
+        },
       },
       defaultProps: {
         title: "Card Title",
         description: "A brief description of this card",
         content: "Card content goes here. Add any details you want to share.",
+        image: "",
+        titleColor: "",
+        textColor: "",
+        backgroundColor: "",
+        borderColor: "",
+        borderWidth: "1",
+        borderRadius: "8",
+        shadow: "sm",
+        padding: "6",
+        hoverEffect: "none",
       },
-      render: ({ title, description, content }) => {
+      render: ({
+        title,
+        description,
+        content,
+        image,
+        titleColor,
+        textColor,
+        backgroundColor,
+        borderColor,
+        borderWidth,
+        borderRadius,
+        shadow,
+        padding,
+        hoverEffect,
+      }) => {
+        const shadowClasses = {
+          none: "",
+          sm: "shadow-sm",
+          md: "shadow-md",
+          lg: "shadow-lg",
+          xl: "shadow-xl",
+        }
+
+        const hoverEffectClasses = {
+          none: "",
+          lift: "hover:-translate-y-2 transition-transform",
+          shadow: "hover:shadow-xl transition-shadow",
+          scale: "hover:scale-105 transition-transform",
+        }
+
+        const cardStyles = {
+          backgroundColor: backgroundColor || undefined,
+          color: textColor || undefined,
+          borderColor: borderColor || undefined,
+          borderWidth: borderWidth ? `${borderWidth}px` : undefined,
+          borderRadius: `${borderRadius}px`,
+          borderStyle: borderWidth !== "0" ? "solid" : undefined,
+        }
+
         return (
-          <Card>
+          <Card
+            className={`p-${padding} ${shadowClasses[shadow as keyof typeof shadowClasses]} ${hoverEffectClasses[hoverEffect as keyof typeof hoverEffectClasses]}`}
+            style={cardStyles}
+          >
+            {image && (
+              <img
+                src={image || "/placeholder.svg"}
+                alt={title || "Card image"}
+                className="w-full h-48 object-cover rounded-t-md mb-4"
+              />
+            )}
             <CardHeader>
-              <CardTitle>{title}</CardTitle>
+              <CardTitle style={{ color: titleColor || undefined }}>{title}</CardTitle>
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -777,6 +1139,64 @@ export const createPuckConfig = (tenantId?: string): Config => ({
                 { label: "Primary", value: "default" },
                 { label: "Secondary", value: "secondary" },
                 { label: "Outline", value: "outline" },
+                { label: "Ghost", value: "ghost" },
+                { label: "Destructive", value: "destructive" },
+              ],
+            },
+            size: {
+              type: "select",
+              label: "Size",
+              options: [
+                { label: "Small", value: "sm" },
+                { label: "Medium", value: "default" },
+                { label: "Large", value: "lg" },
+              ],
+            },
+            backgroundColor: { type: "text", label: "Background Color" },
+            hoverBackgroundColor: { type: "text", label: "Hover Background Color" },
+            textColor: { type: "text", label: "Text Color" },
+            hoverTextColor: { type: "text", label: "Hover Text Color" },
+            borderColor: { type: "text", label: "Border Color" },
+            borderWidth: {
+              type: "select",
+              label: "Border Width",
+              options: [
+                { label: "None", value: "0" },
+                { label: "1px", value: "1" },
+                { label: "2px", value: "2" },
+                { label: "4px", value: "4" },
+              ],
+            },
+            borderRadius: {
+              type: "select",
+              label: "Border Radius",
+              options: [
+                { label: "None", value: "0" },
+                { label: "Small", value: "4" },
+                { label: "Medium", value: "8" },
+                { label: "Large", value: "12" },
+                { label: "Full", value: "9999" },
+              ],
+            },
+            shadow: {
+              type: "select",
+              label: "Shadow",
+              options: [
+                { label: "None", value: "none" },
+                { label: "Small", value: "sm" },
+                { label: "Medium", value: "md" },
+                { label: "Large", value: "lg" },
+                { label: "Extra Large", value: "xl" },
+              ],
+            },
+            effect: {
+              type: "select",
+              label: "Hover Effect",
+              options: [
+                { label: "None", value: "none" },
+                { label: "Scale Up", value: "scale" },
+                { label: "Lift Up", value: "lift" },
+                { label: "Glow", value: "glow" },
               ],
             },
           },
@@ -784,6 +1204,16 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             label: "Button",
             href: "#",
             variant: "default",
+            size: "default",
+            backgroundColor: "",
+            hoverBackgroundColor: "",
+            textColor: "",
+            hoverTextColor: "",
+            borderColor: "",
+            borderWidth: "0",
+            borderRadius: "8",
+            shadow: "none",
+            effect: "none",
           },
         },
         align: {
@@ -795,27 +1225,108 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Right", value: "right" },
           ],
         },
+        gap: {
+          type: "select",
+          label: "Spacing Between Buttons",
+          options: [
+            { label: "Small", value: "2" },
+            { label: "Medium", value: "4" },
+            { label: "Large", value: "6" },
+            { label: "Extra Large", value: "8" },
+          ],
+        },
       },
       defaultProps: {
         buttons: [
-          { label: "Get Started", href: "#", variant: "default" },
-          { label: "Learn More", href: "#", variant: "outline" },
+          {
+            label: "Get Started",
+            href: "#",
+            variant: "default",
+            size: "default",
+            backgroundColor: "",
+            hoverBackgroundColor: "",
+            textColor: "",
+            hoverTextColor: "",
+            borderColor: "",
+            borderWidth: "0",
+            borderRadius: "8",
+            shadow: "none",
+            effect: "none",
+          },
+          {
+            label: "Learn More",
+            href: "#",
+            variant: "outline",
+            size: "default",
+            backgroundColor: "",
+            hoverBackgroundColor: "",
+            textColor: "",
+            hoverTextColor: "",
+            borderColor: "",
+            borderWidth: "0",
+            borderRadius: "8",
+            shadow: "none",
+            effect: "none",
+          },
         ],
         align: "center",
+        gap: "4",
       },
-      render: ({ buttons, align }) => {
+      render: ({ buttons, align, gap }) => {
         const alignClasses = {
           left: "justify-start",
           center: "justify-center",
           right: "justify-end",
         }
+
+        const shadowClasses = {
+          none: "",
+          sm: "shadow-sm",
+          md: "shadow-md",
+          lg: "shadow-lg",
+          xl: "shadow-xl",
+        }
+
+        const effectClasses = {
+          none: "",
+          scale: "hover:scale-105 transition-transform",
+          lift: "hover:-translate-y-1 transition-transform",
+          glow: "hover:shadow-lg transition-shadow",
+        }
+
         return (
-          <div className={`flex flex-wrap gap-4 ${alignClasses[align as keyof typeof alignClasses]}`}>
-            {buttons.map((btn: any, idx: number) => (
-              <Button key={idx} variant={btn.variant as any} asChild>
-                <a href={btn.href}>{btn.label}</a>
-              </Button>
-            ))}
+          <div className={`flex flex-wrap gap-${gap} ${alignClasses[align as keyof typeof alignClasses]}`}>
+            {buttons.map((btn: any, idx: number) => {
+              const customStyles = {
+                backgroundColor: btn.backgroundColor || undefined,
+                color: btn.textColor || undefined,
+                borderColor: btn.borderColor || undefined,
+                borderWidth: btn.borderWidth ? `${btn.borderWidth}px` : undefined,
+                borderRadius: `${btn.borderRadius}px`,
+                borderStyle: btn.borderWidth !== "0" ? "solid" : undefined,
+              }
+
+              const hoverStyles =
+                btn.hoverBackgroundColor || btn.hoverTextColor
+                  ? {
+                      "--hover-bg": btn.hoverBackgroundColor || undefined,
+                      "--hover-color": btn.hoverTextColor || undefined,
+                    }
+                  : {}
+
+              return (
+                <Button
+                  key={idx}
+                  variant={btn.variant as any}
+                  size={btn.size as any}
+                  asChild
+                  className={`${shadowClasses[btn.shadow as keyof typeof shadowClasses]} ${effectClasses[btn.effect as keyof typeof effectClasses]}`}
+                  style={{ ...customStyles, ...hoverStyles } as any}
+                >
+                  <a href={btn.href}>{btn.label}</a>
+                </Button>
+              )
+            })}
           </div>
         )
       },
@@ -825,20 +1336,86 @@ export const createPuckConfig = (tenantId?: string): Config => ({
     HeroBlock: {
       label: "Hero Section",
       fields: {
-        title: { type: "text", label: "Title" },
-        subtitle: { type: "textarea", label: "Subtitle" },
-        buttonText: { type: "text", label: "Button Text" },
-        buttonHref: { type: "text", label: "Button URL" },
-        backgroundImage: { type: "text", label: "Background Image URL" },
+        title: { type: "text" as const, label: "Title" },
+        subtitle: { type: "textarea" as const, label: "Subtitle" },
+        buttonText: { type: "text" as const, label: "Button Text" },
+        buttonHref: { type: "text" as const, label: "Button URL" },
+        buttonVariant: {
+          type: "select" as const,
+          label: "Button Style",
+          options: [
+            { label: "Primary", value: "default" },
+            { label: "Secondary", value: "secondary" },
+            { label: "Outline", value: "outline" },
+          ],
+        },
+        buttonSize: {
+          type: "select" as const,
+          label: "Button Size",
+          options: [
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "default" },
+            { label: "Large", value: "lg" },
+          ],
+        },
+        backgroundImage: tenantId
+          ? createImagePickerField(tenantId, "Background Image")
+          : { type: "text" as const, label: "Background Image URL" },
         backgroundColor: { type: "text", label: "Background Color" },
+        gradientFrom: { type: "text", label: "Gradient From Color" },
+        gradientTo: { type: "text", label: "Gradient To Color" },
+        overlayOpacity: {
+          type: "select" as const,
+          label: "Image Overlay Opacity",
+          options: [
+            { label: "None", value: "0" },
+            { label: "10%", value: "10" },
+            { label: "20%", value: "20" },
+            { label: "30%", value: "30" },
+            { label: "40%", value: "40" },
+            { label: "50%", value: "50" },
+            { label: "60%", value: "60" },
+            { label: "70%", value: "70" },
+          ],
+        },
         textColor: { type: "text", label: "Text Color" },
+        titleSize: {
+          type: "select" as const,
+          label: "Title Size",
+          options: [
+            { label: "Small", value: "text-3xl md:text-4xl" },
+            { label: "Medium", value: "text-4xl md:text-5xl" },
+            { label: "Large", value: "text-5xl md:text-6xl" },
+            { label: "Extra Large", value: "text-6xl md:text-7xl" },
+          ],
+        },
+        subtitleSize: {
+          type: "select" as const,
+          label: "Subtitle Size",
+          options: [
+            { label: "Small", value: "text-base" },
+            { label: "Medium", value: "text-lg" },
+            { label: "Large", value: "text-xl" },
+            { label: "Extra Large", value: "text-2xl" },
+          ],
+        },
         align: {
-          type: "radio",
+          type: "radio" as const,
           label: "Alignment",
           options: [
             { label: "Left", value: "left" },
             { label: "Center", value: "center" },
             { label: "Right", value: "right" },
+          ],
+        },
+        paddingY: {
+          type: "select" as const,
+          label: "Vertical Padding",
+          options: [
+            { label: "Small", value: "12" },
+            { label: "Medium", value: "20" },
+            { label: "Large", value: "32" },
+            { label: "Extra Large", value: "40" },
           ],
         },
       },
@@ -847,29 +1424,67 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         subtitle: "Discover amazing content and features that will transform your experience.",
         buttonText: "Get Started",
         buttonHref: "#",
+        buttonVariant: "default",
+        buttonSize: "lg",
         backgroundImage: "",
         backgroundColor: "#1f2937",
+        gradientFrom: "",
+        gradientTo: "",
+        overlayOpacity: "50",
         textColor: "#ffffff",
+        titleSize: "text-4xl md:text-5xl",
+        subtitleSize: "text-xl",
         align: "center",
+        paddingY: "20",
       },
-      render: ({ title, subtitle, buttonText, buttonHref, backgroundImage, backgroundColor, textColor, align }) => {
-        return (
-          <section
-            className="py-20 px-6"
-            style={{
+      render: ({
+        title,
+        subtitle,
+        buttonText,
+        buttonHref,
+        buttonVariant,
+        buttonSize,
+        backgroundImage,
+        backgroundColor,
+        gradientFrom,
+        gradientTo,
+        overlayOpacity,
+        textColor,
+        titleSize,
+        subtitleSize,
+        align,
+        paddingY,
+      }) => {
+        const hasGradient = gradientFrom && gradientTo
+        const backgroundStyle = hasGradient
+          ? { backgroundImage: `linear-gradient(to right, ${gradientFrom}, ${gradientTo})` }
+          : {
               backgroundColor,
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",
+            }
+
+        return (
+          <section
+            className={`py-${paddingY} px-6 relative`}
+            style={{
+              ...backgroundStyle,
               color: textColor,
               textAlign: align,
             }}
           >
-            <div className="max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">{title}</h1>
-              <p className="text-xl mb-8 opacity-90">{subtitle}</p>
+            {backgroundImage && overlayOpacity !== "0" && (
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: `rgba(0, 0, 0, ${Number.parseInt(overlayOpacity) / 100})` }}
+              />
+            )}
+            <div className="max-w-4xl mx-auto relative z-10">
+              <h1 className={`${titleSize} font-bold mb-4`}>{title}</h1>
+              <p className={`${subtitleSize} mb-8 opacity-90`}>{subtitle}</p>
               {buttonText && (
-                <Button size="lg" asChild>
+                <Button size={buttonSize as any} variant={buttonVariant as any} asChild>
                   <a href={buttonHref}>{buttonText}</a>
                 </Button>
               )}
@@ -948,6 +1563,50 @@ export const createPuckConfig = (tenantId?: string): Config => ({
       fields: {
         title: { type: "text", label: "Section Title" },
         subtitle: { type: "text", label: "Section Subtitle" },
+        titleColor: { type: "text", label: "Title Color" },
+        subtitleColor: { type: "text", label: "Subtitle Color" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        columns: {
+          type: "select",
+          label: "Columns",
+          options: [
+            { label: "2 Columns", value: "2" },
+            { label: "3 Columns", value: "3" },
+            { label: "4 Columns", value: "4" },
+          ],
+        },
+        gap: {
+          type: "select",
+          label: "Gap Between Items",
+          options: [
+            { label: "Small", value: "4" },
+            { label: "Medium", value: "6" },
+            { label: "Large", value: "8" },
+            { label: "Extra Large", value: "10" },
+          ],
+        },
+        cardBackgroundColor: { type: "text", label: "Card Background" },
+        cardBorderColor: { type: "text", label: "Card Border Color" },
+        cardShadow: {
+          type: "select",
+          label: "Card Shadow",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+          ],
+        },
+        cardHoverEffect: {
+          type: "select",
+          label: "Card Hover Effect",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Lift", value: "lift" },
+            { label: "Scale", value: "scale" },
+            { label: "Shadow", value: "shadow" },
+          ],
+        },
         features: {
           type: "array",
           label: "Features",
@@ -955,33 +1614,99 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             title: { type: "text", label: "Title" },
             description: { type: "textarea", label: "Description" },
             icon: { type: "text", label: "Icon (emoji or URL)" },
+            iconColor: { type: "text", label: "Icon Color" },
           },
           defaultItemProps: {
             title: "Feature",
             description: "Feature description",
             icon: "⚡",
+            iconColor: "",
           },
         },
       },
       defaultProps: {
         title: "Our Features",
         subtitle: "Everything you need to succeed",
+        titleColor: "",
+        subtitleColor: "",
+        backgroundColor: "",
+        columns: "3",
+        gap: "8",
+        cardBackgroundColor: "",
+        cardBorderColor: "",
+        cardShadow: "sm",
+        cardHoverEffect: "none",
         features: [
-          { title: "Fast & Reliable", description: "Lightning fast performance you can count on", icon: "⚡" },
-          { title: "Easy to Use", description: "Intuitive interface that anyone can master", icon: "🎯" },
-          { title: "Secure", description: "Your data is protected with enterprise-grade security", icon: "🔒" },
+          {
+            title: "Fast & Reliable",
+            description: "Lightning fast performance you can count on",
+            icon: "⚡",
+            iconColor: "",
+          },
+          {
+            title: "Easy to Use",
+            description: "Intuitive interface that anyone can master",
+            icon: "🎯",
+            iconColor: "",
+          },
+          {
+            title: "Secure",
+            description: "Your data is protected with enterprise-grade security",
+            icon: "🔒",
+            iconColor: "",
+          },
         ],
       },
-      render: ({ title, subtitle, features }) => {
+      render: ({
+        title,
+        subtitle,
+        titleColor,
+        subtitleColor,
+        backgroundColor,
+        columns,
+        gap,
+        cardBackgroundColor,
+        cardBorderColor,
+        cardShadow,
+        cardHoverEffect,
+        features,
+      }) => {
+        const shadowClasses = {
+          none: "",
+          sm: "shadow-sm",
+          md: "shadow-md",
+          lg: "shadow-lg",
+        }
+
+        const hoverEffectClasses = {
+          none: "",
+          lift: "hover:-translate-y-2 transition-transform",
+          scale: "hover:scale-105 transition-transform",
+          shadow: "hover:shadow-xl transition-shadow",
+        }
+
         return (
-          <section className="py-16 px-6">
+          <section className="py-16 px-6" style={{ backgroundColor: backgroundColor || undefined }}>
             <div className="max-w-6xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-2">{title}</h2>
-              <p className="text-muted-foreground mb-12">{subtitle}</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <h2 className="text-3xl font-bold mb-2" style={{ color: titleColor || undefined }}>
+                {title}
+              </h2>
+              <p className="text-muted-foreground mb-12" style={{ color: subtitleColor || undefined }}>
+                {subtitle}
+              </p>
+              <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-${gap}`}>
                 {features.map((feature: any, i: number) => (
-                  <Card key={i} className="p-6">
-                    <div className="text-4xl mb-4">{feature.icon}</div>
+                  <Card
+                    key={i}
+                    className={`p-6 ${shadowClasses[cardShadow as keyof typeof shadowClasses]} ${hoverEffectClasses[cardHoverEffect as keyof typeof hoverEffectClasses]}`}
+                    style={{
+                      backgroundColor: cardBackgroundColor || undefined,
+                      borderColor: cardBorderColor || undefined,
+                    }}
+                  >
+                    <div className="text-4xl mb-4" style={{ color: feature.iconColor || undefined }}>
+                      {feature.icon}
+                    </div>
                     <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                     <p className="text-muted-foreground">{feature.description}</p>
                   </Card>
@@ -999,6 +1724,51 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         author: { type: "text", label: "Author Name" },
         role: { type: "text", label: "Author Role" },
         image: { type: "text", label: "Author Image URL" },
+        quoteColor: { type: "text", label: "Quote Text Color" },
+        authorColor: { type: "text", label: "Author Name Color" },
+        roleColor: { type: "text", label: "Role Color" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        borderColor: { type: "text", label: "Border Color" },
+        borderWidth: {
+          type: "select",
+          label: "Border Width",
+          options: [
+            { label: "None", value: "0" },
+            { label: "1px", value: "1" },
+            { label: "2px", value: "2" },
+            { label: "4px", value: "4" },
+          ],
+        },
+        borderRadius: {
+          type: "select",
+          label: "Border Radius",
+          options: [
+            { label: "Small", value: "4" },
+            { label: "Medium", value: "8" },
+            { label: "Large", value: "16" },
+            { label: "Extra Large", value: "24" },
+          ],
+        },
+        padding: {
+          type: "select",
+          label: "Padding",
+          options: [
+            { label: "Small", value: "4" },
+            { label: "Medium", value: "6" },
+            { label: "Large", value: "8" },
+            { label: "Extra Large", value: "10" },
+          ],
+        },
+        shadow: {
+          type: "select",
+          label: "Shadow",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+          ],
+        },
       },
       defaultProps: {
         quote:
@@ -1006,16 +1776,65 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         author: "Jane Doe",
         role: "CEO, Company Inc.",
         image: "/diverse-person-portrait.png",
+        quoteColor: "",
+        authorColor: "",
+        roleColor: "",
+        backgroundColor: "",
+        borderColor: "",
+        borderWidth: "0",
+        borderRadius: "8",
+        padding: "8",
+        shadow: "none",
       },
-      render: ({ quote, author, role, image }) => {
+      render: ({
+        quote,
+        author,
+        role,
+        image,
+        quoteColor,
+        authorColor,
+        roleColor,
+        backgroundColor,
+        borderColor,
+        borderWidth,
+        borderRadius,
+        padding,
+        shadow,
+      }) => {
+        const shadowClasses = {
+          none: "",
+          sm: "shadow-sm",
+          md: "shadow-md",
+          lg: "shadow-lg",
+        }
+
+        const blockStyles = {
+          backgroundColor: backgroundColor || undefined,
+          borderColor: borderColor || undefined,
+          borderWidth: borderWidth ? `${borderWidth}px` : undefined,
+          borderRadius: `${borderRadius}px`,
+          borderStyle: borderWidth !== "0" ? "solid" : undefined,
+        }
+
         return (
-          <div className="bg-muted/50 rounded-lg p-8 text-center max-w-2xl mx-auto">
-            <p className="text-lg italic mb-6">&ldquo;{quote}&rdquo;</p>
+          <div
+            className={`p-${padding} text-center max-w-2xl mx-auto ${shadowClasses[shadow as keyof typeof shadowClasses]}`}
+            style={blockStyles}
+          >
+            <p className="text-lg italic mb-6" style={{ color: quoteColor || undefined }}>
+              &ldquo;{quote}&rdquo;
+            </p>
             <div className="flex items-center justify-center gap-4">
-              {image && <img src={image || "/placeholder.svg"} alt={author} className="w-12 h-12 rounded-full" />}
+              {image && (
+                <img src={image || "/placeholder.svg"} alt={author} className="w-12 h-12 rounded-full object-cover" />
+              )}
               <div className="text-left">
-                <p className="font-semibold">{author}</p>
-                <p className="text-sm text-muted-foreground">{role}</p>
+                <p className="font-semibold" style={{ color: authorColor || undefined }}>
+                  {author}
+                </p>
+                <p className="text-sm text-muted-foreground" style={{ color: roleColor || undefined }}>
+                  {role}
+                </p>
               </div>
             </div>
           </div>
@@ -1029,23 +1848,102 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         subtitle: { type: "text", label: "Subtitle" },
         buttonText: { type: "text", label: "Button Text" },
         buttonHref: { type: "text", label: "Button URL" },
+        buttonVariant: {
+          type: "select",
+          label: "Button Style",
+          options: [
+            { label: "Primary", value: "default" },
+            { label: "Secondary", value: "secondary" },
+            { label: "Outline", value: "outline" },
+          ],
+        },
+        buttonSize: {
+          type: "select",
+          label: "Button Size",
+          options: [
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "default" },
+            { label: "Large", value: "lg" },
+          ],
+        },
         backgroundColor: { type: "text", label: "Background Color" },
         textColor: { type: "text", label: "Text Color" },
+        borderRadius: {
+          type: "select",
+          label: "Border Radius",
+          options: [
+            { label: "None", value: "0" },
+            { label: "Small", value: "8" },
+            { label: "Medium", value: "16" },
+            { label: "Large", value: "24" },
+          ],
+        },
+        paddingY: {
+          type: "select",
+          label: "Vertical Padding",
+          options: [
+            { label: "Small", value: "8" },
+            { label: "Medium", value: "16" },
+            { label: "Large", value: "24" },
+            { label: "Extra Large", value: "32" },
+          ],
+        },
+        shadow: {
+          type: "select",
+          label: "Shadow",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+          ],
+        },
       },
       defaultProps: {
         title: "Ready to Get Started?",
         subtitle: "Join thousands of satisfied users today.",
         buttonText: "Sign Up Now",
         buttonHref: "#",
+        buttonVariant: "secondary",
+        buttonSize: "lg",
         backgroundColor: "#1f2937",
         textColor: "#ffffff",
+        borderRadius: "0",
+        paddingY: "16",
+        shadow: "none",
       },
-      render: ({ title, subtitle, buttonText, buttonHref, backgroundColor, textColor }) => {
+      render: ({
+        title,
+        subtitle,
+        buttonText,
+        buttonHref,
+        buttonVariant,
+        buttonSize,
+        backgroundColor,
+        textColor,
+        borderRadius,
+        paddingY,
+        shadow,
+      }) => {
+        const shadowClasses = {
+          none: "",
+          sm: "shadow-sm",
+          md: "shadow-md",
+          lg: "shadow-lg",
+        }
+
         return (
-          <section className="py-16 px-6 text-center" style={{ backgroundColor, color: textColor }}>
+          <section
+            className={`py-${paddingY} px-6 text-center ${shadowClasses[shadow as keyof typeof shadowClasses]}`}
+            style={{
+              backgroundColor,
+              color: textColor,
+              borderRadius: `${borderRadius}px`,
+            }}
+          >
             <h2 className="text-3xl font-bold mb-4">{title}</h2>
             <p className="text-xl mb-8 opacity-90">{subtitle}</p>
-            <Button size="lg" variant="secondary" asChild>
+            <Button size={buttonSize as any} variant={buttonVariant as any} asChild>
               <a href={buttonHref}>{buttonText}</a>
             </Button>
           </section>
@@ -1059,7 +1957,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
       fields: {
         title: { type: "text", label: "Section Title" },
         category: tenantId
-          ? createExternalFieldWithSchema("blog-categories", tenantId, "Filter by Category")
+          ? createExternalFieldWithSchema("blog-categories", tenantId, "string")
           : { type: "text", label: "Category ID" },
         limit: {
           type: "select",
@@ -1260,7 +2158,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         },
         campaignId: tenantId
           ? {
-              ...createExternalFieldWithSchema("campaigns", tenantId, "Select Campaign"),
+              ...createExternalFieldWithSchema("campaigns", tenantId, "object"),
               // Only show when source is "campaign"
             }
           : { type: "text", label: "Campaign ID" },
@@ -1324,7 +2222,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             getItemSummary: (item: any) => item?.label || "Select campaign",
             ai: {
               schema: {
-                type: "string",
+                type: "object",
                 description: "The campaign to display. This is fetched from the database.",
               },
             },
