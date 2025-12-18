@@ -195,19 +195,27 @@ export default function TenantLayout({
 
   const checkTenantOwnership = useCallback(
     async (currentUser: User | null, currentSubdomain: string) => {
+      console.log("[v0] TenantLayout: checkTenantOwnership called:", {
+        hasUser: !!currentUser,
+        subdomain: currentSubdomain,
+        authInProgress: authCheckInProgressRef.current,
+        timeSinceLastCheck: Date.now() - lastAuthCheckRef.current,
+      })
+
       if (authCheckInProgressRef.current) {
-        console.log("[v0] Auth check already in progress, skipping")
+        console.log("[v0] TenantLayout: Auth check already in progress, skipping")
         return
       }
 
       const now = Date.now()
       if (now - lastAuthCheckRef.current < 30000) {
-        console.log("[v0] Recent auth check, skipping")
+        console.log("[v0] TenantLayout: Recent auth check (within 30s), skipping")
         return
       }
       lastAuthCheckRef.current = now
 
       if (!currentUser || !currentSubdomain) {
+        console.log("[v0] TenantLayout: No user or subdomain, clearing auth state")
         setIsTenantOwner(false)
         setIsDonor(false)
         setIsCheckingAuth(false)
@@ -223,6 +231,7 @@ export default function TenantLayout({
         return false
       }
 
+      console.log("[v0] TenantLayout: Starting auth check...")
       authCheckInProgressRef.current = true
 
       const supabase = createBrowserClient()

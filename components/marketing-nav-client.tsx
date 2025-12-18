@@ -1,5 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
+import type React from "react"
+
 import { Menu, X, ExternalLink, User, Crown, LogOut } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
@@ -40,20 +42,24 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log("[v0] MarketingNav: Initializing auth state")
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
+      console.log("[v0] MarketingNav: Got user:", user?.email)
       setUser(user)
       setLoading(false)
     })
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("[v0] MarketingNav: Auth state changed:", _event)
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
   const handleSignOut = async () => {
+    console.log("[v0] MarketingNav: Signing out")
     const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = "/"
@@ -64,6 +70,15 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
   const renderNavLink = (item: MenuItem) => {
     const isExternal = isExternalUrl(item.url)
 
+    const handleClick = (e: React.MouseEvent) => {
+      console.log("[v0] ========== NAV LINK CLICKED ==========")
+      console.log("[v0] Link:", item.label)
+      console.log("[v0] URL:", item.url)
+      console.log("[v0] Is external:", isExternal)
+      console.log("[v0] Event type:", e.type)
+      console.log("[v0] Current pathname:", window.location.pathname)
+    }
+
     if (isExternal) {
       return (
         <a
@@ -71,6 +86,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleClick}
           className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent flex items-center gap-1"
         >
           {item.label}
@@ -83,6 +99,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
       <Link
         key={item.id}
         href={item.url}
+        onClick={handleClick}
         className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent block"
       >
         {item.label}
@@ -180,6 +197,11 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => {
+                      console.log("[v0] ========== MOBILE NAV LINK CLICKED ==========")
+                      console.log("[v0] Link:", item.label)
+                      console.log("[v0] URL:", item.url)
+                    }}
                     className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-1"
                   >
                     {item.label}
@@ -192,7 +214,12 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                 <Link
                   key={item.id}
                   href={item.url}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    console.log("[v0] ========== MOBILE NAV LINK CLICKED ==========")
+                    console.log("[v0] Link:", item.label)
+                    console.log("[v0] URL:", item.url)
+                    setMobileMenuOpen(false)
+                  }}
                   className="text-sm font-medium hover:text-primary transition-colors py-2 text-left block"
                 >
                   {item.label}
@@ -205,7 +232,12 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                   <>
                     <Link
                       href="/account/subscription"
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => {
+                        console.log("[v0] ========== MOBILE NAV LINK CLICKED ==========")
+                        console.log("[v0] Link: My Subscription")
+                        console.log("[v0] URL: /account/subscription")
+                        setMobileMenuOpen(false)
+                      }}
                       className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-2 text-left"
                     >
                       <Crown className="h-4 w-4" />
@@ -226,12 +258,25 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                   <>
                     <Link
                       href="/auth/login"
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => {
+                        console.log("[v0] ========== MOBILE NAV LINK CLICKED ==========")
+                        console.log("[v0] Link: Log In")
+                        console.log("[v0] URL: /auth/login")
+                        setMobileMenuOpen(false)
+                      }}
                       className="text-sm font-medium hover:text-primary transition-colors py-2 text-left"
                     >
                       Log In
                     </Link>
-                    <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
+                    <Link
+                      href="/auth/signup"
+                      onClick={() => {
+                        console.log("[v0] ========== MOBILE NAV LINK CLICKED ==========")
+                        console.log("[v0] Link: Get Started Free")
+                        console.log("[v0] URL: /auth/signup")
+                        setMobileMenuOpen(false)
+                      }}
+                    >
                       <Button className="w-full mt-2">Get Started Free</Button>
                     </Link>
                   </>

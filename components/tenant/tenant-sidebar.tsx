@@ -161,11 +161,22 @@ export function TenantSidebar({
   const renderNavLink = (item: NavItem) => {
     const active = isActive(item.href)
 
+    const handleClick = () => {
+      console.log("[v0] ========== TENANT SIDEBAR LINK CLICKED ==========")
+      console.log("[v0] Link:", item.label)
+      console.log("[v0] Href:", item.href)
+      console.log("[v0] Is active:", active)
+      console.log("[v0] Current pathname:", pathname)
+      console.log("[v0] Window location:", window.location.pathname)
+      console.log("[v0] Closing mobile menu:", mobileMenuOpen)
+      setMobileMenuOpen(false)
+    }
+
     return (
       <Link
         key={item.href}
         href={item.href}
-        onClick={() => setMobileMenuOpen(false)}
+        onClick={handleClick}
         className={cn(
           "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left",
           active ? "bg-gray-100 text-black" : "text-black hover:bg-gray-50",
