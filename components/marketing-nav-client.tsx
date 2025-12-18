@@ -1,9 +1,7 @@
 "use client"
-
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, ExternalLink, User, Crown, LogOut } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -40,6 +38,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [navigating, setNavigating] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -61,6 +60,16 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
     await supabase.auth.signOut()
     window.location.href = "/"
   }
+
+  const handleNavigation = useCallback(
+    (url: string) => {
+      if (navigating) return
+      setNavigating(true)
+      router.push(url)
+      setTimeout(() => setNavigating(false), 500)
+    },
+    [navigating, router],
+  )
 
   const leftItems = menuItems.filter((item) => item.navigation_side === "left")
   const rightItems = menuItems.filter((item) => item.navigation_side === "right")
@@ -86,14 +95,14 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
     }
 
     return (
-      <Link
+      <button
         key={item.id}
-        href={item.url}
-        scroll={false}
-        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent block"
+        onClick={() => handleNavigation(item.url)}
+        disabled={navigating}
+        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent block disabled:opacity-50"
       >
         {item.label}
-      </Link>
+      </button>
     )
   }
 
@@ -101,7 +110,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between mx-auto px-4 max-w-7xl">
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
+          <button onClick={() => handleNavigation("/")} className="flex items-center gap-2" disabled={navigating}>
             {navSettings.logo_type === "image" ? (
               <Image
                 src={navSettings.logo_image_url || "/tektons-table-logo.png"}
@@ -114,7 +123,7 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
             ) : (
               <span className="text-xl font-bold">{navSettings.logo_text}</span>
             )}
-          </Link>
+          </button>
         </div>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -132,11 +141,9 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                      <Link href="/account/subscription" className="flex items-center gap-2 cursor-pointer w-full">
-                        <Crown className="h-4 w-4" />
-                        My Subscription
-                      </Link>
+                    <DropdownMenuItem onClick={() => handleNavigation("/account/subscription")}>
+                      <Crown className="h-4 w-4 mr-2" />
+                      My Subscription
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer">
@@ -147,15 +154,18 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                 </DropdownMenu>
               ) : (
                 <>
-                  <Link
-                    href="/auth/login"
-                    className="text-sm font-medium hover:text-primary transition-colors px-4 py-2"
+                  <button
+                    onClick={() => handleNavigation("/auth/login")}
+                    disabled={navigating}
+                    className="text-sm font-medium hover:text-primary transition-colors px-4 py-2 disabled:opacity-50"
                   >
                     Log In
-                  </Link>
-                  <Link href="/auth/signup">
-                    <Button className="ml-2">Get Started Free</Button>
-                  </Link>
+                  </button>
+                  <button onClick={() => handleNavigation("/auth/signup")} disabled={navigating}>
+                    <Button className="ml-2" disabled={navigating}>
+                      Get Started Free
+                    </Button>
+                  </button>
                 </>
               )}
             </>
@@ -193,29 +203,34 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
               }
 
               return (
-                <Link
+                <button
                   key={item.id}
-                  href={item.url}
-                  scroll={false}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-medium hover:text-primary transition-colors py-2 text-left block"
+                  onClick={() => {
+                    handleNavigation(item.url)
+                    setMobileMenuOpen(false)
+                  }}
+                  disabled={navigating}
+                  className="text-sm font-medium hover:text-primary transition-colors py-2 text-left block disabled:opacity-50"
                 >
                   {item.label}
-                </Link>
+                </button>
               )
             })}
             {!loading && (
               <>
                 {user ? (
                   <>
-                    <Link
-                      href="/account/subscription"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-2 text-left"
+                    <button
+                      onClick={() => {
+                        handleNavigation("/account/subscription")
+                        setMobileMenuOpen(false)
+                      }}
+                      disabled={navigating}
+                      className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-2 text-left disabled:opacity-50"
                     >
                       <Crown className="h-4 w-4" />
                       My Subscription
-                    </Link>
+                    </button>
                     <button
                       onClick={() => {
                         handleSignOut()
@@ -229,16 +244,27 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                   </>
                 ) : (
                   <>
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-sm font-medium hover:text-primary transition-colors py-2 text-left"
+                    <button
+                      onClick={() => {
+                        handleNavigation("/auth/login")
+                        setMobileMenuOpen(false)
+                      }}
+                      disabled={navigating}
+                      className="text-sm font-medium hover:text-primary transition-colors py-2 text-left disabled:opacity-50"
                     >
                       Log In
-                    </Link>
-                    <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full mt-2">Get Started Free</Button>
-                    </Link>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleNavigation("/auth/signup")
+                        setMobileMenuOpen(false)
+                      }}
+                      disabled={navigating}
+                    >
+                      <Button className="w-full mt-2" disabled={navigating}>
+                        Get Started Free
+                      </Button>
+                    </button>
                   </>
                 )}
               </>

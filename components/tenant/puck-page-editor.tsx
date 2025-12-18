@@ -6,7 +6,7 @@ import "@puckeditor/plugin-ai/styles.css"
 import headingAnalyzer from "@measured/puck-plugin-heading-analyzer"
 import "@measured/puck-plugin-heading-analyzer/dist/index.css"
 import { createPuckConfig } from "@/lib/puck-config"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -31,7 +31,7 @@ export function PuckPageEditor({
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-  const [puckData, setPuckData] = useState(initialData || { content: [], root: {} })
+  const [puckData, setPuckData] = useState(() => initialData || { content: [], root: {} })
 
   const config = useMemo(() => createPuckConfig(tenantId), [tenantId])
 
@@ -43,9 +43,16 @@ export function PuckPageEditor({
     [],
   )
 
+  const handleChange = useCallback((data: any) => {
+    console.log("[v0] Puck data changed:", data)
+    setPuckData(data)
+  }, [])
+
   const handlePublish = async (data: any) => {
     setIsSaving(true)
     try {
+      console.log("[v0] Publishing page with data:", data)
+
       if (onSave) {
         await onSave(data)
       } else {
@@ -97,7 +104,7 @@ export function PuckPageEditor({
     <Puck
       config={config}
       data={puckData}
-      onChange={(data) => setPuckData(data)}
+      onChange={handleChange}
       onPublish={handlePublish}
       plugins={[aiPlugin, headingAnalyzer]}
       iframe={{ enabled: true }}

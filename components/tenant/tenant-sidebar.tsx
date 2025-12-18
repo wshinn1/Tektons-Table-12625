@@ -1,9 +1,7 @@
 "use client"
-
-import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
@@ -74,6 +72,7 @@ export function TenantSidebar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(autoHide)
   const [campaignsExpanded, setCampaignsExpanded] = useState(true)
+  const [navigating, setNavigating] = useState(false)
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active").slice(0, 5)
 
@@ -160,21 +159,32 @@ export function TenantSidebar({
     return Math.min(Math.round((current / goal) * 100), 100)
   }
 
+  const handleNavigation = useCallback(
+    (href: string) => {
+      if (navigating) return
+      setNavigating(true)
+      setMobileMenuOpen(false)
+      router.push(href)
+      setTimeout(() => setNavigating(false), 500)
+    },
+    [navigating, router],
+  )
+
   const renderNavLink = (item: NavItem) => {
     const active = isActive(item.href)
 
     return (
-      <Link
+      <button
         key={item.href}
-        href={item.href}
-        scroll={false}
+        onClick={() => handleNavigation(item.href)}
+        disabled={navigating}
         className={cn(
-          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left block",
+          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left disabled:opacity-50",
           active ? "bg-gray-100 text-black" : "text-black hover:bg-gray-50",
         )}
       >
         {item.label}
-      </Link>
+      </button>
     )
   }
 
@@ -262,12 +272,12 @@ export function TenantSidebar({
               </button>
             </form>
           ) : (
-            <Link
+            <a
               href="https://tektonstable.com/auth/login"
-              className="flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg hover:bg-[#1e3a8a] hover:text-white transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg hover:bg-[#1e3a8a] hover:text-white transition-colors block"
             >
               Sign In
-            </Link>
+            </a>
           )}
         </div>
 
@@ -300,12 +310,12 @@ export function TenantSidebar({
                     const isCompleted = progress >= 100
 
                     return (
-                      <Link
+                      <button
                         key={campaign.id}
-                        href={`/campaigns/${campaign.slug}`}
-                        scroll={false}
+                        onClick={() => handleNavigation(`/campaigns/${campaign.slug}`)}
+                        disabled={navigating}
                         className={cn(
-                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left block",
+                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left disabled:opacity-50",
                           isActive(`/campaigns/${campaign.slug}`)
                             ? "bg-green-50 text-green-900 font-bold"
                             : "text-black font-semibold hover:bg-gray-50",
@@ -329,7 +339,7 @@ export function TenantSidebar({
                             {progress}%
                           </span>
                         </div>
-                      </Link>
+                      </button>
                     )
                   })}
                 </div>
