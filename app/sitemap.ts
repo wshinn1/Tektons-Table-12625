@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 3600 // Revalidate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tektonstable.com"
@@ -66,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let dynamicPages: MetadataRoute.Sitemap = []
 
   try {
-    const supabase = await createServerClient()
+    const supabase = createAdminClient()
 
     // Get published platform pages
     const { data: pages } = await supabase.from("pages").select("slug, updated_at").eq("is_published", true)

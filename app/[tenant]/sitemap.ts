@@ -1,20 +1,14 @@
 import type { MetadataRoute } from "next"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { headers } from "next/headers"
+export const dynamic = "force-dynamic"
+export const revalidate = 3600 // Revalidate every hour
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const headersList = await headers()
-  const host = headersList.get("host") || ""
-
-  // Extract subdomain
-  const parts = host.split(".")
-  let subdomain = ""
-
-  if (host.includes("tektonstable.com") && parts.length >= 3 && parts[0] !== "www") {
-    subdomain = parts[0]
-  } else if (host.includes("localhost") && parts.length > 1) {
-    subdomain = parts[0]
-  }
+export default async function sitemap({
+  params,
+}: {
+  params: { tenant: string }
+}): Promise<MetadataRoute.Sitemap> {
+  const { tenant: subdomain } = params
 
   if (!subdomain || subdomain === "www" || subdomain === "tektonstable") {
     return []
@@ -22,11 +16,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = createAdminClient()
   const baseUrl = `https://${subdomain}.tektonstable.com`
-
-  // Get tenant
-  const { data: tenant } = await supabase.from("tenants").select("id").eq("subdomain", subdomain).maybeSingle()
-
-  if (!tenant) return []
 
   const sitemap: MetadataRoute.Sitemap = [
     {
@@ -61,11 +50,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Add blog posts
   const { data: posts } = await supabase
     .from("blog_posts")
     .select("slug, updated_at, published_at")
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", subdomain)
     .eq("status", "published")
     .order("published_at", { ascending: false })
 
@@ -80,11 +68,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // Add campaigns
   const { data: campaigns } = await supabase
     .from("tenant_campaigns")
     .select("slug, updated_at")
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", subdomain)
     .eq("status", "active")
 
   if (campaigns) {
@@ -98,11 +85,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // Add custom pages
   const { data: pages } = await supabase
     .from("tenant_pages")
     .select("slug, updated_at")
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", subdomain)
     .eq("status", "published")
 
   if (pages) {

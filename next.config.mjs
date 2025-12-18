@@ -55,6 +55,10 @@ export default withSentryConfig(nextConfig, {
   silent: !process.env.CI,
   widenClientFileUpload: true,
   hideSourceMaps: true,
+  
+  disableServerWebpackPlugin: !process.env.SENTRY_PROJECT,
+  disableClientWebpackPlugin: !process.env.SENTRY_PROJECT,
+  
   webpack: {
     treeshake: {
       removeDebugLogging: true,

@@ -1,7 +1,10 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 3600 // Revalidate every hour
 
 export async function GET() {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
 
   const { data: posts } = await supabase
     .from("blog_posts")
