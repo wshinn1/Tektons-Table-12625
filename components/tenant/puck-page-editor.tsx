@@ -6,7 +6,7 @@ import "@puckeditor/plugin-ai/styles.css"
 import headingAnalyzer from "@measured/puck-plugin-heading-analyzer"
 import "@measured/puck-plugin-heading-analyzer/dist/index.css"
 import { createPuckConfig } from "@/lib/puck-config"
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -31,7 +31,11 @@ export function PuckPageEditor({
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-  const [puckData, setPuckData] = useState(() => initialData || { content: [], root: {} })
+  const [puckData, setPuckData] = useState(() => {
+    const data = initialData || { content: [], root: { props: { title: "Page" } } }
+    console.log("[v0] Initial Puck data:", data)
+    return data
+  })
 
   const config = useMemo(() => createPuckConfig(tenantId), [tenantId])
 
@@ -43,9 +47,22 @@ export function PuckPageEditor({
     [],
   )
 
+  useEffect(() => {
+    if (initialData) {
+      console.log("[v0] Updating Puck data from initialData:", initialData)
+      setPuckData(initialData)
+    }
+  }, [initialData])
+
   const handleChange = useCallback((data: any) => {
     console.log("[v0] Puck data changed:", data)
-    setPuckData(data)
+    if (data && typeof data === "object") {
+      setPuckData({
+        ...data,
+        root: data.root || { props: { title: "Page" } },
+        content: data.content || [],
+      })
+    }
   }, [])
 
   const handlePublish = async (data: any) => {

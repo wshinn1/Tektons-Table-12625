@@ -1,5 +1,3 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
 import { MarketingNavClient } from "@/components/marketing-nav-client"
 import { HomepageSectionRenderer } from "@/components/homepage-section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
@@ -237,66 +235,13 @@ const STATIC_NAV_SETTINGS = {
   logo_image_url: "/tektons-table-logo.png",
 }
 
+export const dynamic = "force-static"
+export const revalidate = 3600 // Revalidate every hour
+
 export default async function LandingPage() {
-  let sections = STATIC_SECTIONS
-  let navItems = STATIC_NAV_ITEMS
-  let navSettings = STATIC_NAV_SETTINGS
-
-  try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-            } catch {
-              // Ignore - this is called from Server Component
-            }
-          },
-        },
-      },
-    )
-
-    // Fetch homepage sections from database
-    const { data: dbSections, error: sectionsError } = await supabase
-      .from("homepage_sections")
-      .select("*")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true })
-
-    if (!sectionsError && dbSections && dbSections.length > 0) {
-      sections = dbSections
-    }
-
-    // Fetch navigation items
-    const { data: dbNavItems, error: navError } = await supabase
-      .from("menu_items")
-      .select("*")
-      .eq("published", true)
-      .order("position", { ascending: true })
-
-    if (!navError && dbNavItems && dbNavItems.length > 0) {
-      navItems = dbNavItems
-    }
-
-    // Fetch navigation settings
-    const { data: dbNavSettings, error: navSettingsError } = await supabase
-      .from("navigation_settings")
-      .select("*")
-      .single()
-
-    if (!navSettingsError && dbNavSettings) {
-      navSettings = dbNavSettings
-    }
-  } catch (error) {
-    console.error("Error fetching data, using static fallback:", error)
-  }
+  const sections = STATIC_SECTIONS
+  const navItems = STATIC_NAV_ITEMS
+  const navSettings = STATIC_NAV_SETTINGS
 
   return (
     <div className="min-h-screen bg-background">

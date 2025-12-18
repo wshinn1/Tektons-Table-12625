@@ -1,7 +1,8 @@
 "use client"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
@@ -68,11 +69,9 @@ export function TenantSidebar({
   campaigns = [],
 }: TenantSidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(autoHide)
   const [campaignsExpanded, setCampaignsExpanded] = useState(true)
-  const [navigating, setNavigating] = useState(false)
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active").slice(0, 5)
 
@@ -159,32 +158,21 @@ export function TenantSidebar({
     return Math.min(Math.round((current / goal) * 100), 100)
   }
 
-  const handleNavigation = useCallback(
-    (href: string) => {
-      if (navigating) return
-      setNavigating(true)
-      setMobileMenuOpen(false)
-      router.push(href)
-      setTimeout(() => setNavigating(false), 500)
-    },
-    [navigating, router],
-  )
-
   const renderNavLink = (item: NavItem) => {
     const active = isActive(item.href)
 
     return (
-      <button
+      <Link
         key={item.href}
-        onClick={() => handleNavigation(item.href)}
-        disabled={navigating}
+        href={item.href}
+        onClick={() => setMobileMenuOpen(false)}
         className={cn(
-          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left disabled:opacity-50",
+          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left",
           active ? "bg-gray-100 text-black" : "text-black hover:bg-gray-50",
         )}
       >
         {item.label}
-      </button>
+      </Link>
     )
   }
 
@@ -310,12 +298,12 @@ export function TenantSidebar({
                     const isCompleted = progress >= 100
 
                     return (
-                      <button
+                      <Link
                         key={campaign.id}
-                        onClick={() => handleNavigation(`/campaigns/${campaign.slug}`)}
-                        disabled={navigating}
+                        href={`/campaigns/${campaign.slug}`}
+                        onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left disabled:opacity-50",
+                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left",
                           isActive(`/campaigns/${campaign.slug}`)
                             ? "bg-green-50 text-green-900 font-bold"
                             : "text-black font-semibold hover:bg-gray-50",
@@ -339,7 +327,7 @@ export function TenantSidebar({
                             {progress}%
                           </span>
                         </div>
-                      </button>
+                      </Link>
                     )
                   })}
                 </div>
