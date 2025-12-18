@@ -8,7 +8,7 @@ import { TenantAdminSidebar } from "@/components/tenant/tenant-admin-sidebar"
 import { TenantAdminMobileMenu } from "@/components/tenant/tenant-admin-mobile-menu"
 import { createBrowserClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
-import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import * as Sentry from "@sentry/nextjs"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
 import { GoogleAnalytics } from "@/components/google-analytics"
@@ -61,6 +61,11 @@ interface NavItem {
   open_in_new_tab?: boolean
 }
 
+interface TenantLayoutProps {
+  children: React.ReactNode
+  params: any
+}
+
 const defaultNavItems: NavItem[] = [
   { id: "home", label: "Home", url: "/" },
   { id: "about", label: "About", url: "/about" },
@@ -69,12 +74,7 @@ const defaultNavItems: NavItem[] = [
   { id: "contact", label: "Contact", url: "/contact" },
 ]
 
-export default function TenantLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const params = useParams()
+export default function TenantLayout({ children, params }: TenantLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -114,7 +114,8 @@ export default function TenantLayout({
   const [isPersistedAdmin, setIsPersistedAdmin] = useState(false)
   const authCheckInProgressRef = useRef(false)
   const lastAuthCheckRef = useRef<number>(0)
-  const isNavigatingRef = useRef(false)
+  const pathnameRef = useRef(pathname)
+  const [isNavigating, setIsNavigating] = useState(false) // Changed from ref to state
 
   useEffect(() => {
     const hostname = window.location.hostname
@@ -178,22 +179,20 @@ export default function TenantLayout({
   }, [searchParams])
 
   useEffect(() => {
-    // Track navigation state
-    const handleRouteChange = () => {
-      isNavigatingRef.current = true
-      setTimeout(() => {
-        isNavigatingRef.current = false
-      }, 500)
-    }
+    if (pathname !== pathnameRef.current) {
+      console.log("[v0] TenantLayout: Route changing from", pathnameRef.current, "to", pathname)
+      setIsNavigating(true) // Set state immediately so auth check sees it
+      pathnameRef.current = pathname
 
-    // Listen for route changes
-    const handlePopState = () => handleRouteChange()
-    window.addEventListener("popstate", handlePopState)
+      // Clear navigation flag after transition completes
+      const timer = setTimeout(() => {
+        setIsNavigating(false)
+        console.log("[v0] TenantLayout: Navigation complete")
+      }, 1500) // Increased to 1.5s for safety
 
-    return () => {
-      window.removeEventListener("popstate", handlePopState)
+      return () => clearTimeout(timer)
     }
-  }, [])
+  }, [pathname])
 
   const checkDonorStatus = useCallback(async (currentUser: User, currentTenantId: string) => {
     const supabase = createBrowserClient()
@@ -214,7 +213,7 @@ export default function TenantLayout({
 
   const checkTenantOwnership = useCallback(
     async (currentUser: User | null, currentSubdomain: string) => {
-      if (isNavigatingRef.current) {
+      if (isNavigating) {
         console.log("[v0] TenantLayout: Skipping auth check during navigation")
         return
       }
@@ -342,7 +341,7 @@ export default function TenantLayout({
         return false
       }
     },
-    [checkDonorStatus],
+    [checkDonorStatus, isNavigating], // Added isNavigating to deps
   )
 
   const refreshSession = useCallback(async () => {

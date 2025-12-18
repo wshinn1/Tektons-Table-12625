@@ -6,7 +6,7 @@ import "@puckeditor/plugin-ai/styles.css"
 import headingAnalyzer from "@measured/puck-plugin-heading-analyzer"
 import "@measured/puck-plugin-heading-analyzer/dist/index.css"
 import { createPuckConfig } from "@/lib/puck-config"
-import { useState, useMemo, useCallback, useRef } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -31,7 +31,9 @@ export function PuckPageEditor({
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-  const puckDataRef = useRef(initialData || { content: [], root: { props: { title: "Page" } } })
+  const [puckData, setPuckData] = useState(
+    initialData || { content: [], root: { props: { title: "Page" } }, zones: {} },
+  )
 
   const config = useMemo(() => createPuckConfig(tenantId), [tenantId])
 
@@ -50,10 +52,14 @@ export function PuckPageEditor({
         content: Array.isArray(data.content) ? data.content : [],
         zones: data.zones || {},
       }
-      puckDataRef.current = normalizedData
-      console.log("[v0] Puck data updated:", normalizedData.content.length, "blocks")
+      console.log("[v0] Puck onChange called with", normalizedData.content.length, "blocks")
+      setPuckData(normalizedData)
     }
   }, [])
+
+  useEffect(() => {
+    console.log("[v0] Puck data state updated:", puckData.content.length, "blocks")
+  }, [puckData])
 
   const handlePublish = async (data: any) => {
     setIsSaving(true)
@@ -108,7 +114,7 @@ export function PuckPageEditor({
   return (
     <Puck
       config={config}
-      data={puckDataRef.current}
+      data={puckData}
       onChange={handleChange}
       onPublish={handlePublish}
       plugins={[aiPlugin, headingAnalyzer]}
