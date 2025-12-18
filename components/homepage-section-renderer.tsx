@@ -23,11 +23,22 @@ const getFontFamily = (fontType: string | undefined) => {
 }
 
 export function HomepageSectionRenderer({ sections }: HomepageSectionRendererProps) {
+  console.log("[v0] Rendering sections:", sections.length)
+
   const sortedSections = [...sections].sort((a, b) => {
-    const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER
-    const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER
+    const orderA = a.display_order ?? a.section_order ?? 0
+    const orderB = b.display_order ?? b.section_order ?? 0
     return orderA - orderB
   })
+
+  console.log(
+    "[v0] Sorted section orders:",
+    sortedSections.map((s) => ({
+      id: s.id,
+      type: s.section_type,
+      order: s.display_order ?? s.section_order,
+    })),
+  )
 
   return (
     <>
@@ -459,41 +470,42 @@ export function HomepageSectionRenderer({ sections }: HomepageSectionRendererPro
 
           case "benefits_columns":
             const benefitsContent = section.content || {}
+            const benefits = benefitsContent.benefits || benefitsContent.features || []
+
             return (
               <section
                 key={section.id}
                 className="py-20 px-6"
                 style={{
-                  backgroundColor:
-                    benefitsContent.backgroundColor === "bg-accent/5"
-                      ? "#fef2f2"
-                      : section.background_value || "#fef2f2",
+                  backgroundColor: benefitsContent.backgroundColor || section.background_value || "#f9fafb",
                 }}
               >
                 <div className="max-w-7xl mx-auto">
                   <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                      {benefitsContent.headline || section.title}
+                      {section.title || benefitsContent.headline}
                     </h2>
-                    <p className="text-xl text-gray-600">{benefitsContent.subheadline || section.subtitle}</p>
+                    <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                      {section.subtitle || benefitsContent.subheadline}
+                    </p>
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-8">
-                    {benefitsContent.features?.map((feature: any, featureIndex: number) => {
-                      const IconComponent = iconMap[feature.icon] || iconMap.Circle
+                    {benefits.map((benefit: any, benefitIndex: number) => {
+                      const IconComponent = iconMap[benefit.icon] || iconMap.Circle
                       return (
                         <div
-                          key={featureIndex}
+                          key={benefitIndex}
                           className="bg-white rounded-xl p-8 border border-gray-100 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
                         >
                           <div
                             className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                            style={{ backgroundColor: feature.iconBgColor || "#fee2e2" }}
+                            style={{ backgroundColor: benefit.iconBgColor || "#fee2e2" }}
                           >
-                            <IconComponent className="w-7 h-7" style={{ color: feature.iconColor || "#ef4444" }} />
+                            <IconComponent className="w-7 h-7" style={{ color: benefit.iconColor || "#ef4444" }} />
                           </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                          <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                          <h3 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
+                          <p className="text-gray-600 leading-relaxed">{benefit.description}</p>
                         </div>
                       )
                     })}
@@ -514,10 +526,10 @@ export function HomepageSectionRenderer({ sections }: HomepageSectionRendererPro
                 }}
               >
                 <div className="max-w-4xl mx-auto text-center">
-                  <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    {ctaContent.headline || section.title}
+                  <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                    {section.title || ctaContent.headline}
                   </h2>
-                  <p className="text-xl text-gray-800 mb-8">{ctaContent.subheadline || section.subtitle}</p>
+                  <p className="text-xl text-gray-800 mb-8">{section.subtitle || ctaContent.subheadline}</p>
 
                   <Link
                     href={ctaContent.ctaLink || section.button_url || "/auth/signup"}
@@ -527,11 +539,15 @@ export function HomepageSectionRenderer({ sections }: HomepageSectionRendererPro
                       color: ctaContent.buttonTextColor || "#ffffff",
                     }}
                   >
-                    {ctaContent.ctaText || section.button_text || "Get Started Free"}
+                    {section.button_text || ctaContent.ctaText || "Get Started Free"}
                     <ArrowRight className="w-5 h-5" />
                   </Link>
 
-                  {ctaContent.disclaimer && <p className="mt-6 text-sm text-gray-700">{ctaContent.disclaimer}</p>}
+                  {(ctaContent.disclaimer || section.subtitle) && (
+                    <p className="mt-6 text-sm text-gray-700">
+                      {ctaContent.disclaimer || "No credit card required • Setup in 5 minutes • Cancel anytime"}
+                    </p>
+                  )}
                 </div>
               </section>
             )
