@@ -139,6 +139,7 @@ export function TenantAdminSidebar({
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false} // Added prefetch={false} to prevent Next.js from pre-loading
               onClick={() => isMobile && setMobileOpen(false)}
               title={!isMobile && isCollapsed ? item.label : undefined}
               className={cn(
@@ -158,6 +159,7 @@ export function TenantAdminSidebar({
       <div className={cn("border-t border-gray-800 p-2 space-y-1", !isMobile && isCollapsed && "px-1")}>
         <Link
           href={`/`}
+          prefetch={false} // Added prefetch={false} to prevent Next.js from pre-loading
           onClick={() => isMobile && setMobileOpen(false)}
           title={!isMobile && isCollapsed ? "View Site" : undefined}
           className={cn(

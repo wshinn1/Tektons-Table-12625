@@ -23,9 +23,15 @@ const getFontFamily = (fontType: string | undefined) => {
 }
 
 export function HomepageSectionRenderer({ sections }: HomepageSectionRendererProps) {
+  const sortedSections = [...sections].sort((a, b) => {
+    const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER
+    return orderA - orderB
+  })
+
   return (
     <>
-      {sections.map((section, index) => {
+      {sortedSections.map((section, index) => {
         // Render screenshot section
         if (section.source_type === "screenshot" && section.content?.code) {
           return (

@@ -117,6 +117,7 @@ export function TenantNavbar({
                 <Link
                   key={item.id}
                   href={item.url}
+                  prefetch={false}
                   target={item.open_in_new_tab ? "_blank" : undefined}
                   rel={item.open_in_new_tab ? "noopener noreferrer" : undefined}
                   className={cn(
@@ -214,6 +215,7 @@ export function TenantNavbar({
                 <Link
                   key={item.id}
                   href={item.url}
+                  prefetch={false}
                   target={item.open_in_new_tab ? "_blank" : undefined}
                   rel={item.open_in_new_tab ? "noopener noreferrer" : undefined}
                   className={cn(
