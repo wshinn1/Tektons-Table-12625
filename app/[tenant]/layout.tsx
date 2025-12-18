@@ -114,6 +114,7 @@ export default function TenantLayout({
   const [isPersistedAdmin, setIsPersistedAdmin] = useState(false)
   const authCheckInProgressRef = useRef(false)
   const lastAuthCheckRef = useRef<number>(0)
+  const isNavigatingRef = useRef(false)
 
   useEffect(() => {
     const hostname = window.location.hostname
@@ -176,6 +177,24 @@ export default function TenantLayout({
     }
   }, [searchParams])
 
+  useEffect(() => {
+    // Track navigation state
+    const handleRouteChange = () => {
+      isNavigatingRef.current = true
+      setTimeout(() => {
+        isNavigatingRef.current = false
+      }, 500)
+    }
+
+    // Listen for route changes
+    const handlePopState = () => handleRouteChange()
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [])
+
   const checkDonorStatus = useCallback(async (currentUser: User, currentTenantId: string) => {
     const supabase = createBrowserClient()
     try {
@@ -195,6 +214,11 @@ export default function TenantLayout({
 
   const checkTenantOwnership = useCallback(
     async (currentUser: User | null, currentSubdomain: string) => {
+      if (isNavigatingRef.current) {
+        console.log("[v0] TenantLayout: Skipping auth check during navigation")
+        return
+      }
+
       console.log("[v0] TenantLayout: checkTenantOwnership called:", {
         hasUser: !!currentUser,
         subdomain: currentSubdomain,
