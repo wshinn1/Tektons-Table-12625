@@ -41,6 +41,8 @@ Sentry.init({
     "moz-extension",
   ],
 
+  telemetry: false,
+
   beforeSend(event, hint) {
     return event
   },

@@ -7,7 +7,6 @@ import { FieldLabel } from "@measured/puck"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ImageIcon, Upload, Search, X, Check, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -163,7 +162,7 @@ export function ImagePickerField({ field, name, value, onChange, tenantId }: Ima
                 </div>
 
                 {/* Image Grid */}
-                <ScrollArea className="flex-1">
+                <div className="flex-1 overflow-y-auto">
                   {loading ? (
                     <div className="flex items-center justify-center h-48">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -204,7 +203,7 @@ export function ImagePickerField({ field, name, value, onChange, tenantId }: Ima
                       ))}
                     </div>
                   )}
-                </ScrollArea>
+                </div>
 
                 {/* Confirm Button */}
                 <div className="flex justify-end gap-2 pt-4 border-t mt-4">
