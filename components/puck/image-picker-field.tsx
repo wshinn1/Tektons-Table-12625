@@ -289,6 +289,12 @@ export function ImagePickerField({ field, name, value, onChange, tenantId }: Ima
 export const createImagePickerField = (tenantId: string, label = "Image") => ({
   type: "custom" as const,
   label,
+  ai: {
+    schema: {
+      type: "string",
+      description: "Image URL from the media library or external source",
+    },
+  },
   render: ({ field, name, value, onChange }: any) => (
     <ImagePickerField field={field} name={name} value={value || ""} onChange={onChange} tenantId={tenantId} />
   ),

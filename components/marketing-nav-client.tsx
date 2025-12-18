@@ -86,13 +86,14 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
     }
 
     return (
-      <button
+      <Link
         key={item.id}
-        onClick={() => router.push(item.url)}
-        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
+        href={item.url}
+        scroll={false}
+        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent block"
       >
         {item.label}
-      </button>
+      </Link>
     )
   }
 
@@ -132,13 +133,10 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
-                      <button
-                        onClick={() => router.push("/account/subscription")}
-                        className="flex items-center gap-2 cursor-pointer w-full"
-                      >
+                      <Link href="/account/subscription" className="flex items-center gap-2 cursor-pointer w-full">
                         <Crown className="h-4 w-4" />
                         My Subscription
-                      </button>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer">
@@ -149,15 +147,15 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                 </DropdownMenu>
               ) : (
                 <>
-                  <button
-                    onClick={() => router.push("/auth/login")}
+                  <Link
+                    href="/auth/login"
                     className="text-sm font-medium hover:text-primary transition-colors px-4 py-2"
                   >
                     Log In
-                  </button>
-                  <Button onClick={() => router.push("/auth/signup")} className="ml-2">
-                    Get Started Free
-                  </Button>
+                  </Link>
+                  <Link href="/auth/signup">
+                    <Button className="ml-2">Get Started Free</Button>
+                  </Link>
                 </>
               )}
             </>
@@ -195,32 +193,29 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
               }
 
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => {
-                    router.push(item.url)
-                    setMobileMenuOpen(false)
-                  }}
-                  className="text-sm font-medium hover:text-primary transition-colors py-2 text-left"
+                  href={item.url}
+                  scroll={false}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-medium hover:text-primary transition-colors py-2 text-left block"
                 >
                   {item.label}
-                </button>
+                </Link>
               )
             })}
             {!loading && (
               <>
                 {user ? (
                   <>
-                    <button
-                      onClick={() => {
-                        router.push("/account/subscription")
-                        setMobileMenuOpen(false)
-                      }}
+                    <Link
+                      href="/account/subscription"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="text-sm font-medium hover:text-primary transition-colors py-2 flex items-center gap-2 text-left"
                     >
                       <Crown className="h-4 w-4" />
                       My Subscription
-                    </button>
+                    </Link>
                     <button
                       onClick={() => {
                         handleSignOut()
@@ -234,24 +229,16 @@ export function MarketingNavClient({ menuItems, navSettings }: MarketingNavClien
                   </>
                 ) : (
                   <>
-                    <button
-                      onClick={() => {
-                        router.push("/auth/login")
-                        setMobileMenuOpen(false)
-                      }}
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="text-sm font-medium hover:text-primary transition-colors py-2 text-left"
                     >
                       Log In
-                    </button>
-                    <Button
-                      onClick={() => {
-                        router.push("/auth/signup")
-                        setMobileMenuOpen(false)
-                      }}
-                      className="w-full mt-2"
-                    >
-                      Get Started Free
-                    </Button>
+                    </Link>
+                    <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full mt-2">Get Started Free</Button>
+                    </Link>
                   </>
                 )}
               </>

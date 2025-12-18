@@ -164,16 +164,17 @@ export function TenantSidebar({
     const active = isActive(item.href)
 
     return (
-      <button
+      <Link
         key={item.href}
-        onClick={() => router.push(item.href)}
+        href={item.href}
+        scroll={false}
         className={cn(
-          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left",
+          "flex items-center px-3 py-2.5 rounded-lg text-sm font-open-sans font-bold transition-colors w-full text-left block",
           active ? "bg-gray-100 text-black" : "text-black hover:bg-gray-50",
         )}
       >
         {item.label}
-      </button>
+      </Link>
     )
   }
 
@@ -299,11 +300,12 @@ export function TenantSidebar({
                     const isCompleted = progress >= 100
 
                     return (
-                      <button
+                      <Link
                         key={campaign.id}
-                        onClick={() => router.push(`/campaigns/${campaign.slug}`)}
+                        href={`/campaigns/${campaign.slug}`}
+                        scroll={false}
                         className={cn(
-                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left",
+                          "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left block",
                           isActive(`/campaigns/${campaign.slug}`)
                             ? "bg-green-50 text-green-900 font-bold"
                             : "text-black font-semibold hover:bg-gray-50",
@@ -327,7 +329,7 @@ export function TenantSidebar({
                             {progress}%
                           </span>
                         </div>
-                      </button>
+                      </Link>
                     )
                   })}
                 </div>

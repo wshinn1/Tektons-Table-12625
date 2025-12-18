@@ -47,3 +47,6 @@ Sentry.init({
     return event
   },
 })
+
+// Hook to capture navigation transitions
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart
