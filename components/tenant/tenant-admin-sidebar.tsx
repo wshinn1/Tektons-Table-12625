@@ -1,9 +1,10 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import type React from "react"
+
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   LayoutDashboard,
   Heart,
@@ -43,7 +44,7 @@ const adminNavItems = [
   { label: "Contact Forms", href: "/admin/contact-submissions", icon: MessageSquare },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Navigation", href: "/admin/navigation", icon: MenuIcon },
-  { label: "About Page", href: "/admin/about", icon: UserCircle }, // Added About page link
+  { label: "About Page", href: "/admin/about", icon: UserCircle },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
@@ -56,10 +57,12 @@ export function TenantAdminSidebar({
   pageBuilderEnabled = false,
 }: TenantAdminSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -73,6 +76,10 @@ export function TenantAdminSidebar({
       }
     }
   }, [subdomain, mounted])
+
+  useEffect(() => {
+    setIsNavigating(false)
+  }, [pathname])
 
   const toggleCollapsed = () => {
     const newState = !isCollapsed
@@ -88,6 +95,22 @@ export function TenantAdminSidebar({
   }
 
   const allItems = [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
+
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+      if (isNavigating) {
+        e.preventDefault()
+        return
+      }
+
+      e.preventDefault()
+
+      setIsNavigating(true)
+
+      window.location.href = href
+    },
+    [isNavigating],
+  )
 
   const handleSignOut = async (formData: FormData) => {
     setIsSigningOut(true)
@@ -136,11 +159,13 @@ export function TenantAdminSidebar({
           const Icon = item.icon
           const active = isActive(item.href)
           return (
-            <Link
+            <a
               key={item.href}
               href={item.href}
-              prefetch={false} // Added prefetch={false} to prevent Next.js from pre-loading
-              onClick={() => isMobile && setMobileOpen(false)}
+              onClick={(e) => {
+                if (isMobile) setMobileOpen(false)
+                handleNavClick(e, item.href)
+              }}
               title={!isMobile && isCollapsed ? item.label : undefined}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
@@ -150,17 +175,19 @@ export function TenantAdminSidebar({
             >
               <Icon className="h-5 w-5 shrink-0" />
               {(isMobile || !isCollapsed) && <span>{item.label}</span>}
-            </Link>
+            </a>
           )
         })}
       </nav>
 
       {/* Footer */}
       <div className={cn("border-t border-gray-800 p-2 space-y-1", !isMobile && isCollapsed && "px-1")}>
-        <Link
-          href={`/`}
-          prefetch={false} // Added prefetch={false} to prevent Next.js from pre-loading
-          onClick={() => isMobile && setMobileOpen(false)}
+        <a
+          href="/"
+          onClick={(e) => {
+            if (isMobile) setMobileOpen(false)
+            handleNavClick(e, "/")
+          }}
           title={!isMobile && isCollapsed ? "View Site" : undefined}
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors",
@@ -169,7 +196,7 @@ export function TenantAdminSidebar({
         >
           <ExternalLink className="h-5 w-5 shrink-0" />
           {(isMobile || !isCollapsed) && <span>View Site</span>}
-        </Link>
+        </a>
         <form action={handleSignOut}>
           <button
             type="submit"

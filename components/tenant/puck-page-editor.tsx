@@ -6,7 +6,7 @@ import "@puckeditor/plugin-ai/styles.css"
 import headingAnalyzer from "@measured/puck-plugin-heading-analyzer"
 import "@measured/puck-plugin-heading-analyzer/dist/index.css"
 import { createPuckConfig } from "@/lib/puck-config"
-import { useState, useMemo, useCallback, useEffect } from "react"
+import { useState, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -31,9 +31,8 @@ export function PuckPageEditor({
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
-  const [puckData, setPuckData] = useState(
-    initialData || { content: [], root: { props: { title: "Page" } }, zones: {} },
-  )
+
+  const latestDataRef = useRef(initialData || { content: [], root: { props: { title: "Page" } }, zones: {} })
 
   const config = useMemo(() => createPuckConfig(tenantId), [tenantId])
 
@@ -45,21 +44,11 @@ export function PuckPageEditor({
     [],
   )
 
-  const handleChange = useCallback((data: any) => {
+  const handleChange = (data: any) => {
     if (data && typeof data === "object") {
-      const normalizedData = {
-        root: data.root || { props: { title: "Page" } },
-        content: Array.isArray(data.content) ? data.content : [],
-        zones: data.zones || {},
-      }
-      console.log("[v0] Puck onChange called with", normalizedData.content.length, "blocks")
-      setPuckData(normalizedData)
+      latestDataRef.current = data
     }
-  }, [])
-
-  useEffect(() => {
-    console.log("[v0] Puck data state updated:", puckData.content.length, "blocks")
-  }, [puckData])
+  }
 
   const handlePublish = async (data: any) => {
     setIsSaving(true)
@@ -104,17 +93,22 @@ export function PuckPageEditor({
         router.push(`/${tenantSlug}/admin/pages`)
       }
     } catch (error) {
-      console.error("[v0] Error saving page:", error)
+      console.error("Error saving page:", error)
       toast.error(error instanceof Error ? error.message : "Failed to save page")
     } finally {
       setIsSaving(false)
     }
   }
 
+  const stableInitialData = useMemo(
+    () => initialData || { content: [], root: { props: { title: "Page" } }, zones: {} },
+    [], // Empty deps - only compute once on mount
+  )
+
   return (
     <Puck
       config={config}
-      data={puckData}
+      data={stableInitialData}
       onChange={handleChange}
       onPublish={handlePublish}
       plugins={[aiPlugin, headingAnalyzer]}

@@ -14,8 +14,8 @@ const STATIC_NAV_ITEMS = [
 ]
 
 const STATIC_NAV_SETTINGS = {
-  logo_type: "image",
-  logo_text: "TektonStable",
+  logo_type: "text" as "text" | "image",
+  logo_text: "Tekton's Table",
   logo_image_url: "/tektons-table-logo.png",
 }
 

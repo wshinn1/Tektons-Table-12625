@@ -1,9 +1,10 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import type React from "react"
+
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Menu, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
@@ -48,9 +49,11 @@ export function TenantNavbar({
   isCheckingAuth = false,
 }: TenantNavbarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [campaignsOpen, setCampaignsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active").slice(0, 5)
 
@@ -67,6 +70,7 @@ export function TenantNavbar({
   useEffect(() => {
     setMobileMenuOpen(false)
     setCampaignsOpen(false)
+    setIsNavigating(false)
   }, [pathname])
 
   // Close mobile menu on resize
@@ -91,6 +95,24 @@ export function TenantNavbar({
     return Math.min(Math.round((current / goal) * 100), 100)
   }
 
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, url: string, external?: boolean) => {
+      if (external) return // Let external links work normally
+
+      if (isNavigating) {
+        e.preventDefault()
+        return
+      }
+
+      e.preventDefault()
+
+      setIsNavigating(true)
+
+      window.location.href = url
+    },
+    [isNavigating],
+  )
+
   if (!visible) {
     return null
   }
@@ -107,17 +129,17 @@ export function TenantNavbar({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo / Tenant Name */}
-            <Link href="/" className="flex-shrink-0">
+            <a href="/" className="flex-shrink-0" onClick={(e) => handleNavClick(e, "/")}>
               <h1 className="text-xl font-bold text-gray-900 font-open-sans">{tenantName || subdomain}</h1>
-            </Link>
+            </a>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => (
-                <Link
+                <a
                   key={item.id}
                   href={item.url}
-                  prefetch={false}
+                  onClick={(e) => handleNavClick(e, item.url, item.open_in_new_tab)}
                   target={item.open_in_new_tab ? "_blank" : undefined}
                   rel={item.open_in_new_tab ? "noopener noreferrer" : undefined}
                   className={cn(
@@ -128,7 +150,7 @@ export function TenantNavbar({
                   )}
                 >
                   {item.label}
-                </Link>
+                </a>
               ))}
 
               {/* Campaigns Dropdown */}
@@ -154,18 +176,21 @@ export function TenantNavbar({
                         {activeCampaigns.map((campaign) => {
                           const progress = getProgress(campaign.current_amount, campaign.goal_amount)
                           return (
-                            <Link
+                            <a
                               key={campaign.id}
                               href={`/campaigns/${campaign.slug}`}
                               className="block px-4 py-3 hover:bg-gray-50 transition-colors"
-                              onClick={() => setCampaignsOpen(false)}
+                              onClick={(e) => {
+                                setCampaignsOpen(false)
+                                handleNavClick(e, `/campaigns/${campaign.slug}`)
+                              }}
                             >
                               <div className="font-semibold text-sm text-gray-900 mb-1">{campaign.title}</div>
                               <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                                 <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }} />
                               </div>
                               <div className="text-xs text-gray-500 mt-1">{progress}% funded</div>
-                            </Link>
+                            </a>
                           )
                         })}
                       </div>
@@ -176,26 +201,29 @@ export function TenantNavbar({
 
               {/* Auth Links */}
               {user ? (
-                <Link
+                <a
                   href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin"}
+                  onClick={(e) => handleNavClick(e, isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin")}
                   className="ml-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold hover:bg-[#1e3a8a]/90 transition-colors font-open-sans"
                 >
                   {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
-                </Link>
+                </a>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
-                  <Link
+                  <a
                     href="/auth/donor-login"
+                    onClick={(e) => handleNavClick(e, "/auth/donor-login")}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors font-open-sans"
                   >
                     Donor Login
-                  </Link>
-                  <Link
+                  </a>
+                  <a
                     href="/auth/login"
+                    onClick={(e) => handleNavClick(e, "/auth/login")}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors font-open-sans"
                   >
                     Admin Login
-                  </Link>
+                  </a>
                 </div>
               )}
             </div>
@@ -212,20 +240,22 @@ export function TenantNavbar({
           <div className="md:hidden border-t border-gray-200 bg-white">
             <div className="px-4 py-3 space-y-1">
               {navItems.map((item) => (
-                <Link
+                <a
                   key={item.id}
                   href={item.url}
-                  prefetch={false}
+                  onClick={(e) => {
+                    setMobileMenuOpen(false)
+                    handleNavClick(e, item.url, item.open_in_new_tab)
+                  }}
                   target={item.open_in_new_tab ? "_blank" : undefined}
                   rel={item.open_in_new_tab ? "noopener noreferrer" : undefined}
                   className={cn(
                     "block px-4 py-3 rounded-lg text-sm font-semibold transition-colors font-open-sans",
                     isActive(item.url) ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50",
                   )}
-                  onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
-                </Link>
+                </a>
               ))}
 
               {/* Mobile Campaigns */}
@@ -235,18 +265,21 @@ export function TenantNavbar({
                   {activeCampaigns.map((campaign) => {
                     const progress = getProgress(campaign.current_amount, campaign.goal_amount)
                     return (
-                      <Link
+                      <a
                         key={campaign.id}
                         href={`/campaigns/${campaign.slug}`}
                         className="block px-4 py-3 hover:bg-gray-50"
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={(e) => {
+                          setMobileMenuOpen(false)
+                          handleNavClick(e, `/campaigns/${campaign.slug}`)
+                        }}
                       >
                         <div className="font-semibold text-sm text-gray-900 mb-1">{campaign.title}</div>
                         <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }} />
                         </div>
                         <div className="text-xs text-gray-500 mt-1">{progress}% funded</div>
-                      </Link>
+                      </a>
                     )
                   })}
                 </div>
@@ -255,29 +288,38 @@ export function TenantNavbar({
               {/* Mobile Auth */}
               <div className="pt-2 border-t border-gray-100 mt-2">
                 {user ? (
-                  <Link
+                  <a
                     href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin"}
                     className="block px-4 py-3 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold text-center"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      setMobileMenuOpen(false)
+                      handleNavClick(e, isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin")
+                    }}
                   >
                     {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
-                  </Link>
+                  </a>
                 ) : (
                   <div className="space-y-2">
-                    <Link
+                    <a
                       href="/auth/donor-login"
                       className="block px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold text-center"
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        setMobileMenuOpen(false)
+                        handleNavClick(e, "/auth/donor-login")
+                      }}
                     >
                       Donor Login
-                    </Link>
-                    <Link
+                    </a>
+                    <a
                       href="/auth/login"
                       className="block px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold text-center"
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        setMobileMenuOpen(false)
+                        handleNavClick(e, "/auth/login")
+                      }}
                     >
                       Admin Login
-                    </Link>
+                    </a>
                   </div>
                 )}
               </div>

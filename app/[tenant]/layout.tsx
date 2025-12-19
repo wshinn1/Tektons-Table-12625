@@ -116,6 +116,7 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
   const lastAuthCheckRef = useRef<number>(0)
   const pathnameRef = useRef(pathname)
   const [isNavigating, setIsNavigating] = useState(false) // Changed from ref to state
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const hostname = window.location.hostname
@@ -177,6 +178,38 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
       document.documentElement.classList.remove("embedded-mode")
     }
   }, [searchParams])
+
+  useEffect(() => {
+    // When pathname changes, we just finished navigating
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current)
+    }
+    setIsNavigating(false)
+  }, [pathname])
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const link = target.closest("a")
+      if (link && link.href && !link.target && link.href.startsWith(window.location.origin)) {
+        // Internal navigation - set navigating state immediately
+        setIsNavigating(true)
+        // Clear after 2 seconds in case navigation doesn't complete
+        navigationTimeoutRef.current = setTimeout(() => {
+          setIsNavigating(false)
+        }, 2000)
+      }
+    }
+
+    // Use capture phase to intercept before React handles it
+    document.addEventListener("click", handleClick, true)
+    return () => {
+      document.removeEventListener("click", handleClick, true)
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (pathname !== pathnameRef.current) {
