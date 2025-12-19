@@ -1,3 +1,7 @@
+"use client"
+
+import type React from "react"
+
 import type { Config } from "@measured/puck"
 import { DropZone } from "@measured/puck"
 import { Button } from "@/components/ui/button"
@@ -6,6 +10,10 @@ import type { JSX } from "react"
 import { cn } from "@/lib/utils" // Assuming cn is available for class merging
 
 import { createImagePickerField } from "@/components/puck/image-picker-field"
+import { PuckContactForm } from "@/components/puck/puck-contact-form"
+import { createFontPickerField, getGoogleFontsLink } from "@/components/puck/font-picker-field"
+import { createColorPickerField } from "@/components/puck/color-picker-field"
+import { createFontSizeField } from "@/components/puck/font-size-field"
 
 const createExternalFetcher = (type: string, tenantId?: string, schemaType: "string" | "object" = "string") => ({
   fetchList: async ({ query }: { query?: string }) => {
@@ -98,30 +106,58 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Right", value: "right" },
           ],
         },
-        color: {
-          type: "text",
-          label: "Text Color (hex or CSS color)",
-          placeholder: "#000000 or rgb(0,0,0)",
-        },
-        fontFamily: {
-          type: "select",
-          label: "Font Family",
-          options: [
-            { label: "Default", value: "inherit" },
-            { label: "Sans Serif", value: "sans-serif" },
-            { label: "Serif", value: "serif" },
-            { label: "Monospace", value: "monospace" },
-          ],
-        },
+        color: createColorPickerField("Text Color"),
+        fontFamily: createFontPickerField("Font Family"),
+        fontSize: createFontSizeField("Font Size (pt)", 32),
         fontWeight: {
           type: "select",
           label: "Font Weight",
           options: [
+            { label: "Light", value: "300" },
             { label: "Normal", value: "400" },
             { label: "Medium", value: "500" },
             { label: "Semibold", value: "600" },
             { label: "Bold", value: "700" },
             { label: "Extra Bold", value: "800" },
+          ],
+        },
+        fontStyle: {
+          type: "radio",
+          label: "Font Style",
+          options: [
+            { label: "Normal", value: "normal" },
+            { label: "Italic", value: "italic" },
+          ],
+        },
+        textDecoration: {
+          type: "select",
+          label: "Text Decoration",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Underline", value: "underline" },
+            { label: "Line Through", value: "line-through" },
+          ],
+        },
+        textTransform: {
+          type: "select",
+          label: "Text Transform",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Uppercase", value: "uppercase" },
+            { label: "Lowercase", value: "lowercase" },
+            { label: "Capitalize", value: "capitalize" },
+          ],
+        },
+        letterSpacing: {
+          type: "select",
+          label: "Letter Spacing",
+          options: [
+            { label: "Tighter", value: "-0.05em" },
+            { label: "Tight", value: "-0.025em" },
+            { label: "Normal", value: "0" },
+            { label: "Wide", value: "0.025em" },
+            { label: "Wider", value: "0.05em" },
+            { label: "Widest", value: "0.1em" },
           ],
         },
         link: { type: "text", label: "Link URL (optional)" },
@@ -140,30 +176,52 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         align: "left",
         color: "",
         fontFamily: "inherit",
+        fontSize: 32,
         fontWeight: "700",
+        fontStyle: "normal",
+        textDecoration: "none",
+        textTransform: "none",
+        letterSpacing: "0",
         link: "",
         openInNewTab: "false",
       },
-      render: ({ title, level, align, color, fontFamily, fontWeight, link, openInNewTab }) => {
+      render: ({
+        title,
+        level,
+        align,
+        color,
+        fontFamily,
+        fontSize,
+        fontWeight,
+        fontStyle,
+        textDecoration,
+        textTransform,
+        letterSpacing,
+        link,
+        openInNewTab,
+      }) => {
         const Tag = level as keyof JSX.IntrinsicElements
-        const classes = {
-          h1: "text-4xl",
-          h2: "text-3xl",
-          h3: "text-2xl",
-          h4: "text-xl",
-        }
 
-        const style = {
+        const style: React.CSSProperties = {
           textAlign: align as any,
           color: color || undefined,
           fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
+          fontSize: fontSize ? `${fontSize}pt` : undefined,
           fontWeight: fontWeight,
+          fontStyle: fontStyle !== "normal" ? fontStyle : undefined,
+          textDecoration: textDecoration !== "none" ? textDecoration : undefined,
+          textTransform: textTransform !== "none" ? (textTransform as any) : undefined,
+          letterSpacing: letterSpacing !== "0" ? letterSpacing : undefined,
         }
 
+        // Load Google Font if needed
+        const fontLink = fontFamily && fontFamily !== "inherit" ? getGoogleFontsLink([fontFamily]) : null
+
         const content = (
-          <Tag className={classes[level as keyof typeof classes]} style={style}>
-            {title}
-          </Tag>
+          <>
+            {fontLink && <link href={fontLink} rel="stylesheet" />}
+            <Tag style={style}>{title}</Tag>
+          </>
         )
 
         if (link) {
@@ -182,6 +240,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         return content
       },
     },
+
     TextBlock: {
       label: "Text Paragraph",
       fields: {
@@ -195,32 +254,9 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Right", value: "right" },
           ],
         },
-        fontSize: {
-          type: "select",
-          label: "Font Size",
-          options: [
-            { label: "Small (14px)", value: "14px" },
-            { label: "Normal (16px)", value: "16px" },
-            { label: "Medium (18px)", value: "18px" },
-            { label: "Large (20px)", value: "20px" },
-            { label: "Extra Large (24px)", value: "24px" },
-          ],
-        },
-        color: {
-          type: "text",
-          label: "Text Color (hex or CSS color)",
-          placeholder: "#000000 or rgb(0,0,0)",
-        },
-        fontFamily: {
-          type: "select",
-          label: "Font Family",
-          options: [
-            { label: "Default", value: "inherit" },
-            { label: "Sans Serif", value: "sans-serif" },
-            { label: "Serif", value: "serif" },
-            { label: "Monospace", value: "monospace" },
-          ],
-        },
+        fontSize: createFontSizeField("Font Size (pt)", 16),
+        color: createColorPickerField("Text Color"),
+        fontFamily: createFontPickerField("Font Family"),
         fontWeight: {
           type: "select",
           label: "Font Weight",
@@ -255,7 +291,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
       defaultProps: {
         content: "Enter your text here. This block is perfect for paragraphs and body content.",
         align: "left",
-        fontSize: "16px",
+        fontSize: 16,
         color: "",
         fontFamily: "inherit",
         fontWeight: "400",
@@ -264,16 +300,23 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         openInNewTab: "false",
       },
       render: ({ content, align, fontSize, color, fontFamily, fontWeight, lineHeight, link, openInNewTab }) => {
-        const style = {
+        const style: React.CSSProperties = {
           textAlign: align as any,
-          fontSize,
+          fontSize: fontSize ? `${fontSize}pt` : undefined,
           color: color || undefined,
           fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
           fontWeight,
           lineHeight,
         }
 
-        const textContent = <p style={style}>{content}</p>
+        const fontLink = fontFamily && fontFamily !== "inherit" ? getGoogleFontsLink([fontFamily]) : null
+
+        const textContent = (
+          <>
+            {fontLink && <link href={fontLink} rel="stylesheet" />}
+            <p style={style}>{content}</p>
+          </>
+        )
 
         if (link) {
           return (
@@ -319,6 +362,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Secondary", value: "secondary" },
             { label: "Outline", value: "outline" },
             { label: "Ghost", value: "ghost" },
+            { label: "Custom", value: "custom" },
           ],
         },
         size: {
@@ -330,18 +374,130 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Large", value: "lg" },
           ],
         },
+        backgroundColor: createColorPickerField("Background Color"),
+        textColor: createColorPickerField("Text Color"),
+        hoverBackgroundColor: createColorPickerField("Hover Background"),
+        fontFamily: createFontPickerField("Font Family"),
+        fontSize: createFontSizeField("Font Size (pt)", 14),
+        fontWeight: {
+          type: "select",
+          label: "Font Weight",
+          options: [
+            { label: "Normal", value: "400" },
+            { label: "Medium", value: "500" },
+            { label: "Semibold", value: "600" },
+            { label: "Bold", value: "700" },
+          ],
+        },
+        borderRadius: {
+          type: "select",
+          label: "Border Radius",
+          options: [
+            { label: "None", value: "0" },
+            { label: "Small", value: "4" },
+            { label: "Medium", value: "8" },
+            { label: "Large", value: "12" },
+            { label: "Full", value: "9999" },
+          ],
+        },
+        openInNewTab: {
+          type: "radio",
+          label: "Open link in",
+          options: [
+            { label: "Same tab", value: "false" },
+            { label: "New tab", value: "true" },
+          ],
+        },
       },
       defaultProps: {
         label: "Click Me",
         href: "#",
         variant: "default",
         size: "default",
+        backgroundColor: "",
+        textColor: "",
+        hoverBackgroundColor: "",
+        fontFamily: "inherit",
+        fontSize: 14,
+        fontWeight: "500",
+        borderRadius: "8",
+        openInNewTab: "false",
       },
-      render: ({ label, href, variant, size }) => {
+      render: ({
+        label,
+        href,
+        variant,
+        size,
+        backgroundColor,
+        textColor,
+        hoverBackgroundColor,
+        fontFamily,
+        fontSize,
+        fontWeight,
+        borderRadius,
+        openInNewTab,
+      }) => {
+        const isCustom = variant === "custom" || backgroundColor || textColor
+
+        const customStyle: React.CSSProperties = {
+          backgroundColor: backgroundColor || undefined,
+          color: textColor || undefined,
+          fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
+          fontSize: fontSize ? `${fontSize}pt` : undefined,
+          fontWeight,
+          borderRadius: borderRadius ? `${borderRadius}px` : undefined,
+        }
+
+        const fontLink = fontFamily && fontFamily !== "inherit" ? getGoogleFontsLink([fontFamily]) : null
+
+        if (isCustom) {
+          return (
+            <>
+              {fontLink && <link href={fontLink} rel="stylesheet" />}
+              <a
+                href={href}
+                target={openInNewTab === "true" ? "_blank" : "_self"}
+                rel={openInNewTab === "true" ? "noopener noreferrer" : undefined}
+                className={cn(
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "disabled:pointer-events-none disabled:opacity-50",
+                  size === "sm" && "h-9 px-3",
+                  size === "default" && "h-10 px-4 py-2",
+                  size === "lg" && "h-11 px-8",
+                  !backgroundColor && "bg-primary text-primary-foreground hover:bg-primary/90",
+                )}
+                style={customStyle}
+                onMouseEnter={(e) => {
+                  if (hoverBackgroundColor) {
+                    ;(e.target as HTMLElement).style.backgroundColor = hoverBackgroundColor
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (hoverBackgroundColor && backgroundColor) {
+                    ;(e.target as HTMLElement).style.backgroundColor = backgroundColor
+                  }
+                }}
+              >
+                {label}
+              </a>
+            </>
+          )
+        }
+
         return (
-          <Button variant={variant as any} size={size as any} asChild>
-            <a href={href}>{label}</a>
-          </Button>
+          <>
+            {fontLink && <link href={fontLink} rel="stylesheet" />}
+            <Button variant={variant as any} size={size as any} asChild style={customStyle}>
+              <a
+                href={href}
+                target={openInNewTab === "true" ? "_blank" : "_self"}
+                rel={openInNewTab === "true" ? "noopener noreferrer" : undefined}
+              >
+                {label}
+              </a>
+            </Button>
+          </>
         )
       },
     },
@@ -591,12 +747,76 @@ export const createPuckConfig = (tenantId?: string): Config => ({
       label: "Embed Code",
       fields: {
         embedCode: { type: "textarea", label: "Embed HTML" },
+        minHeight: {
+          type: "select",
+          label: "Minimum Height",
+          options: [
+            { label: "Auto", value: "auto" },
+            { label: "Small (200px)", value: "200px" },
+            { label: "Medium (400px)", value: "400px" },
+            { label: "Large (600px)", value: "600px" },
+            { label: "Extra Large (800px)", value: "800px" },
+          ],
+        },
+        aspectRatio: {
+          type: "select",
+          label: "Aspect Ratio",
+          options: [
+            { label: "None", value: "none" },
+            { label: "16:9 (Video)", value: "16/9" },
+            { label: "4:3", value: "4/3" },
+            { label: "1:1 (Square)", value: "1/1" },
+            { label: "9:16 (Vertical)", value: "9/16" },
+          ],
+        },
       },
       defaultProps: {
         embedCode: "<!-- Paste your embed code here (YouTube, Vimeo, etc.) -->",
+        minHeight: "auto",
+        aspectRatio: "none",
       },
-      render: ({ embedCode }) => {
-        return <div dangerouslySetInnerHTML={{ __html: embedCode }} />
+      render: ({ embedCode, minHeight, aspectRatio }) => {
+        const isPlaceholder = !embedCode || embedCode.includes("<!-- Paste your embed code here")
+
+        const containerStyle: React.CSSProperties = {
+          minHeight: minHeight !== "auto" ? minHeight : undefined,
+          aspectRatio: aspectRatio !== "none" ? aspectRatio : undefined,
+        }
+
+        if (isPlaceholder) {
+          return (
+            <div
+              className="border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30 flex flex-col items-center justify-center p-8"
+              style={{ ...containerStyle, minHeight: containerStyle.minHeight || "200px" }}
+            >
+              <div className="text-muted-foreground text-center">
+                <svg
+                  className="w-12 h-12 mx-auto mb-3 opacity-50"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  />
+                </svg>
+                <p className="font-medium">Embed Code Block</p>
+                <p className="text-sm mt-1">Click to add YouTube, Vimeo, or other embed code</p>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div
+            style={containerStyle}
+            className="[&>iframe]:w-full [&>iframe]:h-full"
+            dangerouslySetInnerHTML={{ __html: embedCode }}
+          />
+        )
       },
     },
 
@@ -747,7 +967,6 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Small", value: "sm" },
             { label: "Medium", value: "md" },
             { label: "Large", value: "lg" },
-            { label: "Extra Large", value: "xl" },
           ],
         },
         padding: {
@@ -1141,6 +1360,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
                 { label: "Outline", value: "outline" },
                 { label: "Ghost", value: "ghost" },
                 { label: "Destructive", value: "destructive" },
+                { label: "Custom", value: "custom" },
               ],
             },
             size: {
@@ -1152,11 +1372,11 @@ export const createPuckConfig = (tenantId?: string): Config => ({
                 { label: "Large", value: "lg" },
               ],
             },
-            backgroundColor: { type: "text", label: "Background Color" },
-            hoverBackgroundColor: { type: "text", label: "Hover Background Color" },
-            textColor: { type: "text", label: "Text Color" },
-            hoverTextColor: { type: "text", label: "Hover Text Color" },
-            borderColor: { type: "text", label: "Border Color" },
+            backgroundColor: { type: "text", label: "Background Color (hex)" },
+            hoverBackgroundColor: { type: "text", label: "Hover Background (hex)" },
+            textColor: { type: "text", label: "Text Color (hex)" },
+            hoverTextColor: { type: "text", label: "Hover Text Color (hex)" },
+            borderColor: { type: "text", label: "Border Color (hex)" },
             borderWidth: {
               type: "select",
               label: "Border Width",
@@ -1235,6 +1455,8 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Extra Large", value: "8" },
           ],
         },
+        fontFamily: createFontPickerField("Button Font Family"),
+        fontSize: createFontSizeField("Button Font Size (pt)", 14),
       },
       defaultProps: {
         buttons: [
@@ -1271,8 +1493,10 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         ],
         align: "center",
         gap: "4",
+        fontFamily: "inherit",
+        fontSize: 14,
       },
-      render: ({ buttons, align, gap }) => {
+      render: ({ buttons, align, gap, fontFamily, fontSize }) => {
         const alignClasses = {
           left: "justify-start",
           center: "justify-center",
@@ -1294,40 +1518,39 @@ export const createPuckConfig = (tenantId?: string): Config => ({
           glow: "hover:shadow-lg transition-shadow",
         }
 
+        const fontLink = fontFamily && fontFamily !== "inherit" ? getGoogleFontsLink([fontFamily]) : null
+
         return (
-          <div className={`flex flex-wrap gap-${gap} ${alignClasses[align as keyof typeof alignClasses]}`}>
-            {buttons.map((btn: any, idx: number) => {
-              const customStyles = {
-                backgroundColor: btn.backgroundColor || undefined,
-                color: btn.textColor || undefined,
-                borderColor: btn.borderColor || undefined,
-                borderWidth: btn.borderWidth ? `${btn.borderWidth}px` : undefined,
-                borderRadius: `${btn.borderRadius}px`,
-                borderStyle: btn.borderWidth !== "0" ? "solid" : undefined,
-              }
+          <>
+            {fontLink && <link href={fontLink} rel="stylesheet" />}
+            <div className={`flex flex-wrap gap-${gap} ${alignClasses[align as keyof typeof alignClasses]}`}>
+              {buttons.map((btn: any, idx: number) => {
+                const customStyles: React.CSSProperties = {
+                  backgroundColor: btn.backgroundColor || undefined,
+                  color: btn.textColor || undefined,
+                  borderColor: btn.borderColor || undefined,
+                  borderWidth: btn.borderWidth ? `${btn.borderWidth}px` : undefined,
+                  borderRadius: `${btn.borderRadius}px`,
+                  borderStyle: btn.borderWidth !== "0" ? "solid" : undefined,
+                  fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
+                  fontSize: fontSize ? `${fontSize}pt` : undefined,
+                }
 
-              const hoverStyles =
-                btn.hoverBackgroundColor || btn.hoverTextColor
-                  ? {
-                      "--hover-bg": btn.hoverBackgroundColor || undefined,
-                      "--hover-color": btn.hoverTextColor || undefined,
-                    }
-                  : {}
-
-              return (
-                <Button
-                  key={idx}
-                  variant={btn.variant as any}
-                  size={btn.size as any}
-                  asChild
-                  className={`${shadowClasses[btn.shadow as keyof typeof shadowClasses]} ${effectClasses[btn.effect as keyof typeof effectClasses]}`}
-                  style={{ ...customStyles, ...hoverStyles } as any}
-                >
-                  <a href={btn.href}>{btn.label}</a>
-                </Button>
-              )
-            })}
-          </div>
+                return (
+                  <Button
+                    key={idx}
+                    variant={btn.variant as any}
+                    size={btn.size as any}
+                    asChild
+                    className={`${shadowClasses[btn.shadow as keyof typeof shadowClasses]} ${effectClasses[btn.effect as keyof typeof effectClasses]}`}
+                    style={customStyles}
+                  >
+                    <a href={btn.href}>{btn.label}</a>
+                  </Button>
+                )
+              })}
+            </div>
+          </>
         )
       },
     },
@@ -1515,7 +1738,17 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Large", value: "128" },
           ],
         },
-        imageUrl: { type: "text", label: "Image URL" },
+        // Typography options
+        titleFontFamily: createFontPickerField("Title Font"),
+        titleFontSize: createFontSizeField("Title Font Size (pt)", 48),
+        titleColor: createColorPickerField("Title Color"),
+        descriptionFontFamily: createFontPickerField("Description Font"),
+        descriptionFontSize: createFontSizeField("Description Font Size (pt)", 18),
+        descriptionColor: createColorPickerField("Description Color"),
+        // Image options
+        ...(tenantId
+          ? { imageUrl: createImagePickerField(tenantId, "Image") }
+          : { imageUrl: { type: "text", label: "Image URL" } }),
         imageMode: {
           type: "radio",
           label: "Image Mode",
@@ -1524,16 +1757,63 @@ export const createPuckConfig = (tenantId?: string): Config => ({
             { label: "Background", value: "background" },
           ],
         },
+        overlayOpacity: {
+          type: "select",
+          label: "Background Overlay",
+          options: [
+            { label: "None", value: "0" },
+            { label: "Light (30%)", value: "0.3" },
+            { label: "Medium (50%)", value: "0.5" },
+            { label: "Dark (70%)", value: "0.7" },
+            { label: "Very Dark (90%)", value: "0.9" },
+          ],
+        },
       },
       defaultProps: {
         title: "Hero Title",
         description: "A compelling description goes here to engage your visitors.",
         align: "center",
         padding: "64",
+        titleFontFamily: "inherit",
+        titleFontSize: 48,
+        titleColor: "",
+        descriptionFontFamily: "inherit",
+        descriptionFontSize: 18,
+        descriptionColor: "",
         imageUrl: "",
         imageMode: "inline",
+        overlayOpacity: "0.5",
       },
-      render: ({ title, description, align, padding, imageUrl, imageMode }) => {
+      render: ({
+        title,
+        description,
+        align,
+        padding,
+        titleFontFamily,
+        titleFontSize,
+        titleColor,
+        descriptionFontFamily,
+        descriptionFontSize,
+        descriptionColor,
+        imageUrl,
+        imageMode,
+        overlayOpacity,
+      }) => {
+        const fonts = [titleFontFamily, descriptionFontFamily].filter((f) => f && f !== "inherit")
+        const fontLink = fonts.length > 0 ? getGoogleFontsLink(fonts) : null
+
+        const titleStyle: React.CSSProperties = {
+          fontFamily: titleFontFamily !== "inherit" ? titleFontFamily : undefined,
+          fontSize: titleFontSize ? `${titleFontSize}pt` : undefined,
+          color: titleColor || undefined,
+        }
+
+        const descriptionStyle: React.CSSProperties = {
+          fontFamily: descriptionFontFamily !== "inherit" ? descriptionFontFamily : undefined,
+          fontSize: descriptionFontSize ? `${descriptionFontSize}pt` : undefined,
+          color: descriptionColor || undefined,
+        }
+
         return (
           <section
             className="relative"
@@ -1545,10 +1825,17 @@ export const createPuckConfig = (tenantId?: string): Config => ({
               backgroundPosition: "center",
             }}
           >
-            {imageMode === "background" && imageUrl && <div className="absolute inset-0 bg-black/50" />}
+            {fontLink && <link href={fontLink} rel="stylesheet" />}
+            {imageMode === "background" && imageUrl && (
+              <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />
+            )}
             <div className={`relative max-w-4xl ${align === "center" ? "mx-auto" : ""}`}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">{title}</h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl">{description}</p>
+              <h1 className="font-bold mb-4" style={titleStyle}>
+                {title}
+              </h1>
+              <p className="text-muted-foreground mb-8 max-w-2xl" style={descriptionStyle}>
+                {description}
+              </p>
               <DropZone zone="hero-actions" />
               {imageMode === "inline" && imageUrl && (
                 <img src={imageUrl || "/placeholder.svg"} alt="" className="mt-8 rounded-lg shadow-lg max-w-full" />
@@ -1698,7 +1985,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
                 {features.map((feature: any, i: number) => (
                   <Card
                     key={i}
-                    className={`p-6 ${shadowClasses[cardShadow as keyof typeof shadowClasses]} ${hoverEffectClasses[cardHoverEffect as keyof typeof hoverEffectClasses]}`}
+                    className={`p-6 ${shadowClasses[cardShadow as keyof typeof shadowClasses]} ${hoverEffectClasses[cardHoverEffect as keyof typeof cardHoverEffect]}`}
                     style={{
                       backgroundColor: cardBackgroundColor || undefined,
                       borderColor: cardBorderColor || undefined,
@@ -2067,35 +2354,79 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         duplicate: true,
         drag: true,
       },
-      render: ({ title, description, submitText, showSubject }) => {
-        return (
-          <div className="max-w-md mx-auto p-6 bg-card rounded-lg border">
-            <h3 className="text-xl font-semibold mb-2">{title}</h3>
-            {description && <p className="text-muted-foreground mb-6">{description}</p>}
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <input type="text" placeholder="Your name" className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input type="email" placeholder="you@example.com" className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              {showSubject === "yes" && (
+      render: ({ title, description, submitText, showSubject, puck }) => {
+        // Get tenantId from window location in browser
+        const tenantId = typeof window !== "undefined" ? window.location.pathname.split("/")[1] : ""
+
+        // In editor mode (puck.isEditing), show preview
+        // On published page, show working form
+        const isEditing = puck?.isEditing
+
+        if (isEditing) {
+          return (
+            <div className="max-w-md mx-auto p-6 bg-card rounded-lg border">
+              <h3 className="text-xl font-semibold mb-2">{title}</h3>
+              {description && <p className="text-muted-foreground mb-4">{description}</p>}
+              <p className="text-xs text-muted-foreground mb-4 bg-muted p-2 rounded">
+                Editor Preview: The published page will have a working contact form that saves submissions to your
+                dashboard.
+              </p>
+              <div className="space-y-4 opacity-60">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Subject</label>
-                  <input type="text" placeholder="Subject" className="w-full px-3 py-2 border rounded-md" />
+                  <label className="block text-sm font-medium mb-1">Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    disabled
+                  />
                 </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium mb-1">Message</label>
-                <textarea placeholder="Your message" rows={4} className="w-full px-3 py-2 border rounded-md" />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email *</label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    disabled
+                  />
+                </div>
+                {showSubject === "yes" && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Subject</label>
+                    <input
+                      type="text"
+                      placeholder="Subject"
+                      className="w-full px-3 py-2 border rounded-md bg-background"
+                      disabled
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Message *</label>
+                  <textarea
+                    placeholder="Your message"
+                    rows={4}
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    disabled
+                  />
+                </div>
+                <Button type="button" className="w-full" disabled>
+                  {submitText}
+                </Button>
               </div>
-              <Button type="submit" className="w-full">
-                {submitText}
-              </Button>
-            </form>
-          </div>
+            </div>
+          )
+        }
+
+        // Published page - render working form
+        return (
+          <PuckContactForm
+            tenantId={tenantId}
+            title={title}
+            description={description}
+            submitText={submitText}
+            showSubject={showSubject}
+          />
         )
       },
     },
@@ -2104,12 +2435,14 @@ export const createPuckConfig = (tenantId?: string): Config => ({
       fields: {
         title: { type: "text", label: "Title" },
         description: { type: "textarea", label: "Description" },
+        donationUrl: { type: "text", label: "Donation Page URL (e.g., /donate or full URL)" },
         suggestedAmounts: { type: "text", label: "Suggested Amounts (comma-separated)" },
         buttonText: { type: "text", label: "Button Text" },
       },
       defaultProps: {
         title: "Support Our Mission",
         description: "Your donation helps us continue our important work.",
+        donationUrl: "/donate",
         suggestedAmounts: "25,50,100,250",
         buttonText: "Donate Now",
       },
@@ -2118,12 +2451,15 @@ export const createPuckConfig = (tenantId?: string): Config => ({
         duplicate: true,
         drag: true,
       },
-      render: ({ title, description, suggestedAmounts, buttonText }) => {
+      render: ({ title, description, donationUrl, suggestedAmounts, buttonText }) => {
         const amounts = suggestedAmounts.split(",").map((a: string) => a.trim())
         return (
           <div className="max-w-md mx-auto p-6 bg-card rounded-lg border">
             <h3 className="text-xl font-semibold mb-2">{title}</h3>
-            {description && <p className="text-muted-foreground mb-6">{description}</p>}
+            {description && <p className="text-muted-foreground mb-4">{description}</p>}
+            {donationUrl && (
+              <p className="text-xs text-muted-foreground mb-4 bg-muted p-2 rounded">Links to: {donationUrl}</p>
+            )}
             <div className="grid grid-cols-2 gap-2 mb-4">
               {amounts.map((amount: string) => (
                 <button
@@ -2136,9 +2472,16 @@ export const createPuckConfig = (tenantId?: string): Config => ({
               ))}
             </div>
             <div className="mb-4">
-              <input type="number" placeholder="Custom amount" className="w-full px-3 py-2 border rounded-md" />
+              <input
+                type="number"
+                placeholder="Custom amount"
+                className="w-full px-3 py-2 border rounded-md bg-background"
+                readOnly
+              />
             </div>
-            <Button className="w-full">{buttonText}</Button>
+            <Button className="w-full" asChild>
+              <a href={donationUrl || "/donate"}>{buttonText}</a>
+            </Button>
           </div>
         )
       },

@@ -57,6 +57,13 @@ export function PuckPageEditor({
 
   const latestDataRef = useRef(initialData || { content: [], root: { props: { title: "Page" } }, zones: {} })
 
+  const isSubdomain =
+    typeof window !== "undefined" &&
+    window.location.hostname.includes(".") &&
+    !window.location.hostname.startsWith("localhost") &&
+    window.location.hostname.split(".")[0] !== "www" &&
+    window.location.hostname.split(".")[0] !== "tektonstable"
+
   const config = useMemo(() => {
     console.log("[v0] Creating Puck config for tenant:", tenantId)
     return createPuckConfig(tenantId)
@@ -109,7 +116,7 @@ export function PuckPageEditor({
               slug: pageSlug || `page-${Date.now()}`,
               design_json: data,
               tenant_id: tenantId,
-              status: "draft",
+              status: "published",
             }
 
         const response = await fetch(url, {
@@ -131,7 +138,8 @@ export function PuckPageEditor({
         }
 
         toast.success("Page saved successfully!")
-        router.push(`/${tenantSlug}/admin/pages`)
+        const redirectPath = isSubdomain ? "/admin/pages" : `/${tenantSlug}/admin/pages`
+        router.push(redirectPath)
       }
     } catch (error) {
       console.error("Error saving page:", error)

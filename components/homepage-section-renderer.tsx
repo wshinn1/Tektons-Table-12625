@@ -1,10 +1,16 @@
 "use client"
 
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { ArrowRight, Check } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 
 const iconMap: Record<string, any> = LucideIcons
+
+const Prism = dynamic(() => import("@/components/backgrounds/prism"), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-gradient-to-br from-purple-900 to-indigo-900" />,
+})
 
 interface HomepageSectionRendererProps {
   sections: any[]
@@ -547,6 +553,76 @@ export function HomepageSectionRenderer({ sections }: HomepageSectionRendererPro
                     <p className="mt-6 text-sm text-gray-700">
                       {ctaContent.disclaimer || "No credit card required • Setup in 5 minutes • Cancel anytime"}
                     </p>
+                  )}
+                </div>
+              </section>
+            )
+
+          case "animation_background_1":
+            const animBgContent = section.content || {}
+            const sectionHeight = animBgContent.sectionHeight || 600
+
+            return (
+              <section
+                key={section.id}
+                className="relative flex items-center justify-center overflow-hidden"
+                style={{ height: `${sectionHeight}px` }}
+              >
+                {/* Prism Background */}
+                <div className="absolute inset-0">
+                  <Prism
+                    animationType={animBgContent.animationType || "rotate"}
+                    timeScale={animBgContent.timeScale ?? 0.5}
+                    height={animBgContent.prismHeight ?? 3.5}
+                    baseWidth={animBgContent.baseWidth ?? 5.5}
+                    scale={animBgContent.scale ?? 3.6}
+                    hueShift={animBgContent.hueShift ?? 0}
+                    colorFrequency={animBgContent.colorFrequency ?? 1}
+                    noise={animBgContent.noise ?? 0.5}
+                    glow={animBgContent.glow ?? 1}
+                    suspendWhenOffscreen={true}
+                  />
+                </div>
+
+                {/* Overlay */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundColor: animBgContent.overlayColor || "#000000",
+                    opacity: (animBgContent.overlayOpacity ?? 30) / 100,
+                  }}
+                />
+
+                {/* Content */}
+                <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+                  <h1
+                    className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
+                    style={{ color: animBgContent.textColor || "#ffffff" }}
+                  >
+                    {animBgContent.headline || section.title || "Welcome"}
+                  </h1>
+
+                  {animBgContent.subheadline && (
+                    <p
+                      className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90"
+                      style={{ color: animBgContent.textColor || "#ffffff" }}
+                    >
+                      {animBgContent.subheadline}
+                    </p>
+                  )}
+
+                  {animBgContent.buttonText && (
+                    <Link
+                      href={animBgContent.buttonUrl || "#"}
+                      className="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-lg font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                      style={{
+                        backgroundColor: animBgContent.buttonColor || "#ffffff",
+                        color: animBgContent.buttonTextColor || "#000000",
+                      }}
+                    >
+                      {animBgContent.buttonText}
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
                   )}
                 </div>
               </section>
