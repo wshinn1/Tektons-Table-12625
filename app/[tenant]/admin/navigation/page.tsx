@@ -1,6 +1,7 @@
 import { getTenantMenuItems } from "@/app/actions/tenant-menu"
 import { getTenantPages } from "@/app/actions/tenant-pages"
 import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound, redirect } from "next/navigation"
 import { NavigationManager } from "@/components/tenant/navigation-manager"
 
@@ -42,6 +43,14 @@ export default async function TenantNavigationPage({ params }: Props) {
   const menuItems = await getTenantMenuItems(tenant.id)
   const pages = await getTenantPages(tenant.id)
 
+  const adminSupabase = createAdminClient()
+  const { data: homepagePage } = await adminSupabase
+    .from("tenant_pages")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .eq("is_homepage", true)
+    .single()
+
   return (
     <div className="space-y-8">
       <div>
@@ -55,6 +64,7 @@ export default async function TenantNavigationPage({ params }: Props) {
         tenantName={tenant.full_name || ""}
         initialItems={menuItems}
         pages={pages.filter((p) => p.status === "published")}
+        currentHomepageId={homepagePage?.id || null}
       />
     </div>
   )

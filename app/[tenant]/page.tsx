@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
 import { OrganizationSchema } from "@/components/seo/organization-schema"
+import { PuckPageRender } from "@/components/tenant/puck-page-editor"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -169,16 +170,17 @@ export default async function TenantHomePage({
 
   const adminClient = createAdminClient()
 
-  const [postsCountResult, postsResult, homepageResult, activeCampaignsResult] = await Promise.all([
-    adminClient
-      .from("blog_posts")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", String(tenant.id))
-      .eq("status", "published"),
+  const [postsCountResult, postsResult, homepageResult, activeCampaignsResult, customHomepageResult] =
+    await Promise.all([
+      adminClient
+        .from("blog_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", String(tenant.id))
+        .eq("status", "published"),
 
-    adminClient
-      .from("blog_posts")
-      .select(`
+      adminClient
+        .from("blog_posts")
+        .select(`
         id,
         slug,
         title,
@@ -192,14 +194,14 @@ export default async function TenantHomePage({
           )
         )
       `)
-      .eq("tenant_id", String(tenant.id))
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
-      .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1),
+        .eq("tenant_id", String(tenant.id))
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1),
 
-    supabase
-      .from("pages")
-      .select(`
+      supabase
+        .from("pages")
+        .select(`
         id,
         title,
         slug,
@@ -216,25 +218,34 @@ export default async function TenantHomePage({
           )
         )
       `)
-      .eq("is_homepage", true)
-      .eq("tenant_id", tenant.id)
-      .eq("is_published", true)
-      .maybeSingle(),
+        .eq("is_homepage", true)
+        .eq("tenant_id", tenant.id)
+        .eq("is_published", true)
+        .maybeSingle(),
 
-    adminClient
-      .from("tenant_campaigns")
-      .select("id, slug, title, goal_amount, current_amount")
-      .eq("tenant_id", tenant.id)
-      .eq("status", "active")
-      .limit(1)
-      .maybeSingle(),
-  ])
+      adminClient
+        .from("tenant_campaigns")
+        .select("id, slug, title, goal_amount, current_amount")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle(),
+
+      adminClient
+        .from("tenant_pages")
+        .select("id, title, slug, design_json")
+        .eq("tenant_id", tenant.id)
+        .eq("is_homepage", true)
+        .eq("status", "published")
+        .maybeSingle(),
+    ])
 
   const totalPosts = postsCountResult.count || 0
   const totalPages = Math.ceil(totalPosts / postsPerPage)
   const posts = postsResult.data || []
   const homepage = homepageResult.data
   const activeCampaign = activeCampaignsResult.data
+  const customHomepage = customHomepageResult.data
 
   const homepageWidgetPreference = givingSettings?.homepage_widget_preference || "none"
   const showDonorNames = givingSettings?.show_donor_names ?? false
@@ -403,6 +414,21 @@ export default async function TenantHomePage({
   )
 
   const baseUrl = `https://${tenant.subdomain}.tektonstable.com`
+
+  if (customHomepage && customHomepage.design_json) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div id="tenant-data" data-tenant-id={tenant.id} style={{ display: "none" }} />
+        <OrganizationSchema
+          name={tenant.full_name}
+          url={baseUrl}
+          logo={tenant.profile_image_url}
+          description={tenant.bio}
+        />
+        <PuckPageRender data={customHomepage.design_json} tenantId={tenant.id} />
+      </div>
+    )
+  }
 
   if (homepage && homepage.page_sections && homepage.page_sections.length > 0) {
     const sortedSections = homepage.page_sections.sort((a, b) => a.order_index - b.order_index)

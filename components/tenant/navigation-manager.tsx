@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -43,6 +43,7 @@ import {
   MessageSquare,
   Megaphone,
   Check,
+  Globe,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -54,6 +55,7 @@ import {
   reorderTenantMenuItems,
 } from "@/app/actions/tenant-menu"
 import { updateTenantSettings } from "@/app/actions/tenant-settings"
+import { setTenantHomepage } from "@/app/actions/tenant-pages"
 import type { TenantPage } from "@/app/actions/tenant-pages"
 import { builtInPages } from "@/app/actions/builtin-pages"
 
@@ -65,9 +67,17 @@ interface NavigationManagerProps {
   tenantName: string
   initialItems: TenantMenuItem[]
   pages: TenantPage[]
+  currentHomepageId?: string | null
 }
 
-export function NavigationManager({ tenantId, tenantSlug, tenantName, initialItems, pages }: NavigationManagerProps) {
+export function NavigationManager({
+  tenantId,
+  tenantSlug,
+  tenantName,
+  initialItems,
+  pages,
+  currentHomepageId,
+}: NavigationManagerProps) {
   const router = useRouter()
   const [items, setItems] = useState<TenantMenuItem[]>(initialItems)
   const [activeTab, setActiveTab] = useState<MenuLocation>("navbar")
@@ -80,6 +90,9 @@ export function NavigationManager({ tenantId, tenantSlug, tenantName, initialIte
   const [isSavingSiteName, setIsSavingSiteName] = useState(false)
   const [siteNameChanged, setSiteNameChanged] = useState(false)
 
+  const [homepageId, setHomepageId] = useState<string>(currentHomepageId || "default")
+  const [isSavingHomepage, setIsSavingHomepage] = useState(false)
+
   const [formLabel, setFormLabel] = useState("")
   const [formType, setFormType] = useState<"page" | "url" | "builtin">("url")
   const [formPageId, setFormPageId] = useState("")
@@ -88,27 +101,67 @@ export function NavigationManager({ tenantId, tenantSlug, tenantName, initialIte
   const [formNewTab, setFormNewTab] = useState(false)
   const [formLocation, setFormLocation] = useState<MenuLocation>("navbar")
 
-  const ICONS: Record<string, React.ElementType> = {
-    Home: Home,
-    User: User,
-    FileText: FileText,
-    Heart: Heart,
-    Link: LinkIcon,
-    ExternalLink: ExternalLink,
-    Settings: Settings,
-    BarChart3: BarChart3,
-    CreditCard: CreditCard,
-    Bell: Bell,
-    Menu: Menu,
-    Mail: Mail,
-    FolderOpen: FolderOpen,
-    LayoutDashboard: LayoutDashboard,
-    Users: Users,
-    MessageSquare: MessageSquare,
-    Megaphone: Megaphone,
+  const IconComponent = ({ name }: { name: string }) => {
+    const Icon = ICONS[name] || LinkIcon
+    return <Icon className="h-4 w-4" />
   }
 
-  const filteredItems = items.filter((item) => item.menu_location === activeTab)
+  const getLocationDescription = (location: MenuLocation) => {
+    switch (location) {
+      case "navbar":
+        return "Items shown in the top navigation bar for all visitors"
+      case "sidebar_admin":
+        return "Items shown in the admin sidebar when logged in as site owner"
+      case "sidebar_donor":
+        return "Items shown in the donor sidebar when logged in as a supporter"
+    }
+  }
+
+  const handleSiteNameChange = (value: string) => {
+    setSiteName(value)
+    setSiteNameChanged(value !== tenantName)
+  }
+
+  const handleSaveSiteName = async () => {
+    if (!siteName.trim()) {
+      toast.error("Site name cannot be empty")
+      return
+    }
+
+    setIsSavingSiteName(true)
+    try {
+      const result = await updateTenantSettings({ full_name: siteName.trim() })
+      if (result.success) {
+        toast.success("Site name updated")
+        setSiteNameChanged(false)
+        router.refresh()
+      } else {
+        toast.error(result.error || "Failed to update site name")
+      }
+    } catch (error) {
+      toast.error("Something went wrong")
+    } finally {
+      setIsSavingSiteName(false)
+    }
+  }
+
+  const handleSaveHomepage = async () => {
+    setIsSavingHomepage(true)
+    try {
+      const pageId = homepageId === "default" ? null : homepageId
+      const result = await setTenantHomepage(tenantId, pageId)
+      if (result.success) {
+        toast.success("Homepage updated")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Failed to update homepage")
+      }
+    } catch (error) {
+      toast.error("Something went wrong")
+    } finally {
+      setIsSavingHomepage(false)
+    }
+  }
 
   const resetForm = () => {
     setFormLabel("")
@@ -234,7 +287,7 @@ export function NavigationManager({ tenantId, tenantSlug, tenantName, initialIte
     e.preventDefault()
     if (draggedIndex === null || draggedIndex === index) return
 
-    const locationItems = filteredItems
+    const locationItems = items.filter((item) => item.menu_location === activeTab)
     const globalStartIndex = items.findIndex((i) => i.id === locationItems[0]?.id)
 
     const newItems = [...items]
@@ -264,52 +317,36 @@ export function NavigationManager({ tenantId, tenantSlug, tenantName, initialIte
     }
   }
 
-  const handleSiteNameChange = (value: string) => {
-    setSiteName(value)
-    setSiteNameChanged(value !== tenantName)
+  const ICONS: Record<string, React.ElementType> = {
+    Home: Home,
+    User: User,
+    FileText: FileText,
+    Heart: Heart,
+    Link: LinkIcon,
+    ExternalLink: ExternalLink,
+    Settings: Settings,
+    BarChart3: BarChart3,
+    CreditCard: CreditCard,
+    Bell: Bell,
+    Menu: Menu,
+    Mail: Mail,
+    FolderOpen: FolderOpen,
+    LayoutDashboard: LayoutDashboard,
+    Users: Users,
+    MessageSquare: MessageSquare,
+    Megaphone: Megaphone,
+    Check: Check,
+    Globe: Globe,
   }
 
-  const handleSaveSiteName = async () => {
-    if (!siteName.trim()) {
-      toast.error("Site name cannot be empty")
-      return
-    }
+  const filteredItems = items.filter((item) => item.menu_location === activeTab)
 
-    setIsSavingSiteName(true)
-    try {
-      const result = await updateTenantSettings({ full_name: siteName.trim() })
-      if (result.success) {
-        toast.success("Site name updated")
-        setSiteNameChanged(false)
-        router.refresh()
-      } else {
-        toast.error(result.error || "Failed to update site name")
-      }
-    } catch (error) {
-      toast.error("Something went wrong")
-    } finally {
-      setIsSavingSiteName(false)
-    }
-  }
-
-  const IconComponent = ({ name }: { name: string }) => {
-    const Icon = ICONS[name] || LinkIcon
-    return <Icon className="h-4 w-4" />
-  }
-
-  const getLocationDescription = (location: MenuLocation) => {
-    switch (location) {
-      case "navbar":
-        return "Items shown in the top navigation bar for all visitors"
-      case "sidebar_admin":
-        return "Items shown in the admin sidebar when logged in as site owner"
-      case "sidebar_donor":
-        return "Items shown in the donor sidebar when logged in as a supporter"
-    }
-  }
+  useEffect(() => {
+    setHomepageId(currentHomepageId || "default")
+  }, [currentHomepageId])
 
   return (
-    <>
+    <div className="space-y-8">
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg">Site Name</CardTitle>
@@ -344,6 +381,40 @@ export function NavigationManager({ tenantId, tenantSlug, tenantName, initialIte
               <span className="font-bold text-lg">{siteName || tenantSlug}</span>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Homepage Settings
+          </CardTitle>
+          <CardDescription>Choose which page loads when visitors go to your site's home URL</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Select Homepage</Label>
+            <Select value={homepageId} onValueChange={setHomepageId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Default (Blog Feed)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default (Blog Feed)</SelectItem>
+                {pages.map((page) => (
+                  <SelectItem key={page.id} value={page.id}>
+                    {page.title} (/p/{page.slug})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Select a custom page to display as your homepage, or use the default blog feed
+            </p>
+          </div>
+          <Button onClick={handleSaveHomepage} disabled={isSavingHomepage} size="sm">
+            {isSavingHomepage ? "Saving..." : "Save Homepage"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -636,6 +707,6 @@ export function NavigationManager({ tenantId, tenantSlug, tenantName, initialIte
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

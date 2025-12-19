@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { NewsletterComposer } from "@/components/tenant/newsletter-composer"
+import { NewsletterPuckEditor } from "@/components/tenant/newsletter-puck-editor"
 import { getSubscriberGroups } from "@/app/actions/subscriber-groups"
 
 export default async function ComposeNewsletterPage({
@@ -27,9 +27,5 @@ export default async function ComposeNewsletterPage({
 
   const groups = await getSubscriberGroups(tenant.id)
 
-  return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
-      <NewsletterComposer tenantId={tenant.id} groups={groups} />
-    </div>
-  )
+  return <NewsletterPuckEditor tenantId={tenant.id} tenantName={tenant.name || tenant.subdomain} groups={groups} />
 }

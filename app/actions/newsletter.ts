@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { getResend } from "@/lib/resend"
+import { renderPuckToEmailHtml } from "@/lib/puck-email-renderer"
 
 export async function getSubscribers(tenantId: string) {
   const supabase = await createClient()
@@ -91,6 +92,7 @@ export async function createNewsletter(
   previewText: string,
   content: string,
   designJson?: any,
+  puckData?: any,
 ) {
   const supabase = await createClient()
 
@@ -102,6 +104,7 @@ export async function createNewsletter(
       preview_text: previewText,
       content: designJson ? JSON.stringify({ html: content, design: designJson }) : content,
       status: "draft",
+      puck_data: puckData || null,
     })
     .select()
     .single()
@@ -123,6 +126,7 @@ export async function updateNewsletter(
     scheduled_for?: string
     timezone?: string
     target_groups?: string[]
+    puck_data?: any
   },
 ) {
   const supabase = await createClient()
@@ -137,6 +141,7 @@ export async function updateNewsletter(
   if (updates.scheduled_for !== undefined) updateData.scheduled_for = updates.scheduled_for
   if (updates.timezone !== undefined) updateData.timezone = updates.timezone
   if (updates.target_groups !== undefined) updateData.target_groups = updates.target_groups
+  if (updates.puck_data !== undefined) updateData.puck_data = updates.puck_data
 
   const { error } = await supabase.from("tenant_newsletters").update(updateData).eq("id", newsletterId)
 
@@ -239,16 +244,24 @@ export async function sendNewsletter(newsletterId: string) {
   const fromEmail = "hello@tektonstable.com"
   const replyToEmail = newsletter.tenant?.personal_reply_email || newsletter.tenant?.email
 
-  let htmlContent = newsletter.content
+  let htmlContent: string
 
-  // Parse content if it's JSON
-  try {
-    const parsed = JSON.parse(newsletter.content)
-    if (parsed.html) {
-      htmlContent = parsed.html
+  if (newsletter.puck_data) {
+    // Render Puck JSON to email-safe HTML
+    htmlContent = renderPuckToEmailHtml(newsletter.puck_data, {
+      previewText: newsletter.preview_text,
+    })
+  } else {
+    htmlContent = newsletter.content
+    // Parse content if it's JSON (legacy format)
+    try {
+      const parsed = JSON.parse(newsletter.content)
+      if (parsed.html) {
+        htmlContent = parsed.html
+      }
+    } catch {
+      // Content is already plain HTML
     }
-  } catch {
-    // Content is already plain HTML
   }
 
   let successCount = 0
@@ -270,7 +283,7 @@ export async function sendNewsletter(newsletterId: string) {
       await resend.emails.send(emailData)
       successCount++
     } catch (error) {
-      console.error(`[v0] Failed to send newsletter to ${subscriber.email}:`, error)
+      console.error(`Failed to send newsletter to ${subscriber.email}:`, error)
       failCount++
     }
   }
@@ -343,16 +356,24 @@ export async function sendTestNewsletter(newsletterId: string, testEmail: string
   const fromEmail = "hello@tektonstable.com"
   const replyToEmail = newsletter.tenant?.personal_reply_email || newsletter.tenant?.email
 
-  let htmlContent = newsletter.content
+  let htmlContent: string
 
-  // Parse content if it's JSON
-  try {
-    const parsed = JSON.parse(newsletter.content)
-    if (parsed.html) {
-      htmlContent = parsed.html
+  if (newsletter.puck_data) {
+    // Render Puck JSON to email-safe HTML
+    htmlContent = renderPuckToEmailHtml(newsletter.puck_data, {
+      previewText: newsletter.preview_text,
+    })
+  } else {
+    htmlContent = newsletter.content
+    // Parse content if it's JSON (legacy format)
+    try {
+      const parsed = JSON.parse(newsletter.content)
+      if (parsed.html) {
+        htmlContent = parsed.html
+      }
+    } catch {
+      // Content is already plain HTML
     }
-  } catch {
-    // Content is already plain HTML
   }
 
   try {
@@ -371,7 +392,7 @@ export async function sendTestNewsletter(newsletterId: string, testEmail: string
 
     return { ok: true, message: "Test email sent successfully" }
   } catch (error) {
-    console.error(`[v0] Failed to send test newsletter to ${testEmail}:`, error)
+    console.error(`Failed to send test newsletter to ${testEmail}:`, error)
     throw new Error("Failed to send test email")
   }
 }

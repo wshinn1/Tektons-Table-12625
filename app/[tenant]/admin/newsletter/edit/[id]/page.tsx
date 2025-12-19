@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { NewsletterComposer } from "@/components/tenant/newsletter-composer"
+import { NewsletterPuckEditor } from "@/components/tenant/newsletter-puck-editor"
+import { getSubscriberGroups } from "@/app/actions/subscriber-groups"
 
 export default async function EditNewsletterPage({
   params,
@@ -20,19 +21,28 @@ export default async function EditNewsletterPage({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.id !== user.id) {
+  if (!tenant || tenant.email !== user.email) {
     redirect(`/`)
   }
 
-  const { data: newsletter } = await supabase.from("newsletters").select("*").eq("id", id).single()
+  const { data: newsletter } = await supabase
+    .from("tenant_newsletters")
+    .select("id, subject, content, puck_data, preheader, status, tenant_id")
+    .eq("id", id)
+    .single()
 
   if (!newsletter || newsletter.tenant_id !== tenant.id) {
     redirect(`/admin/newsletter`)
   }
 
+  const groups = await getSubscriberGroups(tenant.id)
+
   return (
-    <div className="p-8">
-      <NewsletterComposer tenantId={tenant.id} newsletter={newsletter} />
-    </div>
+    <NewsletterPuckEditor
+      tenantId={tenant.id}
+      tenantName={tenant.name || tenant.subdomain}
+      newsletter={newsletter}
+      groups={groups}
+    />
   )
 }

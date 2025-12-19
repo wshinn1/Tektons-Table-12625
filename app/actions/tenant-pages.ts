@@ -16,6 +16,7 @@ export interface TenantPage {
   meta_description: string | null
   created_at: string
   updated_at: string
+  is_homepage?: boolean
 }
 
 // Check if user owns the tenant
@@ -307,4 +308,66 @@ export async function duplicateTenantPage(
 
   revalidatePath(`/admin/pages`)
   return { success: true, page }
+}
+
+// Set the homepage for a tenant
+export async function setTenantHomepage(
+  tenantId: string,
+  pageId: string | null,
+): Promise<{ success: boolean; error?: string }> {
+  const isOwner = await verifyTenantOwnership(tenantId)
+  if (!isOwner) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  const adminSupabase = createAdminClient()
+
+  // First, unset any existing homepage for this tenant
+  const { error: unsetError } = await adminSupabase
+    .from("tenant_pages")
+    .update({ is_homepage: false })
+    .eq("tenant_id", tenantId)
+    .eq("is_homepage", true)
+
+  if (unsetError) {
+    console.error("Error unsetting homepage:", unsetError)
+    return { success: false, error: "Failed to update homepage" }
+  }
+
+  // If a pageId is provided, set it as the new homepage
+  if (pageId) {
+    const { error: setError } = await adminSupabase
+      .from("tenant_pages")
+      .update({ is_homepage: true })
+      .eq("id", pageId)
+      .eq("tenant_id", tenantId)
+
+    if (setError) {
+      console.error("Error setting homepage:", setError)
+      return { success: false, error: "Failed to set homepage" }
+    }
+  }
+
+  revalidatePath(`/`)
+  revalidatePath(`/admin/navigation`)
+  return { success: true }
+}
+
+// Get the current homepage for a tenant
+export async function getTenantHomepage(tenantId: string): Promise<TenantPage | null> {
+  const adminSupabase = createAdminClient()
+
+  const { data, error } = await adminSupabase
+    .from("tenant_pages")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .eq("is_homepage", true)
+    .eq("status", "published")
+    .single()
+
+  if (error) {
+    return null
+  }
+
+  return data
 }

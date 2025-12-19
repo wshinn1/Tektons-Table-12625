@@ -7,6 +7,16 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .replace(/^-|-$/g, "") // Remove leading/trailing hyphens
+}
+
 function loadPuckStyles() {
   if (typeof window === "undefined") return
 
@@ -47,13 +57,14 @@ export function PuckPageEditor({
   initialData,
   tenantId,
   tenantSlug,
-  pageTitle,
-  pageSlug,
+  pageTitle: initialPageTitle,
+  pageSlug: initialPageSlug,
   onSave,
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
   const [puckKey, setPuckKey] = useState(0)
+  const [currentTitle, setCurrentTitle] = useState(initialPageTitle || "Page")
 
   const latestDataRef = useRef(initialData || { content: [], root: { props: { title: "Page" } }, zones: {} })
 
@@ -95,6 +106,11 @@ export function PuckPageEditor({
     if (data && typeof data === "object") {
       latestDataRef.current = data
       console.log("[v0] Updated latestDataRef with", data.content?.length, "blocks")
+
+      const newTitle = data.root?.props?.title
+      if (newTitle && newTitle !== currentTitle) {
+        setCurrentTitle(newTitle)
+      }
     }
   }
 
@@ -106,14 +122,19 @@ export function PuckPageEditor({
       } else {
         const url = pageId ? `/api/tenant/${tenantId}/pages/${pageId}` : `/api/tenant/${tenantId}/pages`
 
+        const puckTitle = data.root?.props?.title || initialPageTitle || `Page ${Date.now()}`
+        const generatedSlug = generateSlug(puckTitle)
+
         const payload = pageId
           ? {
+              title: puckTitle,
+              slug: generatedSlug, // Always use generated slug from current title
               design_json: data,
               status: "published",
             }
           : {
-              title: pageTitle || `Page ${Date.now()}`,
-              slug: pageSlug || `page-${Date.now()}`,
+              title: puckTitle,
+              slug: generatedSlug,
               design_json: data,
               tenant_id: tenantId,
               status: "published",
@@ -180,7 +201,7 @@ export function PuckPageEditor({
       onPublish={handlePublish}
       plugins={[aiPlugin, headingAnalyzer]}
       iframe={{ enabled: true }}
-      headerTitle={pageTitle || "Page"}
+      headerTitle={currentTitle}
       onAction={(action, appState, prevAppState) => {
         console.log("[v0] Puck onAction:", action.type)
         console.log("[v0] appState exists:", !!appState)
