@@ -53,22 +53,41 @@ export function PuckPageEditor({
 }: PuckPageEditorProps) {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
+  const [puckKey, setPuckKey] = useState(0)
 
   const latestDataRef = useRef(initialData || { content: [], root: { props: { title: "Page" } }, zones: {} })
 
-  const config = useMemo(() => createPuckConfig(tenantId), [tenantId])
+  const config = useMemo(() => {
+    console.log("[v0] Creating Puck config for tenant:", tenantId)
+    return createPuckConfig(tenantId)
+  }, [tenantId])
 
-  const aiPlugin = useMemo(
-    () =>
-      createAiPlugin({
-        proxyUrl: "/api/puck",
-      }),
-    [],
-  )
+  const aiPlugin = useMemo(() => {
+    console.log("[v0] Creating AI plugin with proxyUrl: /api/puck")
+    const plugin = createAiPlugin({
+      proxyUrl: "/api/puck",
+    })
+    console.log("[v0] AI plugin created:", plugin)
+    console.log("[v0] AI plugin type:", typeof plugin)
+    console.log("[v0] AI plugin keys:", plugin ? Object.keys(plugin) : "null")
+    return plugin
+  }, [])
 
   const handleChange = (data: any) => {
+    console.log("[v0] Puck onChange called")
+    console.log(
+      "[v0] Data received:",
+      data
+        ? {
+            contentLength: data.content?.length,
+            hasRoot: !!data.root,
+            hasZones: !!data.zones,
+          }
+        : "null",
+    )
     if (data && typeof data === "object") {
       latestDataRef.current = data
+      console.log("[v0] Updated latestDataRef with", data.content?.length, "blocks")
     }
   }
 
@@ -122,17 +141,31 @@ export function PuckPageEditor({
     }
   }
 
-  const stableInitialData = useMemo(
-    () => initialData || { content: [], root: { props: { title: "Page" } }, zones: {} },
-    [], // Empty deps - only compute once on mount
-  )
+  const stableInitialData = useMemo(() => {
+    const data = initialData || { content: [], root: { props: { title: "Page" } }, zones: {} }
+    console.log("[v0] stableInitialData computed:", {
+      contentLength: data.content?.length,
+      hasRoot: !!data.root,
+    })
+    return data
+  }, []) // Empty deps - only compute once on mount
 
   useEffect(() => {
     loadPuckStyles()
+    console.log("[v0] Puck styles loaded")
   }, [])
+
+  console.log("[v0] PuckPageEditor rendering with:", {
+    tenantId,
+    pageId,
+    hasConfig: !!config,
+    hasAiPlugin: !!aiPlugin,
+    puckKey,
+  })
 
   return (
     <Puck
+      key={puckKey}
       config={config}
       data={stableInitialData}
       onChange={handleChange}
@@ -140,6 +173,14 @@ export function PuckPageEditor({
       plugins={[aiPlugin, headingAnalyzer]}
       iframe={{ enabled: true }}
       headerTitle={pageTitle || "Page"}
+      onAction={(action, appState, prevAppState) => {
+        console.log("[v0] Puck onAction:", action.type)
+        console.log("[v0] appState exists:", !!appState)
+        console.log("[v0] prevAppState exists:", !!prevAppState)
+        if (appState?.data) {
+          console.log("[v0] appState.data.content length:", appState.data.content?.length)
+        }
+      }}
     />
   )
 }
