@@ -1,10 +1,10 @@
 "use client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { NewsletterComposer } from "./newsletter-composer"
+import { NewsletterPuckEditor } from "./newsletter-puck-editor"
 import { SubscribersList } from "./subscribers-list"
 import { NewslettersList } from "./newsletters-list"
 
-export function NewsletterDashboard({ tenantId }: { tenantId: string }) {
+export function NewsletterDashboard({ tenantId, tenantName }: { tenantId: string; tenantName?: string }) {
   return (
     <div className="space-y-6">
       <div>
@@ -21,7 +21,7 @@ export function NewsletterDashboard({ tenantId }: { tenantId: string }) {
         </TabsList>
 
         <TabsContent value="compose" className="space-y-6">
-          <NewsletterComposer tenantId={tenantId} />
+          <NewsletterPuckEditor tenantId={tenantId} tenantName={tenantName || "Your Organization"} />
         </TabsContent>
 
         <TabsContent value="drafts" className="space-y-6">

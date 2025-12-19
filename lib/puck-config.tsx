@@ -1,4 +1,4 @@
-"use client"
+// Removed "use client" directive
 
 import type React from "react"
 
@@ -1046,7 +1046,7 @@ export const createPuckConfig = (tenantId?: string): Config => ({
 
         return (
           <Card
-            className={`p-${padding} ${shadowClasses[shadow as keyof typeof shadowClasses]} ${hoverEffectClasses[hoverEffect as keyof typeof hoverEffectClasses]}`}
+            className={`p-${padding} ${shadowClasses[shadow as keyof typeof shadowClasses]} ${hoverEffectClasses[hoverEffect as keyof typeof hoverEffect]}`}
             style={cardStyles}
           >
             {image && (

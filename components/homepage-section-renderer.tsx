@@ -561,12 +561,16 @@ export function HomepageSectionRenderer({ sections }: HomepageSectionRendererPro
           case "animation_background_1":
             const animBgContent = section.content || {}
             const sectionHeight = animBgContent.sectionHeight || 600
+            const animBgColor = section.background_value || animBgContent.backgroundColor || "#0a0a0a"
 
             return (
               <section
                 key={section.id}
                 className="relative flex items-center justify-center overflow-hidden"
-                style={{ height: `${sectionHeight}px` }}
+                style={{
+                  height: `${sectionHeight}px`,
+                  backgroundColor: animBgColor,
+                }}
               >
                 {/* Prism Background */}
                 <div className="absolute inset-0">

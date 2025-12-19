@@ -1,10 +1,15 @@
 import { puckHandler } from "@puckeditor/cloud-client"
-import { createPuckConfig } from "@/lib/puck-config"
+
+const getServerPuckConfig = () => {
+  // Import dynamically to avoid "use client" issues
+  const { createPuckConfig } = require("@/lib/puck-config")
+  return createPuckConfig()
+}
 
 const handler = async (request: Request) => {
-  const config = createPuckConfig()
-
   try {
+    const config = getServerPuckConfig()
+
     const response = await puckHandler(request, {
       apiKey: process.env.PUCK_API_KEY,
       config,
@@ -17,7 +22,10 @@ const handler = async (request: Request) => {
     return response
   } catch (error) {
     console.error("[Puck API] Handler error:", error)
-    throw error
+    return new Response(
+      JSON.stringify({ error: "Puck API error", message: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    )
   }
 }
 

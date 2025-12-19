@@ -754,6 +754,16 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                         : "Video CDN URL"}
                                   </Label>
                                   <div className="flex gap-2">
+                                    {section.background_type === "color" && (
+                                      <input
+                                        type="color"
+                                        value={section.background_value || "#ffffff"}
+                                        onChange={(e) =>
+                                          updateSection(section.id, { background_value: e.target.value })
+                                        }
+                                        className="h-10 w-14 rounded border cursor-pointer p-1"
+                                      />
+                                    )}
                                     <Input
                                       value={section.background_value || ""}
                                       onChange={(e) => updateSection(section.id, { background_value: e.target.value })}
@@ -764,6 +774,7 @@ export function HomepageEditorClient({ sections: initialSections, templates }: P
                                             ? "https://example.com/image.jpg"
                                             : "https://cdn.example.com/video.mp4"
                                       }
+                                      className="flex-1"
                                     />
                                     {section.background_type === "image" && (
                                       <Button type="button" variant="outline" size="sm" disabled={isUploading} asChild>

@@ -26,7 +26,7 @@ export default async function TenantNewsletterManager({
 
   return (
     <div className="p-8">
-      <NewsletterDashboard tenantId={tenant.id} />
+      <NewsletterDashboard tenantId={tenant.id} tenantName={tenant.name || tenant.subdomain} />
     </div>
   )
 }
