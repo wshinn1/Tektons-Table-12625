@@ -34,6 +34,24 @@ interface NewsletterPuckEditorProps {
   groups?: SubscriberGroup[]
 }
 
+function loadPuckStyles() {
+  if (typeof window === "undefined") return
+
+  // Check if styles are already loaded
+  if (document.getElementById("puck-email-css")) return
+
+  // Use same Puck version as page editor
+  const cssFiles = [{ id: "puck-email-css", href: "https://unpkg.com/@measured/puck@0.21.0-canary.c0db75c1/puck.css" }]
+
+  cssFiles.forEach(({ id, href }) => {
+    const link = document.createElement("link")
+    link.id = id
+    link.rel = "stylesheet"
+    link.href = href
+    document.head.appendChild(link)
+  })
+}
+
 export function NewsletterPuckEditor({ tenantId, tenantName, newsletter, groups = [] }: NewsletterPuckEditorProps) {
   const [subject, setSubject] = useState(newsletter?.subject || "")
   const [preheader, setPreheader] = useState(newsletter?.preheader || "")
@@ -49,16 +67,8 @@ export function NewsletterPuckEditor({ tenantId, tenantName, newsletter, groups 
   const supabase = createBrowserClient()
   const config = createEmailPuckConfig(tenantName)
 
-  // Load Puck CSS
   useEffect(() => {
-    const linkId = "puck-email-css"
-    if (!document.getElementById(linkId)) {
-      const link = document.createElement("link")
-      link.id = linkId
-      link.rel = "stylesheet"
-      link.href = "https://unpkg.com/@measured/puck@0.19.0-canary.5590dde/puck.css"
-      document.head.appendChild(link)
-    }
+    loadPuckStyles()
   }, [])
 
   const handleSaveDraft = async () => {

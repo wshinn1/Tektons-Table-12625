@@ -1,14 +1,9 @@
 import { puckHandler } from "@puckeditor/cloud-client"
-
-const getServerPuckConfig = () => {
-  // Import dynamically to avoid "use client" issues
-  const { createPuckConfig } = require("@/lib/puck-config")
-  return createPuckConfig()
-}
+import { createServerPuckConfig } from "@/lib/puck-config-server"
 
 const handler = async (request: Request) => {
   try {
-    const config = getServerPuckConfig()
+    const config = createServerPuckConfig()
 
     const response = await puckHandler(request, {
       apiKey: process.env.PUCK_API_KEY,
