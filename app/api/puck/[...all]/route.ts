@@ -1,14 +1,8 @@
 import { puckHandler } from "@puckeditor/cloud-client"
 import { createPuckConfig } from "@/lib/puck-config"
 
-const config = createPuckConfig()
-
 const handler = async (request: Request) => {
-  console.log("[v0] Puck API handler called")
-  console.log("[v0] Request method:", request.method)
-  console.log("[v0] Request URL:", request.url)
-  console.log("[v0] PUCK_API_KEY exists:", !!process.env.PUCK_API_KEY)
-  console.log("[v0] Config components:", config?.components ? Object.keys(config.components) : "none")
+  const config = createPuckConfig()
 
   try {
     const response = await puckHandler(request, {
@@ -20,10 +14,9 @@ const handler = async (request: Request) => {
       },
     })
 
-    console.log("[v0] Puck handler response status:", response.status)
     return response
   } catch (error) {
-    console.error("[v0] Puck handler error:", error)
+    console.error("[Puck API] Handler error:", error)
     throw error
   }
 }
@@ -33,3 +26,5 @@ export const POST = handler
 export const GET = handler
 export const PUT = handler
 export const DELETE = handler
+
+export const dynamic = "force-dynamic"
