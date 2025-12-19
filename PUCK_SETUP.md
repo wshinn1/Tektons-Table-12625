@@ -72,7 +72,7 @@ Puck supports AI-powered page generation to help tenants create pages faster.
 
 1. Get a Puck AI API key from [puckeditor.com](https://puckeditor.com)
 2. Add the environment variable:
-   - **Name**: `NEXT_PUBLIC_PUCK_AI_KEY`
+   - **Name**: `PUCK_API_KEY`
    - **Value**: Your Puck AI API key
 3. Add it in:
    - **v0**: Vars section in the in-chat sidebar
