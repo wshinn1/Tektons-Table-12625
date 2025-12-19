@@ -10,8 +10,8 @@
   "dependencies": {
     "@ai-sdk/openai": "2.0.87",
     "@emotion/is-prop-valid": "latest",
-    "@measured/puck": "0.21.0-canary.d32e582b",
-    "@measured/puck-plugin-heading-analyzer": "0.20.2",
+    "@measured/puck": "0.21.0-canary.c0db75c1",
+    "@measured/puck-plugin-heading-analyzer": "0.21.0-canary.c0db75c1",
     "@puckeditor/cloud-client": "0.4.0",
     "@puckeditor/plugin-ai": "0.4.0",
     "@radix-ui/react-accordion": "1.2.12",

@@ -15,17 +15,17 @@ importers:
         specifier: latest
         version: 1.4.0
       '@measured/puck':
-        specifier: 0.21.0-canary.d32e582b
-        version: 0.21.0-canary.d32e582b(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))
+        specifier: 0.21.0-canary.c0db75c1
+        version: 0.21.0-canary.c0db75c1(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))
       '@measured/puck-plugin-heading-analyzer':
-        specifier: 0.20.2
-        version: 0.20.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 0.21.0-canary.c0db75c1
+        version: 0.21.0-canary.c0db75c1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@puckeditor/cloud-client':
         specifier: 0.4.0
         version: 0.4.0
       '@puckeditor/plugin-ai':
         specifier: 0.4.0
-        version: 0.4.0(@measured/puck@0.21.0-canary.d32e582b(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0)))(@types/react@19.0.1)(react@19.0.0)(zod@4.0.0)
+        version: 0.4.0(@measured/puck@0.21.0-canary.c0db75c1(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0)))(@types/react@19.0.1)(react@19.0.0)(zod@4.0.0)
       '@radix-ui/react-accordion':
         specifier: 1.2.12
         version: 1.2.12(@types/react-dom@19.0.2(@types/react@19.0.1))(@types/react@19.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -677,13 +677,13 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@measured/puck-plugin-heading-analyzer@0.20.2':
-    resolution: {integrity: sha512-dvAw8T9Y8k7Bg3PjQDXAXt7Vl2WV3D2biNcKGygdtZ/4LA0W8ouUxnfrX0mXQFToOfRGQxihAsxdXVIC1Z4GZg==}
+  '@measured/puck-plugin-heading-analyzer@0.21.0-canary.c0db75c1':
+    resolution: {integrity: sha512-SnTJFuGt3tLhYuPKZI571wf3+YMbzRLHwshEMoCDWyNItPSvOtre2j89DACoGVh5wZrm0WRaM5i0UodOqH9D+A==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@measured/puck@0.21.0-canary.d32e582b':
-    resolution: {integrity: sha512-+ujRt4OKWRKYdq28fDwZ+dQI77hBKgD/cAPyFiwsj8TmduO3ReYvQ0TLX+o30uvjsRYc7z5AZCD1q5VRLBpzQw==}
+  '@measured/puck@0.21.0-canary.c0db75c1':
+    resolution: {integrity: sha512-v3u0aEd/tNifnf3yI9jj5Z51Sth0wXH1PIpc1cGJ/aMIQkLfDK4QqM3Q9uHTk7Ot6e4sOjbTuykHZpV70l+R1w==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
@@ -3157,6 +3157,10 @@ packages:
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
+  fast-equals@5.2.2:
+    resolution: {integrity: sha512-V7/RktU11J3I36Nwq2JnZEM7tNm17eBJz+u25qdxBZeCKiX6BkVSZQjwWIr+IobgnZy+ag73tTZgZi7tr0LrBw==}
+    engines: {node: '>=6.0.0'}
+
   fast-equals@5.4.0:
     resolution: {integrity: sha512-jt2DW/aNFNwke7AUd+Z+e6pz39KO5rzdbbFCg2sGafS4mk13MI7Z8O5z9cADNn5lhGODIgLwug6TZO2ctf7kcw==}
     engines: {node: '>=6.0.0'}
@@ -4988,19 +4992,19 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@measured/puck-plugin-heading-analyzer@0.20.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@measured/puck-plugin-heading-analyzer@0.21.0-canary.c0db75c1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       react: 19.0.0
       react-from-json: 0.8.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - react-dom
 
-  '@measured/puck@0.21.0-canary.d32e582b(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))':
+  '@measured/puck@0.21.0-canary.c0db75c1(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))':
     dependencies:
       '@dnd-kit/helpers': 0.1.18
       '@dnd-kit/react': 0.1.18(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       deep-diff: 1.0.2
-      fast-deep-equal: 3.1.3
+      fast-equals: 5.2.2
       flat: 5.0.2
       object-hash: 3.0.0
       react: 19.0.0
@@ -5285,9 +5289,9 @@ snapshots:
 
   '@puckeditor/cloud-client@0.4.0': {}
 
-  '@puckeditor/plugin-ai@0.4.0(@measured/puck@0.21.0-canary.d32e582b(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0)))(@types/react@19.0.1)(react@19.0.0)(zod@4.0.0)':
+  '@puckeditor/plugin-ai@0.4.0(@measured/puck@0.21.0-canary.c0db75c1(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0)))(@types/react@19.0.1)(react@19.0.0)(zod@4.0.0)':
     dependencies:
-      '@measured/puck': 0.21.0-canary.d32e582b(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))
+      '@measured/puck': 0.21.0-canary.c0db75c1(@types/react@19.0.1)(immer@11.0.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))
       ai: 5.0.113(zod@4.0.0)
       html2canvas-pro: 1.5.13
       qler: 0.6.2
@@ -7452,6 +7456,8 @@ snapshots:
   extend@3.0.2: {}
 
   fast-deep-equal@3.1.3: {}
+
+  fast-equals@5.2.2: {}
 
   fast-equals@5.4.0: {}
 

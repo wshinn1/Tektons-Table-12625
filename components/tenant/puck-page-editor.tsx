@@ -1,14 +1,36 @@
 "use client"
 import { Puck } from "@measured/puck"
-import "@measured/puck/puck.css"
 import { createAiPlugin } from "@puckeditor/plugin-ai"
-import "@puckeditor/plugin-ai/styles.css"
 import headingAnalyzer from "@measured/puck-plugin-heading-analyzer"
-import "@measured/puck-plugin-heading-analyzer/dist/index.css"
 import { createPuckConfig } from "@/lib/puck-config"
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+
+function loadPuckStyles() {
+  if (typeof window === "undefined") return
+
+  // Check if styles are already loaded
+  if (document.getElementById("puck-main-css")) return
+
+  // Create link elements for Puck CSS files from CDN
+  const cssFiles = [
+    { id: "puck-main-css", href: "https://unpkg.com/@measured/puck@0.21.0-canary.c0db75c1/puck.css" },
+    { id: "puck-ai-css", href: "https://unpkg.com/@puckeditor/plugin-ai@0.4.0/styles.css" },
+    {
+      id: "puck-heading-css",
+      href: "https://unpkg.com/@measured/puck-plugin-heading-analyzer@0.21.0-canary.c0db75c1/dist/index.css",
+    },
+  ]
+
+  cssFiles.forEach(({ id, href }) => {
+    const link = document.createElement("link")
+    link.id = id
+    link.rel = "stylesheet"
+    link.href = href
+    document.head.appendChild(link)
+  })
+}
 
 interface PuckPageEditorProps {
   pageId?: string
@@ -104,6 +126,10 @@ export function PuckPageEditor({
     () => initialData || { content: [], root: { props: { title: "Page" } }, zones: {} },
     [], // Empty deps - only compute once on mount
   )
+
+  useEffect(() => {
+    loadPuckStyles()
+  }, [])
 
   return (
     <Puck
