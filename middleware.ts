@@ -1,6 +1,7 @@
 import { updateSession } from "@/lib/supabase/middleware"
 import { type NextRequest, NextResponse } from "next/server"
 
+// Handles subdomain routing and session management
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("x-forwarded-host") || request.headers.get("host") || ""
   const path = request.nextUrl.pathname
