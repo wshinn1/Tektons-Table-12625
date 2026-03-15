@@ -147,75 +147,111 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+    let retryCount = 0
+    const maxRetries = 10
+    
     async function loadTenant() {
-      console.log("[v0] Blog create: loadTenant called for tenant:", tenant)
+      if (!tenant) {
+        setIsLoadingTenant(false)
+        return
+      }
+
+      // Method 1: Check DOM for tenant-data element (set by layout)
+      const tenantDataEl = document.getElementById("tenant-data")
+      const domTenantId = tenantDataEl?.getAttribute("data-tenant-id")
+      if (domTenantId) {
+        if (isMounted) {
+          setTenantId(domTenantId)
+          setIsLoadingTenant(false)
+        }
+        return
+      }
       
-      // Check localStorage cache first for instant loading
+      // Method 2: Check localStorage cache (both layout cache and admin cache)
       try {
-        const cached = localStorage.getItem(`tenant_admin_cache_${tenant}`)
-        console.log("[v0] Blog create: cached data:", cached)
-        if (cached) {
-          const parsed = JSON.parse(cached)
-          if (parsed.tenantId) {
-            console.log("[v0] Blog create: using cached tenantId:", parsed.tenantId)
+        // Check layout's cache first (more reliable)
+        const layoutCache = localStorage.getItem(`tenant-owner-${tenant}`)
+        if (layoutCache) {
+          const parsed = JSON.parse(layoutCache)
+          if (parsed.tenantId && isMounted) {
+            setTenantId(parsed.tenantId)
+            setIsLoadingTenant(false)
+            return
+          }
+        }
+        
+        // Also check admin cache
+        const adminCache = localStorage.getItem(`tenant_admin_cache_${tenant}`)
+        if (adminCache) {
+          const parsed = JSON.parse(adminCache)
+          if (parsed.tenantId && isMounted) {
             setTenantId(parsed.tenantId)
             setIsLoadingTenant(false)
             return
           }
         }
       } catch (e) {
-        console.log("[v0] Blog create: cache error:", e)
         // Ignore cache errors
       }
 
-      // No cache, fetch from database
-      console.log("[v0] Blog create: no cache, fetching from database...")
+      // Method 3: Wait for layout to populate DOM element
+      // The layout also fetches tenant data, so we can wait for it
+      if (retryCount < maxRetries) {
+        retryCount++
+        setTimeout(() => {
+          if (isMounted) {
+            loadTenant()
+          }
+        }, 300)
+        return
+      }
+
+      // Method 4: Fallback - fetch from database ourselves
       try {
         const supabase = createBrowserClient()
-        console.log("[v0] Blog create: supabase client created")
 
         const { data: tenantData, error } = await supabase
           .from("tenants")
-          .select("id, email")
+          .select("id")
           .eq("subdomain", tenant)
-          .single()
-
-        console.log("[v0] Blog create: tenant query result:", { tenantData, error })
+          .maybeSingle()
 
         if (error || !tenantData) {
-          console.log("[v0] Blog create: tenant query failed:", error)
-          toast.error("Failed to load tenant information")
-          setIsLoadingTenant(false)
+          if (isMounted) {
+            toast.error("Failed to load tenant information")
+            setIsLoadingTenant(false)
+          }
           return
         }
 
-        // Cache the tenant ID for future use
+        // Cache for future use
         try {
           const existingCache = localStorage.getItem(`tenant_admin_cache_${tenant}`)
           const parsed = existingCache ? JSON.parse(existingCache) : {}
           parsed.tenantId = tenantData.id
           localStorage.setItem(`tenant_admin_cache_${tenant}`, JSON.stringify(parsed))
-          console.log("[v0] Blog create: cached tenantId")
         } catch (e) {
           // Ignore cache errors
         }
 
-        console.log("[v0] Blog create: setting tenantId:", tenantData.id)
-        setTenantId(tenantData.id)
+        if (isMounted) {
+          setTenantId(tenantData.id)
+          setIsLoadingTenant(false)
+        }
       } catch (error) {
-        console.error("[v0] Blog create: Failed to load tenant:", error)
-        toast.error("Failed to load tenant information")
-      } finally {
-        console.log("[v0] Blog create: setting isLoadingTenant to false")
-        setIsLoadingTenant(false)
+        console.error("Failed to load tenant:", error)
+        if (isMounted) {
+          toast.error("Failed to load tenant information")
+          setIsLoadingTenant(false)
+        }
       }
     }
 
-    if (tenant) {
-      loadTenant()
-    } else {
-      console.log("[v0] Blog create: no tenant param, skipping load")
-      setIsLoadingTenant(false)
+    loadTenant()
+    
+    return () => {
+      isMounted = false
     }
   }, [tenant])
 
