@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,7 +35,7 @@ export function DonationFlowClient({
   supportersCount,
 }: DonationFlowClientProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [isNavigating, setIsNavigating] = useState(false)
   const [donationType, setDonationType] = useState<"once" | "monthly">("monthly")
   const [selectedAmount, setSelectedAmount] = useState<number | null>(PRESET_AMOUNTS[SUGGESTED_INDEX])
   const [customAmount, setCustomAmount] = useState("")
@@ -57,19 +57,18 @@ export function DonationFlowClient({
   const totalAmount = finalAmount // Platform fee comes out of donation, not added on top
 
   const handleContinue = () => {
-    if (finalAmount <= 0) return
+    if (finalAmount <= 0 || isNavigating) return
 
-    console.log("[v0] Starting donation checkout with amount:", finalAmount, "type:", donationType)
+    setIsNavigating(true)
 
-    startTransition(() => {
-      const params = new URLSearchParams({
-        amount: finalAmount.toString(),
-        type: donationType,
-        anonymous: displayAnonymous.toString(),
-      })
-
-      router.push(`/giving/checkout?${params.toString()}`)
+    const params = new URLSearchParams({
+      amount: finalAmount.toString(),
+      type: donationType,
+      anonymous: displayAnonymous.toString(),
     })
+
+    // Use tenant-scoped route
+    router.push(`/${subdomain}/giving/checkout?${params.toString()}`)
   }
 
   return (
@@ -258,11 +257,11 @@ export function DonationFlowClient({
 
           <Button
             size="lg"
-            disabled={finalAmount <= 0 || isPending}
+            disabled={finalAmount <= 0 || isNavigating}
             onClick={handleContinue}
             className="w-full h-14 text-lg font-semibold bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
           >
-            {isPending ? "Loading..." : "Continue"}
+            {isNavigating ? "Loading..." : "Continue"}
           </Button>
         </div>
       </Card>
