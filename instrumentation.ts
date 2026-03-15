@@ -1,16 +1,11 @@
 // Instrumentation file for Sentry - automatically loaded by Next.js
 export async function register() {
-  // Only load Sentry configs if the package is available
-  try {
-    if (process.env.NEXT_RUNTIME === "nodejs") {
-      await import("./sentry.server.config")
-    }
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config")
+  }
 
-    if (process.env.NEXT_RUNTIME === "edge") {
-      await import("./sentry.edge.config")
-    }
-  } catch (e) {
-    // Sentry not available, skip initialization
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config")
   }
 }
 
@@ -25,6 +20,7 @@ export const onRequestError = async (
     routeType: "render" | "route" | "action" | "middleware"
   },
 ) => {
+  // Only use Sentry if it's available (skip in v0 preview)
   try {
     const Sentry = await import("@sentry/nextjs")
     Sentry.captureException(err, {
@@ -37,8 +33,8 @@ export const onRequestError = async (
         },
       },
     })
-  } catch (e) {
+  } catch {
     // Sentry not available, log error to console instead
-    console.error("Request error:", err)
+    console.error("[Instrumentation] Error captured:", err)
   }
 }
