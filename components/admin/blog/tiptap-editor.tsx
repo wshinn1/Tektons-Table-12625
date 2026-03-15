@@ -53,6 +53,27 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const startingContent = initialContent || content || ""
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Safely parse content, handling edge cases
+  const parseContent = (rawContent: string | undefined | null): any => {
+    if (!rawContent || rawContent === "" || rawContent === "[]") {
+      return ""
+    }
+    try {
+      if (typeof rawContent === "string" && (rawContent.startsWith("{") || rawContent.startsWith("["))) {
+        return JSON.parse(rawContent)
+      }
+      return rawContent
+    } catch (e) {
+      console.error("[v0] Failed to parse content:", e)
+      return rawContent
+    }
+  }
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const uploadImage = async (file: File): Promise<string | null> => {
     if (!onImageUpload) {
@@ -118,11 +139,7 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
         placeholder: placeholder || "Start writing...",
       }),
     ],
-    content: startingContent
-      ? typeof startingContent === "string" && startingContent.startsWith("{")
-        ? JSON.parse(startingContent)
-        : startingContent
-      : "",
+    content: parseContent(startingContent),
     editorProps: {
       attributes: {
         class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[400px] max-w-none p-4",
@@ -196,18 +213,16 @@ export function TiptapEditor({ initialContent, content, onChange, placeholder, o
 
   useEffect(() => {
     const contentToUse = initialContent || content
-    if (editor && contentToUse) {
-      try {
-        const parsedContent =
-          typeof contentToUse === "string" && contentToUse.startsWith("{") ? JSON.parse(contentToUse) : contentToUse
+    if (editor && contentToUse && contentToUse !== "" && contentToUse !== "[]") {
+      const parsedContent = parseContent(contentToUse)
+      if (parsedContent) {
         editor.commands.setContent(parsedContent)
-      } catch (e) {
-        console.error("Failed to parse initial content:", e)
       }
     }
   }, [editor, initialContent, content])
 
-  if (!editor) {
+  // Don't render until mounted to prevent hydration issues
+  if (!isMounted || !editor) {
     return (
       <div className="border rounded-lg p-4 bg-background min-h-[400px] flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />

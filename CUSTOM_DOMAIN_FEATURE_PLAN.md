@@ -102,12 +102,12 @@ Allow tenants to connect their own domain to their tenant site through a self-se
 - [ ] SSL is automatic via Vercel
 
 **Logic:**
-```
+\`\`\`
 1. Check if hostname is a tenant subdomain (*.tektonstable.com)
 2. If not, check if hostname matches any tenant's custom_domain
 3. If match found, rewrite to /${tenant.subdomain}/*
 4. If no match, serve main site
-```
+\`\`\`
 
 ---
 

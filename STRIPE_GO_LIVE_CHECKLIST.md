@@ -189,7 +189,7 @@ Go to your Vercel project settings → Environment Variables
 
 Create an announcement to send to all missionaries:
 
-```
+\`\`\`
 Subject: Action Required: Reconnect Your Stripe Account for Live Payments
 
 Hi [Missionary Name],
@@ -213,7 +213,7 @@ Questions? Contact us at hello@tektonstable.com
 
 Best regards,
 The Tekton's Table Team
-```
+\`\`\`
 
 - [ ] Send announcement to all active missionaries
 - [ ] Provide support email for questions

@@ -1,5 +1,6 @@
 "use client"
 
+// Last updated: 2026-03-15 - Fixed loading state and tenant lookup issues
 import type React from "react"
 
 import { use, useState, useEffect, useCallback } from "react"

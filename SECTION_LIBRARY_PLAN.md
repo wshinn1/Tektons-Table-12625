@@ -21,7 +21,7 @@ Take screenshots of every section on each marketing page. Break pages into logic
 - [ ] Any other marketing pages
 
 **Screenshot Naming Convention:**
-```
+\`\`\`
 [page-name]-section-[number]-[brief-description].png
 
 Examples:
@@ -30,7 +30,7 @@ Examples:
 - features-section-1-hero.png
 - features-section-2-feature-grid.png
 - contact-section-1-form.png
-```
+\`\`\`
 
 ### 1.2 Organize Screenshots
 Group screenshots by page in a single message or attachment, labeled clearly so I know:
@@ -51,7 +51,7 @@ I'll analyze all screenshots to:
 
 ### 2.2 Component Library Design
 Create a section taxonomy:
-```
+\`\`\`
 Heroes (full-width top sections)
 ├── hero-centered (text centered with CTA)
 ├── hero-split (image/text side-by-side)
@@ -81,12 +81,12 @@ Forms
 └── multi-step-form (complex forms)
 
 ... and more based on your screenshots
-```
+\`\`\`
 
 ### 2.3 Database Schema Design
 Create unified schema for all pages:
 
-```sql
+\`\`\`sql
 -- Main sections table
 CREATE TABLE page_sections (
   id UUID PRIMARY KEY,
@@ -109,14 +109,14 @@ CREATE TABLE section_library (
   default_content JSONB, -- Template/starter content
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-```
+\`\`\`
 
 ---
 
 ## Phase 3: Implementation (My Task)
 
 ### 3.1 Create Component Architecture
-```
+\`\`\`
 components/
   sections/
     heroes/
@@ -143,7 +143,7 @@ components/
       newsletter-subscribe.tsx
     registry.ts
     types.ts
-```
+\`\`\`
 
 **Each component will:**
 - Accept content as props (typed with TypeScript)
@@ -153,7 +153,7 @@ components/
 - Have default/fallback content
 
 ### 3.2 Component Registry
-```typescript
+\`\`\`typescript
 // components/sections/registry.ts
 import { ComponentType } from 'react'
 
@@ -175,10 +175,10 @@ export const sectionCategories = {
   ctas: ['cta-centered', 'cta-split', 'cta-banner'],
   // ... etc
 }
-```
+\`\`\`
 
 ### 3.3 Dynamic Page Renderer
-```typescript
+\`\`\`typescript
 // components/page-section-renderer.tsx
 export async function PageSectionRenderer({ pageId }: { pageId: string }) {
   const sections = await getPageSections(pageId)
@@ -197,7 +197,7 @@ export async function PageSectionRenderer({ pageId }: { pageId: string }) {
     </>
   )
 }
-```
+\`\`\`
 
 ### 3.4 Admin Page Editor
 Create comprehensive admin interface at `/admin/page-editor`:
@@ -276,7 +276,7 @@ For each page (pricing, features, contact, donate):
 5. Add section metadata to library catalog
 
 ### 5.2 Update Page Routes
-```typescript
+\`\`\`typescript
 // Before (hardcoded)
 export default function PricingPage() {
   return <div>hardcoded content...</div>
@@ -286,7 +286,7 @@ export default function PricingPage() {
 export default function PricingPage() {
   return <PageSectionRenderer pageId="pricing" />
 }
-```
+\`\`\`
 
 ---
 

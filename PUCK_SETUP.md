@@ -33,7 +33,7 @@ Out of the box, Puck includes:
 
 To add more components, edit `lib/puck-config.tsx`:
 
-```tsx
+\`\`\`tsx
 export const puckConfig: Config = {
   components: {
     YourComponent: {
@@ -46,7 +46,7 @@ export const puckConfig: Config = {
     },
   },
 }
-```
+\`\`\`
 
 ## Data Storage
 
