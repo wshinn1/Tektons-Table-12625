@@ -16,7 +16,7 @@ Transform the admin panel with a modern sidebar layout, implement a modular page
 - [x] Create placeholder pages for new sections
 
 ### Sidebar Menu Structure (Implemented)
-```
+\`\`\`
 ✅ Dashboard
 ✅ Content Management
   - Pages & Sections (placeholder)
@@ -36,7 +36,7 @@ Transform the admin panel with a modern sidebar layout, implement a modular page
   - Platform Settings (existing)
   - Help Content (existing)
   - Chat Analytics (existing)
-```
+\`\`\`
 
 ---
 
@@ -47,7 +47,7 @@ Transform the admin panel with a modern sidebar layout, implement a modular page
 **Goal:** Create a flexible system for building pages with reusable section components
 
 ### Database Schema
-```sql
+\`\`\`sql
 -- Pages table
 CREATE TABLE pages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -81,7 +81,7 @@ CREATE TABLE page_sections (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-```
+\`\`\`
 
 ### Tasks
 - [x] Run database migration script
@@ -97,7 +97,7 @@ CREATE TABLE page_sections (
   - [x] Testimonials
 
 ### Folder Structure
-```
+\`\`\`
 components/
   sections/
     hero-overlay/
@@ -121,7 +121,7 @@ components/
       section-list.tsx (collapsible list)
       section-editor.tsx (expanded form)
       section-selector.tsx (add new sections)
-```
+\`\`\`
 
 ### Admin Pages
 - [x] `/admin/pages` - List all pages
@@ -150,7 +150,7 @@ components/
 **Goal:** Track all platform revenue and funds received
 
 ### Database Enhancements
-```sql
+\`\`\`sql
 -- Created in script 036
 CREATE VIEW admin_financials AS
 SELECT 
@@ -172,7 +172,7 @@ SELECT
 FROM tenants t
 LEFT JOIN donations d ON t.id = d.tenant_id
 GROUP BY t.id;
-```
+\`\`\`
 
 ### Completed Tasks
 - [x] Create financials database view (script 036)
@@ -237,7 +237,7 @@ All Phase 4 tasks were completed during Phase 3 implementation:
 **Goal:** Nightly backups to Vercel Blob with email notifications
 
 ### Backup Strategy
-```
+\`\`\`
 Vercel Blob Structure:
 /backups/
   /platform/
@@ -247,10 +247,10 @@ Vercel Blob Structure:
     /{tenant-id}/
       /2025-11-20/
         tenant-{subdomain}-2025-11-20T05-00-00.json
-```
+\`\`\`
 
 ### Database Schema
-```sql
+\`\`\`sql
 -- Enhanced backups table with tenant tracking and email notifications
 ALTER TABLE backups ADD COLUMN tenant_id UUID REFERENCES tenants(id);
 ALTER TABLE backups ADD COLUMN backup_category TEXT DEFAULT 'platform';
@@ -258,7 +258,7 @@ ALTER TABLE backups ADD COLUMN email_sent BOOLEAN DEFAULT false;
 ALTER TABLE backups ADD COLUMN email_sent_at TIMESTAMP;
 ALTER TABLE backups ADD COLUMN retention_days INTEGER DEFAULT 30;
 ALTER TABLE backups ADD COLUMN expires_at TIMESTAMP;
-```
+\`\`\`
 
 ### Tasks
 - [x] Run backup enhancements migration (script 038)
@@ -270,7 +270,7 @@ ALTER TABLE backups ADD COLUMN expires_at TIMESTAMP;
 - [x] Configure Vercel Cron in `vercel.json`
 
 ### Vercel Cron Configuration (vercel.json)
-```json
+\`\`\`json
 {
   "crons": [
     {
@@ -283,7 +283,7 @@ ALTER TABLE backups ADD COLUMN expires_at TIMESTAMP;
     }
   ]
 }
-```
+\`\`\`
 
 Schedule: Midnight EST (5:00 AM UTC) daily
 

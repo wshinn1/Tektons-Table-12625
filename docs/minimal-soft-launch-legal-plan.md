@@ -24,7 +24,7 @@ Add this to your giving/checkout pages:
 
 #### 3. Email Your 3-5 Missionaries
 Send a simple email:
-```
+\`\`\`
 Subject: Tekton's Table Platform Agreement
 
 Hi [Name],
@@ -38,7 +38,7 @@ Before we launch, I need to confirm a few things:
 Please reply "YES" to confirm you understand and agree.
 
 Thanks!
-```
+\`\`\`
 
 **Save their email replies** - this is your proof of agreement.
 

@@ -10,9 +10,9 @@ You need to have these installed on your Mac:
 - **A code editor** (VS Code recommended)
 
 ### Check if you have Node.js installed:
-```bash
+\`\`\`bash
 node --version
-```
+\`\`\`
 
 If you see a version number like `v20.x.x`, you're good! If not, install Node.js from https://nodejs.org (download the LTS version).
 
@@ -37,9 +37,9 @@ If you see a version number like `v20.x.x`, you're good! If not, install Node.js
 ## Step 3: Navigate to Your Project
 
 In Terminal, type:
-```bash
+\`\`\`bash
 cd ~/Desktop/tektonstable
-```
+\`\`\`
 
 Replace `~/Desktop/tektonstable` with wherever you unzipped the project.
 
@@ -50,9 +50,9 @@ Replace `~/Desktop/tektonstable` with wherever you unzipped the project.
 ## Step 4: Install Dependencies
 
 In Terminal, run:
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 This will take 1-2 minutes. You'll see a progress bar and lots of text scrolling.
 
@@ -62,14 +62,14 @@ This will take 1-2 minutes. You'll see a progress bar and lots of text scrolling
 
 Create a file called `.env.local` in your project folder:
 
-```bash
+\`\`\`bash
 touch .env.local
-```
+\`\`\`
 
 Then open it in your editor and add:
-```
+\`\`\`
 NEXT_PUBLIC_PRISMIC_ENVIRONMENT=tektonstable
-```
+\`\`\`
 
 Copy all your other environment variables from v0's **Vars** section into this file.
 
@@ -78,9 +78,9 @@ Copy all your other environment variables from v0's **Vars** section into this f
 ## Step 6: Initialize Slice Machine
 
 Run this command:
-```bash
+\`\`\`bash
 npx @slicemachine/init@latest --repository tektonstable
-```
+\`\`\`
 
 This will:
 - Detect your existing slice definitions
@@ -94,14 +94,14 @@ This will:
 ## Step 7: Start Slice Machine
 
 Run:
-```bash
+\`\`\`bash
 npm run slicemachine
-```
+\`\`\`
 
 **What you'll see:**
-```
+\`\`\`
 ✓ Slice Machine running at http://localhost:9999
-```
+\`\`\`
 
 Open your browser and go to **http://localhost:9999**
 
@@ -152,15 +152,15 @@ You need to install Node.js from https://nodejs.org
 
 ### "Permission denied" errors
 Try adding `sudo` before the command:
-```bash
+\`\`\`bash
 sudo npm install
-```
+\`\`\`
 
 ### Slice Machine won't start
 Make sure you're in the correct directory:
-```bash
+\`\`\`bash
 pwd
-```
+\`\`\`
 Should show something like `/Users/yourname/Desktop/tektonstable`
 
 ### "Repository not found"
@@ -180,7 +180,7 @@ Make sure you created the repository at prismic.io and it's named `tektonstable`
 
 ## Quick Reference
 
-```bash
+\`\`\`bash
 # If you need to add a new slice type later:
 npm run slicemachine
 
@@ -188,7 +188,7 @@ npm run slicemachine
 npm run dev
 
 # Then open: http://localhost:3000
-```
+\`\`\`
 
 ---
 

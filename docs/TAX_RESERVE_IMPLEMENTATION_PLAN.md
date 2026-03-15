@@ -14,17 +14,17 @@ Implement a database-driven tax reserve tracking system that allows tenants to d
 ## Database Schema Changes
 
 ### 1. Add Tax Settings to Tenants Table
-```sql
+\`\`\`sql
 ALTER TABLE tenants 
 ADD COLUMN tax_reserve_percentage DECIMAL(5,2) DEFAULT 0 CHECK (tax_reserve_percentage >= 0 AND tax_reserve_percentage <= 100);
-```
+\`\`\`
 
 ### 2. Add Tax Tracking to Donations Table
-```sql
+\`\`\`sql
 ALTER TABLE donations 
 ADD COLUMN tax_reserve_amount DECIMAL(10,2) DEFAULT 0,
 ADD COLUMN operating_amount DECIMAL(10,2);
-```
+\`\`\`
 
 **Note:** Calculate these values when donations are created:
 - `tax_reserve_amount = total_amount * (tax_reserve_percentage / 100)`
@@ -44,7 +44,7 @@ ADD COLUMN operating_amount DECIMAL(10,2);
 #### Step 1.2: Update Donation Creation Logic
 **File:** `app/actions/donations.ts` (or wherever donation processing occurs)
 
-```typescript
+\`\`\`typescript
 // When creating a donation record
 const tenant = await getTenantSettings(tenantId);
 const taxReservePercentage = tenant.tax_reserve_percentage || 0;
@@ -57,12 +57,12 @@ await supabase.from('donations').insert({
   tax_reserve_amount: taxReserveAmount,
   operating_amount: operatingAmount,
 });
-```
+\`\`\`
 
 #### Step 1.3: Create Tax Summary Queries
 **File:** `app/actions/financial-reports.ts`
 
-```typescript
+\`\`\`typescript
 export async function getTaxReserveSummary(tenantId: string) {
   const { data, error } = await supabase
     .from('donations')
@@ -78,7 +78,7 @@ export async function getTaxReserveSummary(tenantId: string) {
 
   return summary;
 }
-```
+\`\`\`
 
 ---
 
@@ -88,7 +88,7 @@ export async function getTaxReserveSummary(tenantId: string) {
 **File:** `app/[tenant]/admin/giving/page.tsx`
 
 Add a new section:
-```tsx
+\`\`\`tsx
 <Card>
   <CardHeader>
     <CardTitle>Tax Reserve Settings</CardTitle>
@@ -126,12 +126,12 @@ Add a new section:
     </div>
   </CardContent>
 </Card>
-```
+\`\`\`
 
 #### Step 2.2: Create Server Action for Saving Settings
 **File:** `app/actions/giving-settings.ts`
 
-```typescript
+\`\`\`typescript
 export async function updateTaxReservePercentage(
   tenantId: string,
   percentage: number
@@ -153,7 +153,7 @@ export async function updateTaxReservePercentage(
   revalidatePath('/[tenant]/admin/giving');
   return { success: true };
 }
-```
+\`\`\`
 
 ---
 
@@ -162,7 +162,7 @@ export async function updateTaxReservePercentage(
 #### Step 3.1: Create Tax Reserve Dashboard Card
 **File:** `components/tenant/tax-reserve-card.tsx`
 
-```tsx
+\`\`\`tsx
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -225,12 +225,12 @@ export function TaxReserveCard({ summary }: { summary: TaxReserveSummary }) {
     </div>
   )
 }
-```
+\`\`\`
 
 #### Step 3.2: Add to Financial Reports Page
 **File:** `app/[tenant]/admin/financial-reports/page.tsx`
 
-```tsx
+\`\`\`tsx
 import { getTaxReserveSummary } from '@/app/actions/financial-reports'
 import { TaxReserveCard } from '@/components/tenant/tax-reserve-card'
 
@@ -249,14 +249,14 @@ export default async function FinancialReportsPage({ params }) {
     </div>
   )
 }
-```
+\`\`\`
 
 #### Step 3.3: Add Tax Reserve Column to Donations Table
 **File:** `app/[tenant]/admin/financial-reports/page.tsx`
 
 Update the donations table to show tax breakdown:
 
-```tsx
+\`\`\`tsx
 <Table>
   <TableHeader>
     <TableRow>
@@ -283,7 +283,7 @@ Update the donations table to show tax breakdown:
     ))}
   </TableBody>
 </Table>
-```
+\`\`\`
 
 ---
 
@@ -293,7 +293,7 @@ For existing donations that don't have tax amounts calculated, create a migratio
 
 **File:** `scripts/backfill_tax_reserves.sql`
 
-```sql
+\`\`\`sql
 -- Update existing donations to calculate tax reserve amounts
 UPDATE donations d
 SET 
@@ -302,7 +302,7 @@ SET
 FROM tenants t
 WHERE d.tenant_id = t.id
   AND d.tax_reserve_amount IS NULL;
-```
+\`\`\`
 
 ---
 

@@ -82,7 +82,7 @@ Fixed functions:
    - Uses dynamic content from database
 
 ### Data Flow
-```
+\`\`\`
 Database (homepage_sections)
     ↓
 Editor Page (fetches data)
@@ -94,7 +94,7 @@ API Route (saves changes)
 Database (homepage_sections)
     ↓
 Frontend Page (displays updated content)
-```
+\`\`\`
 
 ## What Still Needs Manual Action
 

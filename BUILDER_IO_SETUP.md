@@ -18,9 +18,9 @@ This guide will help you set up Builder.io visual editing for your platform.
 
 Add this to your Vercel environment variables (in v0 Vars section):
 
-```
+\`\`\`
 NEXT_PUBLIC_BUILDER_API_ID=your-api-id-here
-```
+\`\`\`
 
 Replace `your-api-id-here` with the key you copied from Builder.io.
 

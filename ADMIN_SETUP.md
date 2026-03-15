@@ -13,7 +13,7 @@ To access the admin dashboard, you need to be added to the `super_admins` table.
 
 Run this SQL in your Supabase SQL Editor:
 
-```sql
+\`\`\`sql
 -- Find your user ID
 SELECT id, email FROM auth.users;
 
@@ -24,7 +24,7 @@ VALUES (
   'your-email@example.com',
   'Your Full Name'
 );
-```
+\`\`\`
 
 ### Step 3: Access the admin dashboard
 

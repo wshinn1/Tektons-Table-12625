@@ -171,13 +171,13 @@ This session focused on fixing security issues, improving UI/UX, optimizing perf
 If issues occur after deployment:
 
 ### Database Rollback:
-```sql
+\`\`\`sql
 -- Revert RLS on campaign_donation_digest
 ALTER TABLE campaign_donation_digest DISABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Tenant owners can view donation digests" ON campaign_donation_digest;
 DROP POLICY IF EXISTS "Tenant owners can manage donation digests" ON campaign_donation_digest;
 DROP POLICY IF EXISTS "Service role can manage donation digests" ON campaign_donation_digest;
-```
+\`\`\`
 
 ### Code Rollback:
 - Revert commits for:

@@ -36,7 +36,7 @@ Set up database schema and core data operations
 
 ### SQL Migration
 
-```sql
+\`\`\`sql
 -- Add new columns to tenant_campaigns
 ALTER TABLE tenant_campaigns 
 ADD COLUMN show_donor_list BOOLEAN DEFAULT true,
@@ -71,7 +71,7 @@ BEGIN
   RETURN generated_slug;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-```
+\`\`\`
 
 ### Deliverable
 Database ready, CRUD operations working
@@ -515,7 +515,7 @@ Update sidebar to show campaigns
 - Limit to 5 campaigns (show "View all" if more)
 
 **Menu Structure:**
-```
+\`\`\`
 - Home
 - About  
 - Support
@@ -525,7 +525,7 @@ Update sidebar to show campaigns
   - New Church Building (32%)
   - Emergency Relief Fund (100%) ✓
 - Contact
-```
+\`\`\`
 
 #### 2. `app/[tenant]/layout.tsx`
 Pass campaigns to sidebar

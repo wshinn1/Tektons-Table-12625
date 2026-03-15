@@ -121,7 +121,7 @@ Since each missionary connects their own Stripe account, Stripe supports cross-b
 
 ### Stripe Settings
 
-```typescript
+\`\`\`typescript
 // From: app/actions/stripe-donations.ts
 
 payment_method_types: [
@@ -134,7 +134,7 @@ payment_method_types: [
 
 currency: 'usd'
 mode: 'payment' // One-time or subscription
-```
+\`\`\`
 
 ### Features Enabled
 
@@ -189,9 +189,9 @@ Enable donations in local currencies:
 ### 3. Display Pricing in Multiple Currencies
 
 Show approximate amounts in donor's local currency:
-```
+\`\`\`
 $50 USD ≈ ₹4,150 INR ≈ R$250 BRL ≈ ₦77,500 NGN
-```
+\`\`\`
 
 ### 4. Fraud Prevention Enhancements
 
@@ -213,7 +213,7 @@ Improve donor experience with:
 
 ### Add Regional Payment Methods
 
-```typescript
+\`\`\`typescript
 // In app/actions/stripe-donations.ts
 
 payment_method_types: [
@@ -230,11 +230,11 @@ payment_method_types: [
   'oxxo',
   'boleto'
 ]
-```
+\`\`\`
 
 ### Enable Multi-Currency
 
-```typescript
+\`\`\`typescript
 // Detect donor location and offer local currency
 const donorCountry = await detectCountry(request);
 const currency = getCurrencyForCountry(donorCountry); // 'usd', 'eur', 'inr', etc.
@@ -243,16 +243,16 @@ await stripe.checkout.sessions.create({
   currency: currency,
   // ... rest of config
 });
-```
+\`\`\`
 
 ### Add Billing Address Collection
 
-```typescript
+\`\`\`typescript
 await stripe.checkout.sessions.create({
   billing_address_collection: 'required',
   // Improves fraud prevention for international payments
 });
-```
+\`\`\`
 
 ## Testing International Payments
 
@@ -260,12 +260,12 @@ await stripe.checkout.sessions.create({
 
 Stripe provides test cards for different countries:
 
-```
+\`\`\`
 US Card: 4242 4242 4242 4242
 UK Card: 4000 0082 6000 0000
 India Card: 4000 0035 6000 0008
 Brazil Card: 4000 0007 6000 0002
-```
+\`\`\`
 
 ### Testing Steps
 
@@ -279,7 +279,7 @@ Brazil Card: 4000 0007 6000 0002
 
 ### Track International Donations
 
-```typescript
+\`\`\`typescript
 // Add country tracking to donations
 await supabase
   .from('donations')
@@ -289,7 +289,7 @@ await supabase
     donor_country: donorCountry,
     payment_method_type: paymentMethod
   });
-```
+\`\`\`
 
 ### Key Metrics to Monitor
 

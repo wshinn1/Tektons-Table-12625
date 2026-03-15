@@ -400,7 +400,7 @@ Complete overhaul of tenant dashboard and front-end to create a Medium-inspired 
 
 ### New Tables to Create
 
-```sql
+\`\`\`sql
 -- Tenant navigation menu
 CREATE TABLE tenant_navigation_menu (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -525,11 +525,11 @@ CREATE TABLE tenant_contact_submissions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-```
+\`\`\`
 
 ### Columns to Add to Existing Tables
 
-```sql
+\`\`\`sql
 -- Add to blog_posts
 ALTER TABLE blog_posts
 ADD COLUMN subtitle TEXT,
@@ -543,7 +543,7 @@ ALTER TABLE tenant_profiles
 ADD COLUMN about_content JSONB,
 ADD COLUMN contact_email TEXT,
 ADD COLUMN show_campaigns BOOLEAN DEFAULT false;
-```
+\`\`\`
 
 ---
 

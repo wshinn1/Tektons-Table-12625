@@ -139,7 +139,7 @@ Multi-tenant missionary fundraising platform with Stripe Connect, email notifica
 - Track tips and fee coverage separately
 
 ### 3.5 Revenue Calculation
-```javascript
+\`\`\`javascript
 // Example: $100 donation with 15% tip and fee coverage
 donationAmount = 10000 // $100
 platformFee = 350 // 3.5% = $3.50 (was 3%)
@@ -150,7 +150,7 @@ feeCoverage = 320 // Donor covers Stripe fee
 totalCharged = 11820 // $118.20
 platformRevenue = 2170 // $21.70 (fee + tip + covered Stripe fee)
 missionaryReceives = 9650 // $96.50
-```
+\`\`\`
 
 **Deliverables:**
 - Stripe Connect onboarding working ✅
@@ -398,7 +398,7 @@ missionaryReceives = 9650 // $96.50
 **Goal:** Nightly backups of all Supabase data to Vercel Blob
 
 ### 9.1 Database Schema
-```sql
+\`\`\`sql
 backups (
   id uuid primary key,
   backup_type text default 'full',
@@ -413,7 +413,7 @@ backups (
   completed_at timestamp,
   created_at timestamp
 )
-```
+\`\`\`
 
 ### 9.2 Backup Script
 - API route: `/api/cron/backup`
@@ -424,14 +424,14 @@ backups (
 - Handle errors gracefully
 
 ### 9.3 Vercel Cron Job Configuration
-```json
+\`\`\`json
 {
   "crons": [{
     "path": "/api/cron/backup",
     "schedule": "0 5 * * *"
   }]
 }
-```
+\`\`\`
 
 ### 9.4 Backup Notification Emails
 - Send email to super admin on success
@@ -459,7 +459,7 @@ backups (
 **Goal:** Word-of-mouth growth engine with tiered pricing rewards
 
 ### 9.5.1 Database Schema for Referrals
-```sql
+\`\`\`sql
 -- Referral codes and tracking
 referral_codes (
   id uuid primary key,
@@ -505,12 +505,12 @@ pricing_history (
   expires_at timestamp nullable,
   created_at timestamp
 )
-```
+\`\`\`
 
 ### 9.5.2 Referral Tier Structure
 
 **Tier Progression:**
-```javascript
+\`\`\`javascript
 const REFERRAL_TIERS = {
   NEW_USER: {
     rate: 1.5, // 50% off for first 30 days
@@ -547,7 +547,7 @@ const REFERRAL_TIERS = {
     permanent: true
   }
 }
-```
+\`\`\`
 
 ### 9.5.3 Referral Code Generation
 **Backend:** `POST /api/tenant/referrals/generate`
@@ -567,7 +567,7 @@ const REFERRAL_TIERS = {
 
 ### 9.5.5 Referral Completion Logic
 **Webhook:** Monitor first donation from referee
-```javascript
+\`\`\`javascript
 // When referee receives their first donation:
 async function completeReferral(refereeTenantId) {
   // 1. Mark referral as completed
@@ -590,11 +590,11 @@ async function completeReferral(refereeTenantId) {
   // 5. Send email to both parties
   await sendReferralCompletionEmails(referrer, referee);
 }
-```
+\`\`\`
 
 ### 9.5.6 Tier Upgrade Logic
 **Backend:** Automated tier checking
-```javascript
+\`\`\`javascript
 async function checkAndUpgradeTier(tenantId) {
   const pricing = await getTenantPricing(tenantId);
   const referralCount = pricing.referral_count;
@@ -612,11 +612,11 @@ async function checkAndUpgradeTier(tenantId) {
     await sendTierUpgradeEmail(tenantId, newTier);
   }
 }
-```
+\`\`\`
 
 ### 9.5.7 Stripe Integration for Variable Pricing
 **Application Fee Calculation:**
-```javascript
+\`\`\`javascript
 // When creating payment intent
 async function createDonationIntent(tenantId, amount) {
   const pricing = await getTenantPricing(tenantId);
@@ -649,7 +649,7 @@ async function createDonationIntent(tenantId, amount) {
   
   return paymentIntent;
 }
-```
+\`\`\`
 
 ### 9.5.8 Tenant Dashboard - Referral Section
 **UI Components:**
@@ -688,7 +688,7 @@ async function createDonationIntent(tenantId, amount) {
 ### 9.5.10 Email Notifications
 
 **Email 1: Referral Signup (to Referrer)**
-```
+\`\`\`
 Subject: Good news! {Name} joined using your referral
 
 {Name} just signed up for TektonsTable using your referral code!
@@ -698,10 +698,10 @@ When they receive their first donation, you'll both get rewards:
 ✓ Them: Already enjoying 1.5% for their first 30 days
 
 Your referrals: {count}/3 to unlock Bronze Advocate (permanent 2.5% rate)
-```
+\`\`\`
 
 **Email 2: Referral Completed (to Referrer)**
-```
+\`\`\`
 Subject: You earned a reward! 🎉
 
 {Name} just received their first donation, which means your referral is complete!
@@ -714,10 +714,10 @@ Your Progress:
 • Total referrals: {count}
 • Current tier: {tier}
 • Next tier: {nextTier} at {nextCount} referrals
-```
+\`\`\`
 
 **Email 3: Tier Upgrade (to Referrer)**
-```
+\`\`\`
 Subject: Congratulations! You've unlocked {Tier} Advocate status 🏆
 
 You've referred {count} missionaries and earned permanent pricing:
@@ -726,10 +726,10 @@ Your new rate: {rate}% platform fee (was 3.0%)
 Lifetime savings: ${annualSavings}/year
 
 This rate is yours forever. Thank you for spreading the word!
-```
+\`\`\`
 
 **Email 4: Discount Expiring (to Referee)**
-```
+\`\`\`
 Subject: Your welcome discount expires in 7 days
 
 Your 50% discount (1.5% rate) expires on {date}.
@@ -740,7 +740,7 @@ Want to keep lower rates? Share TektonsTable with other missionaries:
 {Your referral link}
 
 For every 3 referrals, you unlock permanent discounted rates!
-```
+\`\`\`
 
 ### 9.5.11 API Routes for Referral System
 
@@ -933,7 +933,7 @@ For every 3 referrals, you unlock permanent discounted rates!
 ### 11.2 Interactive Tooltips & Contextual Help
 
 **Tooltip System Using shadcn/ui:**
-```tsx
+\`\`\`tsx
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 <TooltipProvider>
@@ -946,7 +946,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
     </TooltipContent>
   </Tooltip>
 </TooltipProvider>
-```
+\`\`\`
 
 **Tooltip Locations:**
 - Financial dashboard metrics
@@ -975,7 +975,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 **Implementation Architecture:**
 
 **Step 1: Knowledge Base Embedding**
-```typescript
+\`\`\`typescript
 // scripts/embed-docs.ts
 import { embed, embedMany } from 'ai';
 import { openai } from '@ai-sdk/openai';
@@ -995,10 +995,10 @@ await supabase.from('documentation_embeddings').insert(
     embedding: embedding
   }))
 );
-```
+\`\`\`
 
 **Step 2: Chatbot UI Component**
-```tsx
+\`\`\`tsx
 // components/support-chatbot.tsx
 'use client';
 
@@ -1045,10 +1045,10 @@ export function SupportChatbot() {
     </div>
   );
 }
-```
+\`\`\`
 
 **Step 3: Chat API with RAG**
-```typescript
+\`\`\`typescript
 // app/api/support/chat/route.ts
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
@@ -1104,7 +1104,7 @@ export async function POST(req: Request) {
 
   return result.toUIMessageStreamResponse();
 }
-```
+\`\`\`
 
 **Chatbot Features:**
 - Answers questions using RAG (Retrieval Augmented Generation)
@@ -1154,7 +1154,7 @@ The chatbot automatically detects when users are in onboarding and provides cont
 **Admin Interface for Creating Help Content:**
 
 **Database Schema:**
-```sql
+\`\`\`sql
 create table help_articles (
   id uuid primary key default uuid_generate_v4(),
   slug text unique not null,
@@ -1194,7 +1194,7 @@ create table help_article_feedback (
 create index idx_help_articles_category on help_articles(category);
 create index idx_help_articles_published on help_articles(is_published);
 create index idx_help_articles_slug on help_articles(slug);
-```
+\`\`\`
 
 **Help Guide Admin Dashboard:**
 - Create/edit/delete articles
@@ -1228,7 +1228,7 @@ create index idx_help_articles_slug on help_articles(slug);
 - Table of contents for long articles
 
 **Search Implementation:**
-```typescript
+\`\`\`typescript
 // app/api/help/search/route.ts
 import { createClient } from '@/lib/supabase/server';
 
@@ -1250,10 +1250,10 @@ export async function GET(request: Request) {
   
   return Response.json({ articles });
 }
-```
+\`\`\`
 
 **Article Component with Feedback:**
-```tsx
+\`\`\`tsx
 // app/help/article/[slug]/page.tsx
 'use client';
 
@@ -1367,10 +1367,10 @@ export default function HelpArticlePage({ article }) {
     </div>
   );
 }
-```
+\`\`\`
 
 **Help Center Homepage:**
-```tsx
+\`\`\`tsx
 // app/help/page.tsx
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -1430,7 +1430,7 @@ export default function HelpCenterPage() { // Removed categories prop as it's mo
     </div>
   );
 }
-```
+\`\`\`
 
 **Help Categories Structure:**
 1. **Getting Started** (🚀)
@@ -1618,7 +1618,7 @@ export default function HelpCenterPage() { // Removed categories prop as it's mo
 
 ### 11.12 Database Schema for Support
 
-```sql
+\`\`\`sql
 -- Help documentation
 help_articles (
   id uuid primary key,
@@ -1678,7 +1678,7 @@ feedback (
   rating integer nullable,
   created_at timestamp
 )
-```
+\`\`\`
 
 ### 11.13 Deliverables
 
@@ -1703,7 +1703,7 @@ feedback (
 **Goal:** Platform-wide controls and monitoring for system administrator
 
 #### 12.1.1 Super Admin Database Schema
-```sql
+\`\`\`sql
 -- Super admin users table
 super_admins (
   id uuid primary key,
@@ -1744,7 +1744,7 @@ platform_fee_audit (
   reason text,
   affected_tenants_count integer
 )
-```
+\`\`\`
 
 #### 12.1.2 Platform Fee Management
 **Goal:** Super admin can adjust the base platform fee from the dashboard
@@ -1752,14 +1752,14 @@ platform_fee_audit (
 **Backend:** `POST /api/super-admin/settings/platform-fee`
 
 **Request Body:**
-```javascript
+\`\`\`javascript
 {
   new_fee_percentage: 3.5, // New fee (e.g., 3.5%)
   effective_date: "2025-12-01", // When to apply (immediate or future)
   apply_to_existing: boolean, // Apply to existing tenants or only new ones
   reason: "Market adjustment" // Audit trail reason
 }
-```
+\`\`\`
 
 **Business Logic:**
 - Minimum fee: 0.5%
@@ -1780,7 +1780,7 @@ platform_fee_audit (
 **UI Location:** `/super-admin/settings/platform-fee`
 
 **Dashboard Component:**
-```typescript
+\`\`\`typescript
 // Super Admin Fee Settings Component
 <Card>
   <CardHeader>
@@ -1869,11 +1869,11 @@ platform_fee_audit (
     </Table>
   </CardContent>
 </Card>
-```
+\`\`\`
 
 **Stripe Integration:**
 When processing donations, the system fetches the current platform fee:
-```typescript
+\`\`\`typescript
 // In donation processing
 const { data: currentFee } = await supabase
   .from('platform_fee_config')
@@ -1888,10 +1888,10 @@ const effectiveFee = currentFee.base_fee_percentage * (1 - tenantDiscount)
 
 // Create Stripe payment intent with calculated fee
 const applicationFeeAmount = Math.round(donationAmount * effectiveFee / 100)
-```
+\`\`\`
 
 **Email Notification Template:**
-```
+\`\`\`
 Subject: Platform Fee Update - TektonsTable
 
 Hi [Missionary Name],
@@ -1910,20 +1910,20 @@ What this means for you:
 Questions? Our support team is here to help: support@tektonstable.com
 
 Thank you for using TektonsTable to grow your ministry!
-```
+\`\`\`
 
 #### 12.1.3 Referral Discount Toggle
 
 **Backend:** `POST /api/super-admin/settings/referral-program`
 
 **Request Body:**
-```javascript
+\`\`\`javascript
 {
   is_enabled: false,
   disable_reason: "Temporary pause for review",
   welcome_discount_percentage: 50 // e.g., 50%
 }
-```
+\`\`\`
 
 **Features:**
 - Global toggle to enable/disable the referral program
@@ -1937,7 +1937,7 @@ Thank you for using TektonsTable to grow your ministry!
 **Backend:** `POST /api/super-admin/settings/system`
 
 **Request Body:**
-```javascript
+\`\`\`javascript
 {
   maintenance_mode: {
     enabled: true,
@@ -1946,7 +1946,7 @@ Thank you for using TektonsTable to grow your ministry!
   new_signups_enabled: false,
   email_notifications_enabled: true
 }
-```
+\`\`\`
 
 **Features:**
 - **Maintenance Mode:** Display a custom page to all users when enabled.
@@ -1973,7 +1973,7 @@ Thank you for using TektonsTable to grow your ministry!
 **Goal:** Allow tenants to create fundraising campaigns for specific causes (mission trip, equipment, emergency, project)
 
 #### 13.1.1 Campaign Database Schema
-```sql
+\`\`\`sql
 -- Financial campaigns table
 campaigns (
   id uuid primary key,
@@ -2012,13 +2012,13 @@ campaign_updates (
   content text,
   created_at timestamp
 )
-```
+\`\`\`
 
 #### 13.1.2 Campaign Creation API
 **Backend:** `POST /api/tenant/campaigns`
 
 **Request Body:**
-```javascript
+\`\`\`javascript
 {
   title: "Mission Trip to Kenya",
   description: "Raising funds for a 2-week mission trip...",
@@ -2028,7 +2028,7 @@ campaign_updates (
   end_date: "2025-12-31",
   image_url: "/uploads/kenya-trip.jpg"
 }
-```
+\`\`\`
 
 **Features:**
 - Multiple active campaigns per tenant
@@ -2107,7 +2107,7 @@ campaign_updates (
 - Created: `app/actions/topics.ts`
 
 ### 14.1.1 Database Schema
-```sql
+\`\`\`sql
 -- Content categories (tenant-specific)
 categories (
   id uuid primary key,
@@ -2144,7 +2144,7 @@ post_topics (
 
 -- Add category to posts table
 ALTER TABLE posts ADD COLUMN category_id uuid references categories;
-```
+\`\`\`
 
 #### 14.1.2 Category Management API
 **Backend Routes:**
@@ -2263,7 +2263,7 @@ ALTER TABLE posts ADD COLUMN category_id uuid references categories;
 **Goal:** Allow supporters to contact missionaries directly through tenant sites
 
 #### 15.1.1 Database Schema
-```sql
+\`\`\`sql
 -- Contact form submissions
 contact_submissions (
   id uuid primary key,
@@ -2277,13 +2277,13 @@ contact_submissions (
   user_agent text,
   created_at timestamp
 )
-```
+\`\`\`
 
 #### 15.1.2 Resend Integration
 **Backend:** `POST /api/tenant/contact`
 
 **Implementation:**
-```javascript
+\`\`\`javascript
 import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -2333,7 +2333,7 @@ async function handleContactSubmission(tenantId, formData) {
   
   return { success: true };
 }
-```
+\`\`\`
 
 #### 15.1.3 Public Contact Form UI
 **Route:** `/{tenantSlug}/contact`
@@ -2525,7 +2525,7 @@ The entire tenant site can be embedded into WordPress pages using an iframe.
 
 **Embed Code Generation:**
 
-```typescript
+\`\`\`typescript
 // app/dashboard/embed/page.tsx
 import { useSubdomain } from '@/hooks/useSubdomain'; // Assuming hook exists
 import { Button } from '@/components/ui/button';
@@ -2571,11 +2571,11 @@ export default function EmbedSettingsPage() {
     </div>
   );
 }
-```
+\`\`\`
 
 **Embed Script (Auto-Height Adjustment):**
 
-```javascript
+\`\`\`javascript
 // public/embed.js
 (function() {
   function resizeIframe() {
@@ -2603,11 +2603,11 @@ export default function EmbedSettingsPage() {
   // Initial resize
   resizeIframe();
 })();
-```
+\`\`\`
 
 **Iframe Content Script:**
 
-```typescript
+\`\`\`typescript
 // app/[subdomain]/layout.tsx
 'use client';
 
@@ -2643,7 +2643,7 @@ export default function TenantLayout({ children }) {
 
   return <>{children}</>;
 }
-```
+\`\`\`
 
 **Benefits:**
 - SEO friendly - Missionary keeps their own domain
@@ -2784,7 +2784,7 @@ export default function TenantLayout({ children }) {
 - Word-of-mouth in tight-knit mission communities
 
 **Revenue Impact:**
-```javascript
+\`\`\`javascript
 // Example: 100 missionaries
 Scenario A (No referrals):
 - 100 tenants × $3,000/month avg × 3.5% = $10,500/month revenue
@@ -2799,7 +2799,7 @@ Scenario B (Active referrals):
 Revenue increase: 58.2%
 BUT: User base grows 3-5x faster due to referrals
 Net effect: 225-375% more revenue long-term
-```
+\`\`\`
 
 **Sustainability:**
 - Even Platinum tier (2.04%) covers infrastructure costs
@@ -3142,7 +3142,7 @@ Net effect: 225-375% more revenue long-term
 ### Database Optimization
 
 **Indexing Strategy:**
-```sql
+\`\`\`sql
 -- Critical indexes for performance
 CREATE INDEX idx_posts_tenant_published ON posts(tenant_id, published_at DESC);
 CREATE INDEX idx_donations_tenant_created ON donations(tenant_id, created_at DESC);
@@ -3159,7 +3159,7 @@ CREATE INDEX idx_supporters_name_search ON supporters USING GIN (to_tsvector('en
 -- Composite indexes for common queries
 CREATE INDEX idx_donations_tenant_status_created ON donations(tenant_id, status, created_at DESC);
 CREATE INDEX idx_supporters_tenant_donated ON supporters(tenant_id, has_donated, last_donation_at DESC);
-```
+\`\`\`
 
 **Query Optimization:**
 - Use pagination for all list views (limit 50 per page)
@@ -3179,7 +3179,7 @@ CREATE INDEX idx_supporters_tenant_donated ON supporters(tenant_id, has_donated,
 **Multi-Layer Caching:**
 
 **1. Edge Caching (Vercel)**
-```typescript
+\`\`\`typescript
 // Static assets cached at edge
 export const config = {
   runtime: 'edge',
@@ -3187,10 +3187,10 @@ export const config = {
 
 // Public pages cached for 5 minutes
 export const revalidate = 300; // 5 minutes
-```
+\`\`\`
 
 **2. Redis Caching (Upstash)**
-```typescript
+\`\`\`typescript
 // High-traffic data cached in Redis
 import { Redis } from '@upstash/redis';
 
@@ -3204,10 +3204,10 @@ await redis.setex(`tenant:${tenantId}`, 3600, JSON.stringify(tenant));
 
 // Cache donation totals for 5 minutes
 await redis.setex(`donations:total:${tenantId}`, 300, totalRaised);
-```
+\`\`\`
 
 **3. React Query (Client-Side)**
-```typescript
+\`\`\`typescript
 // Client-side caching with automatic refetching
 import { useQuery } from '@tanstack/react-query';
 
@@ -3217,7 +3217,7 @@ const { data } = useQuery({
   staleTime: 5 * 60 * 1000, // 5 minutes
   cacheTime: 30 * 60 * 1000, // 30 minutes
 });
-```
+\`\`\`
 
 **Caching Strategy by Data Type:**
 - **Tenant profiles:** 1 hour (Redis)
@@ -3246,14 +3246,14 @@ const { data } = useQuery({
 **Optimization Techniques:**
 
 **1. Parallel Requests:**
-```typescript
+\`\`\`typescript
 // Fetch multiple resources in parallel
 const [tenant, donations, supporters] = await Promise.all([
   getTenant(tenantId),
   getDonations(tenantId),
   getSupporters(tenantId)
 ]);
-```
+\`\`\`
 
 **2. Data Denormalization:**
 - Store pre-calculated totals (total_raised, supporter_count)
@@ -3273,7 +3273,7 @@ const [tenant, donations, supporters] = await Promise.all([
 ### Image & Media Optimization
 
 **Image Handling:**
-```typescript
+\`\`\`typescript
 // Next.js Image component with optimization
 import Image from 'next/image';
 
@@ -3287,7 +3287,7 @@ import Image from 'next/image';
   quality={85}
   formats={['webp', 'avif']}
 />
-```
+\`\`\`
 
 **Optimization Rules:**
 - Serve WebP/AVIF formats (95% smaller than PNG)
@@ -3307,13 +3307,13 @@ import Image from 'next/image';
 ### Bundle Size Optimization
 
 **Code Splitting:**
-```typescript
+\`\`\`typescript
 // Dynamic imports for large components
 const BlockNoteEditor = dynamic(() => import('@/components/blocknote-editor'), {
   ssr: false,
   loading: () => <Spinner />
 });
-```
+\`\`\`
 
 **Bundle Analysis:**
 - Target: <200KB initial JS bundle
@@ -3377,11 +3377,11 @@ const BlockNoteEditor = dynamic(() => import('@/components/blocknote-editor'), {
 - Partition large tables (>1M rows)
 
 ### Table Partitioning (Future):
-```sql
+\`\`\`sql
 -- Partition donations by month for performance
 CREATE TABLE donations_2024_01 PARTITION OF donations
   FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
-```
+\`\`\`
 
 ### CDN & Edge Optimization
 
@@ -3392,7 +3392,7 @@ CREATE TABLE donations_2024_01 PARTITION OF donations
 - Automatic DDoS protection
 
 **Edge Functions:**
-```typescript
+\`\`\`typescript
 // Deploy lightweight functions to edge
 export const config = {
   runtime: 'edge',
@@ -3402,7 +3402,7 @@ export default async function handler(req: Request) {
   // Runs in 100+ edge locations
   return new Response('Fast response from edge');
 }
-```
+\`\`\`
 
 **Asset Optimization:**
 - Brotli compression for text files
