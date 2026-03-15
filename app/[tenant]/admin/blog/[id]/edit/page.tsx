@@ -255,7 +255,7 @@ export default function EditBlogPost({ params }: Props) {
       } catch (error) {
         console.error("Failed to load post:", error)
         toast.error("Failed to load post")
-        router.push("/admin/blog")
+        router.push(`/${tenant}/admin/blog`)
       } finally {
         setLoading(false)
       }
@@ -423,7 +423,7 @@ export default function EditBlogPost({ params }: Props) {
 
       console.log("[v0] Blog post saved successfully:", result)
       toast.success(newStatus === "published" ? "Post published!" : "Changes saved!")
-      router.push("/admin/blog")
+      router.push(`/${tenant}/admin/blog`)
     } catch (error) {
       console.error("[v0] Failed to save blog post:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
@@ -467,7 +467,7 @@ export default function EditBlogPost({ params }: Props) {
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/admin/blog">
+              <Link href={`/${tenant}/admin/blog`}>
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
