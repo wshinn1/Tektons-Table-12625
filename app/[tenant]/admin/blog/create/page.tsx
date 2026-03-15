@@ -490,10 +490,11 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
     setIsSaving(true)
     try {
+      const postSlug = slug || generateSlug(title)
       await createBlogPost({
         title: title.trim(),
         subtitle: subtitle.trim() || undefined,
-        slug: slug || generateSlug(title),
+        slug: postSlug,
         readTime: Number.parseInt(readTime) || 5,
         content,
         status: "published",
@@ -511,7 +512,8 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
       })
 
       toast.success("Blog post published!")
-      router.push(`/${tenant}/admin/blog`)
+      // Redirect to the actual blog post instead of admin list
+      router.push(`/${tenant}/blog/${postSlug}`)
     } catch (error) {
       console.error("Failed to publish blog post:", error)
       toast.error("Failed to publish blog post")

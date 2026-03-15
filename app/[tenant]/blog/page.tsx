@@ -149,11 +149,11 @@ export default async function TenantBlogIndexPage({
           <p className="text-xl text-muted-foreground">Stories, updates, and insights from my ministry</p>
         </header>
 
-        <BlogFilters categories={categories} tags={tags} basePath="/blog" />
+        <BlogFilters categories={categories} tags={tags} basePath={`/${tenantSlug}/blog`} />
 
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link key={post.id} href={`/blog/${post.slug}`} className="group">
+            <Link key={post.id} href={`/${tenantSlug}/blog/${post.slug}`} className="group">
               <article className="h-full">
                 {post.featured_image_url && (
                   <div className="mb-6 aspect-[16/10] w-full overflow-hidden rounded-lg">
@@ -211,7 +211,7 @@ export default async function TenantBlogIndexPage({
           </div>
         )}
 
-        <BlogPagination currentPage={page} totalPages={totalPages} basePath="/blog" />
+        <BlogPagination currentPage={page} totalPages={totalPages} basePath={`/${tenantSlug}/blog`} />
       </div>
     </main>
   )

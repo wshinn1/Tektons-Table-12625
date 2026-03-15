@@ -301,7 +301,7 @@ export default async function TenantBlogPostPage({
       {post.navbar_visible === false && (
         <div className="fixed top-4 left-4 z-50">
           <Link
-            href={`/blog/${slug}`}
+            href={`/${tenantSlug}/blog/${slug}`}
             className="inline-flex items-center gap-2 rounded-full bg-background/80 backdrop-blur-sm px-4 py-2 text-sm text-foreground hover:bg-background transition-colors shadow-lg border"
           >
             Show Navigation
@@ -317,7 +317,7 @@ export default async function TenantBlogPostPage({
           <div className="max-w-3xl mx-auto px-6 pt-16 pb-8 sm:px-8">
             {/* Minimal back button */}
             <Link
-              href="/blog"
+              href={`/${tenantSlug}/blog`}
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -417,7 +417,7 @@ export default async function TenantBlogPostPage({
                   </p>
                   {!user && (
                     <Button asChild>
-                      <Link href={`/auth/login?redirect=/blog/${slug}`}>Sign In to Follow</Link>
+                      <Link href={`/auth/login?redirect=/${tenantSlug}/blog/${slug}`}>Sign In to Follow</Link>
                     </Button>
                   )}
                   {user && !isPending && !isFollower && (
