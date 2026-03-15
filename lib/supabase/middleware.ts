@@ -74,8 +74,11 @@ export async function updateSession(request: NextRequest) {
   if (subdomain && !isMarketingPage) {
     const url = request.nextUrl.clone()
 
-    // Rewrite subdomain URLs to the [tenant] dynamic route
-    url.pathname = `/${subdomain}${request.nextUrl.pathname}`
+    // Only prepend subdomain if the path doesn't already start with it
+    // This prevents double-subdomain issues like /wesshinn/wesshinn/admin/...
+    if (!request.nextUrl.pathname.startsWith(`/${subdomain}`)) {
+      url.pathname = `/${subdomain}${request.nextUrl.pathname}`
+    }
 
     const response = NextResponse.rewrite(url)
 
