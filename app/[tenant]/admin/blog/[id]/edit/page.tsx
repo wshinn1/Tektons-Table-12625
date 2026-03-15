@@ -423,7 +423,12 @@ export default function EditBlogPost({ params }: Props) {
 
       console.log("[v0] Blog post saved successfully:", result)
       toast.success(newStatus === "published" ? "Post published!" : "Changes saved!")
-      router.push(`/${tenant}/admin/blog`)
+      // Redirect to blog post when publishing, otherwise stay on admin list
+      if (newStatus === "published") {
+        router.push(`/${tenant}/blog/${slug}`)
+      } else {
+        router.push(`/${tenant}/admin/blog`)
+      }
     } catch (error) {
       console.error("[v0] Failed to save blog post:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
