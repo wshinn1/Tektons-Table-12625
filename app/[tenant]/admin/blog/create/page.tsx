@@ -147,24 +147,31 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
   useEffect(() => {
     async function loadTenant() {
+      console.log("[v0] Blog create: loadTenant called for tenant:", tenant)
+      
       // Check localStorage cache first for instant loading
       try {
         const cached = localStorage.getItem(`tenant_admin_cache_${tenant}`)
+        console.log("[v0] Blog create: cached data:", cached)
         if (cached) {
           const parsed = JSON.parse(cached)
           if (parsed.tenantId) {
+            console.log("[v0] Blog create: using cached tenantId:", parsed.tenantId)
             setTenantId(parsed.tenantId)
             setIsLoadingTenant(false)
             return
           }
         }
       } catch (e) {
+        console.log("[v0] Blog create: cache error:", e)
         // Ignore cache errors
       }
 
       // No cache, fetch from database
+      console.log("[v0] Blog create: no cache, fetching from database...")
       try {
         const supabase = createBrowserClient()
+        console.log("[v0] Blog create: supabase client created")
 
         const { data: tenantData, error } = await supabase
           .from("tenants")
@@ -172,7 +179,10 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           .eq("subdomain", tenant)
           .single()
 
+        console.log("[v0] Blog create: tenant query result:", { tenantData, error })
+
         if (error || !tenantData) {
+          console.log("[v0] Blog create: tenant query failed:", error)
           toast.error("Failed to load tenant information")
           setIsLoadingTenant(false)
           return
@@ -184,15 +194,18 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           const parsed = existingCache ? JSON.parse(existingCache) : {}
           parsed.tenantId = tenantData.id
           localStorage.setItem(`tenant_admin_cache_${tenant}`, JSON.stringify(parsed))
+          console.log("[v0] Blog create: cached tenantId")
         } catch (e) {
           // Ignore cache errors
         }
 
+        console.log("[v0] Blog create: setting tenantId:", tenantData.id)
         setTenantId(tenantData.id)
       } catch (error) {
-        console.error("Failed to load tenant:", error)
+        console.error("[v0] Blog create: Failed to load tenant:", error)
         toast.error("Failed to load tenant information")
       } finally {
+        console.log("[v0] Blog create: setting isLoadingTenant to false")
         setIsLoadingTenant(false)
       }
     }
@@ -200,6 +213,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
     if (tenant) {
       loadTenant()
     } else {
+      console.log("[v0] Blog create: no tenant param, skipping load")
       setIsLoadingTenant(false)
     }
   }, [tenant])
