@@ -1,17 +1,14 @@
-// Instrumentation file - automatically loaded by Next.js
-// Note: Sentry integration is disabled in v0 preview environment
+// Instrumentation file for Next.js
+// Sentry integration is disabled in v0 preview - enable on production by uncommenting
 
 export async function register() {
-  // Sentry configs only load in production with SENTRY_DSN set
-  if (process.env.SENTRY_DSN) {
-    if (process.env.NEXT_RUNTIME === "nodejs") {
-      await import("./sentry.server.config")
-    }
-
-    if (process.env.NEXT_RUNTIME === "edge") {
-      await import("./sentry.edge.config")
-    }
-  }
+  // Sentry configs would be loaded here in production
+  // if (process.env.NEXT_RUNTIME === "nodejs") {
+  //   await import("./sentry.server.config")
+  // }
+  // if (process.env.NEXT_RUNTIME === "edge") {
+  //   await import("./sentry.edge.config")
+  // }
 }
 
 export const onRequestError = async (
@@ -25,7 +22,7 @@ export const onRequestError = async (
     routeType: "render" | "route" | "action" | "middleware"
   },
 ) => {
-  // Log error to console (Sentry capture happens via sentry configs if enabled)
+  // Log errors to console (Sentry disabled in v0 preview)
   console.error("[Instrumentation] Request error:", {
     error: err,
     path: request.path,
