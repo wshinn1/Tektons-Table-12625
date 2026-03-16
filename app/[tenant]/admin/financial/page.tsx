@@ -88,7 +88,7 @@ export default async function TenantFinancialReports({
               You need to connect Stripe to accept donations and view financial reports.
             </p>
             <Button asChild>
-              <a href="/admin/giving">Go to Giving Settings</a>
+              <a href={`/${subdomain}/admin/giving`}>Go to Giving Settings</a>
             </Button>
           </CardContent>
         </Card>

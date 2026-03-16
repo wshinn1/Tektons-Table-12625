@@ -62,7 +62,7 @@ export default async function CampaignsAdminPage({
           <h1 className="text-3xl font-bold">Campaign Manager</h1>
           <p className="text-muted-foreground mt-2">Create and manage fundraising campaigns for specific goals</p>
         </div>
-        <Link href="/admin/campaigns/new">
+        <Link href={`/${subdomain}/admin/campaigns/new`}>
           <Button size="lg">
             <Plus className="mr-2 h-4 w-4" />
             Create Campaign
@@ -119,7 +119,7 @@ export default async function CampaignsAdminPage({
             <p className="text-muted-foreground mb-4">
               Create your first campaign to start raising funds for specific goals
             </p>
-            <Link href="/admin/campaigns/new">
+            <Link href={`/${subdomain}/admin/campaigns/new`}>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Campaign
@@ -149,12 +149,12 @@ export default async function CampaignsAdminPage({
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Link href={`/admin/campaigns/${campaign.id}/edit`}>
+                      <Link href={`/${subdomain}/admin/campaigns/${campaign.id}/edit`}>
                         <Button variant="outline" size="sm">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Link href={`/campaigns/${campaign.slug}`}>
+                      <Link href={`/${subdomain}/campaigns/${campaign.slug}`}>
                         <Button variant="outline" size="sm">
                           <Eye className="mr-2 h-4 w-4" />
                           View Page
@@ -196,7 +196,7 @@ export default async function CampaignsAdminPage({
 
                     {/* Quick Actions */}
                     <div className="flex items-center gap-2 pt-2 border-t">
-                      <Link href={`/campaigns/${campaign.slug}`}>
+                      <Link href={`/${subdomain}/campaigns/${campaign.slug}`}>
                         <Button variant="link" size="sm">
                           View Public Page
                         </Button>
