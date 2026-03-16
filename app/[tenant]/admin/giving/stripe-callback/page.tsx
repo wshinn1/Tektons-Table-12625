@@ -74,9 +74,9 @@ export default async function StripeCallbackPage({
       })
       .eq("id", tenantId)
 
-    redirect(`/admin/giving?success=connected`)
+    redirect(`/${subdomain}/admin/giving?success=connected`)
   } catch (err) {
     console.error("Stripe Connect error:", err)
-    redirect(`/admin/giving?error=connection_failed`)
+    redirect(`/${subdomain}/admin/giving?error=connection_failed`)
   }
 }

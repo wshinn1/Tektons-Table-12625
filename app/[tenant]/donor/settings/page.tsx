@@ -16,14 +16,14 @@ export default async function DonorSettingsPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/donor-login?redirect=/donor/settings`)
+    redirect(`/${tenantSlug}/auth/donor-login?redirect=/${tenantSlug}/donor/settings`)
   }
 
   // Get tenant info
   const { data: tenant } = await supabase.from("tenants").select("id, full_name").eq("subdomain", tenantSlug).single()
 
   if (!tenant) {
-    redirect("/")
+    redirect(`/${tenantSlug}`)
   }
 
   // Get supporter record

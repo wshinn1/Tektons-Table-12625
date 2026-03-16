@@ -16,13 +16,13 @@ export default async function ComposeNewsletterPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login")
+    redirect(`/${subdomain}/auth/login`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
   if (!tenant || tenant.email !== user.email) {
-    redirect("/")
+    redirect(`/${subdomain}`)
   }
 
   const groups = await getSubscriberGroups(tenant.id)

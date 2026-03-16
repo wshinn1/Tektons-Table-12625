@@ -16,13 +16,13 @@ export default async function EditNewsletterPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/login`)
+    redirect(`/${subdomain}/auth/login`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
   if (!tenant || tenant.email !== user.email) {
-    redirect(`/`)
+    redirect(`/${subdomain}`)
   }
 
   const { data: newsletter } = await supabase
@@ -32,7 +32,7 @@ export default async function EditNewsletterPage({
     .single()
 
   if (!newsletter || newsletter.tenant_id !== tenant.id) {
-    redirect(`/admin/newsletter`)
+    redirect(`/${subdomain}/admin/newsletter`)
   }
 
   const groups = await getSubscriberGroups(tenant.id)

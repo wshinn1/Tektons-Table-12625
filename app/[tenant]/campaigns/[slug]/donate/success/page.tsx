@@ -20,7 +20,7 @@ export default async function DonationSuccessPage({ params, searchParams }: Page
   const { session_id } = await searchParams
 
   if (!session_id) {
-    redirect(`/campaigns/${slug}`)
+    redirect(`/${tenantSubdomain}/campaigns/${slug}`)
   }
 
   const supabase = await createServerClient()
@@ -82,13 +82,13 @@ export default async function DonationSuccessPage({ params, searchParams }: Page
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href={`/campaigns/${slug}`} className="flex-1">
+            <Link href={`/${tenantSubdomain}/campaigns/${slug}`} className="flex-1">
               <Button variant="outline" className="w-full bg-transparent">
                 <Home className="h-4 w-4 mr-2" />
                 Back to Campaign
               </Button>
             </Link>
-            <Link href={`/`} className="flex-1">
+            <Link href={`/${tenantSubdomain}`} className="flex-1">
               <Button className="w-full bg-green-600 hover:bg-green-700">View All Campaigns</Button>
             </Link>
           </div>
