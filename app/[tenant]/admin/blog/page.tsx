@@ -33,7 +33,7 @@ export default async function TenantBlogPage({ params }: Props) {
           <p className="text-muted-foreground">Manage your blog posts</p>
         </div>
         <Button asChild>
-          <Link href="/admin/blog/create">
+          <Link href={`/${tenantSlug}/admin/blog/create`}>
             <PlusCircle className="mr-2 h-4 w-4" />
             New Post
           </Link>
@@ -46,7 +46,7 @@ export default async function TenantBlogPage({ params }: Props) {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground mb-4">No blog posts yet</p>
               <Button asChild>
-                <Link href="/admin/blog/create">Create your first post</Link>
+                <Link href={`/${tenantSlug}/admin/blog/create`}>Create your first post</Link>
               </Button>
             </CardContent>
           </Card>
@@ -69,10 +69,10 @@ export default async function TenantBlogPage({ params }: Props) {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/admin/blog/${post.id}/edit`}>Edit</Link>
+                      <Link href={`/${tenantSlug}/admin/blog/${post.id}/edit`}>Edit</Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/blog/${post.slug}`}>View</Link>
+                      <Link href={`/${tenantSlug}/blog/${post.slug}`}>View</Link>
                     </Button>
                   </div>
                 </div>
