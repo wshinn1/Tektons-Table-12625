@@ -19,7 +19,7 @@ export default async function ContactPage({
         <div className="max-w-md mx-auto px-4 text-center">
           <h1 className="text-3xl font-bold mb-4">Page Not Found</h1>
           <Button asChild>
-            <Link href="/">Return Home</Link>
+            <Link href={`/${tenantSlug}`}>Return Home</Link>
           </Button>
         </div>
       </div>
@@ -32,17 +32,17 @@ export default async function ContactPage({
       <div className="border-b">
         <div className="container mx-auto px-4 py-4 max-w-6xl">
           <div className="flex justify-between items-center">
-            <Link href="/" className="text-xl font-bold">
+            <Link href={`/${tenantSlug}`} className="text-xl font-bold">
               {tenant.name}
             </Link>
             <nav className="flex gap-6">
-              <Link href="/posts" className="text-muted-foreground hover:text-foreground">
+              <Link href={`/${tenantSlug}/posts`} className="text-muted-foreground hover:text-foreground">
                 Updates
               </Link>
-              <Link href="/donate" className="text-muted-foreground hover:text-foreground">
+              <Link href={`/${tenantSlug}/donate`} className="text-muted-foreground hover:text-foreground">
                 Donate
               </Link>
-              <Link href="/contact" className="font-medium">
+              <Link href={`/${tenantSlug}/contact`} className="font-medium">
                 Contact
               </Link>
             </nav>

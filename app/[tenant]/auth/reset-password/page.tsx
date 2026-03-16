@@ -192,7 +192,7 @@ export default function TenantResetPassword({
         </div>
       }
     >
-      <TenantResetPasswordContent />
+      <TenantResetPasswordContent tenantSlug={tenantSlug} />
     </Suspense>
   )
 }
