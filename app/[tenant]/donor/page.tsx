@@ -18,7 +18,7 @@ export default async function DonorDashboard({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/donor-login?redirect=/donor`)
+    redirect(`/${tenantSlug}/auth/donor-login?redirect=/${tenantSlug}/donor`)
   }
 
   // Get tenant info
@@ -29,7 +29,7 @@ export default async function DonorDashboard({
     .single()
 
   if (!tenant) {
-    redirect("/")
+    redirect(`/${tenantSlug}`)
   }
 
   const { data: financialSupporter } = await supabase

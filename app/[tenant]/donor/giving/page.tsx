@@ -18,14 +18,14 @@ export default async function DonorGivingHistory({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/donor-login?redirect=/donor/giving`)
+    redirect(`/${tenantSlug}/auth/donor-login?redirect=/${tenantSlug}/donor/giving`)
   }
 
   // Get tenant info
   const { data: tenant } = await supabase.from("tenants").select("id, full_name").eq("subdomain", tenantSlug).single()
 
   if (!tenant) {
-    redirect("/")
+    redirect(`/${tenantSlug}`)
   }
 
   // Get all donations for this donor to this tenant

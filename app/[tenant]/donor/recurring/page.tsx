@@ -20,7 +20,7 @@ export default async function DonorRecurringPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/donor-login?redirect=/donor/recurring`)
+    redirect(`/${tenantSlug}/auth/donor-login?redirect=/${tenantSlug}/donor/recurring`)
   }
 
   // Get tenant info with stripe account
@@ -31,7 +31,7 @@ export default async function DonorRecurringPage({
     .single()
 
   if (!tenant) {
-    redirect("/")
+    redirect(`/${tenantSlug}`)
   }
 
   // Get supporter record with subscription info
@@ -76,7 +76,7 @@ export default async function DonorRecurringPage({
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/give">Set Up Monthly Giving</Link>
+              <Link href={`/${tenantSlug}/giving`}>Set Up Monthly Giving</Link>
             </Button>
           </CardContent>
         </Card>

@@ -33,10 +33,10 @@ export default async function GivingSuccessPage({
         </p>
         <div className="space-y-4">
           <Button asChild className="w-full">
-            <Link href="/">Return to Homepage</Link>
+            <Link href={`/${tenantSlug}`}>Return to Homepage</Link>
           </Button>
           <Button asChild variant="outline" className="w-full bg-transparent">
-            <Link href="/giving">Make Another Gift</Link>
+            <Link href={`/${tenantSlug}/giving`}>Make Another Gift</Link>
           </Button>
         </div>
       </div>

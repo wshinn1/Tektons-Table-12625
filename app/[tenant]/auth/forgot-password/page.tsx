@@ -74,7 +74,7 @@ export default function TenantForgotPassword() {
             </div>
 
             <Button asChild variant="outline" className="w-full bg-transparent">
-              <Link href="/auth/login">
+              <Link href={`/${subdomain}/auth/login`}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Login
               </Link>
@@ -118,7 +118,7 @@ export default function TenantForgotPassword() {
 
             <div className="text-center text-sm text-muted-foreground">
               Remember your password?{" "}
-              <Link href="/auth/login" className="text-primary hover:underline">
+              <Link href={`/${subdomain}/auth/login`} className="text-primary hover:underline">
                 Back to Login
               </Link>
             </div>

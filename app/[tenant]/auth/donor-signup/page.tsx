@@ -108,7 +108,7 @@ export default function DonorSignupPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Link href="/auth/donor-login">
+            <Link href={`/${tenantSlug}/auth/donor-login`}>
               <Button variant="outline" className="mt-4 bg-transparent">
                 Go to Login
               </Button>
@@ -213,13 +213,13 @@ export default function DonorSignupPage({
 
             <div className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/auth/donor-login" className="text-primary hover:underline">
+              <Link href={`/${tenantSlug}/auth/donor-login`} className="text-primary hover:underline">
                 Log in
               </Link>
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
-              <Link href="/" className="text-primary hover:underline">
+              <Link href={`/${tenantSlug}`} className="text-primary hover:underline">
                 Return to site
               </Link>
             </div>

@@ -12,11 +12,11 @@ export default async function StripeCallbackPage({
   const { code, state, error } = await searchParams
 
   if (error) {
-    redirect(`/admin/giving?error=${error}`)
+    redirect(`/${subdomain}/admin/giving?error=${error}`)
   }
 
   if (!code || !state) {
-    redirect(`/admin/giving?error=missing_params`)
+    redirect(`/${subdomain}/admin/giving?error=missing_params`)
   }
 
   const supabase = await createClient()
@@ -26,7 +26,7 @@ export default async function StripeCallbackPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/login`)
+    redirect(`/${subdomain}/auth/login`)
   }
 
   // Parse state to get tenant ID
@@ -41,7 +41,7 @@ export default async function StripeCallbackPage({
     .single()
 
   if (!tenant || tenant.id !== user.id) {
-    redirect(`/admin/giving?error=unauthorized`)
+    redirect(`/${subdomain}/admin/giving?error=unauthorized`)
   }
 
   // Exchange authorization code for access token
@@ -61,7 +61,7 @@ export default async function StripeCallbackPage({
     const data = await response.json()
 
     if (data.error) {
-      redirect(`/admin/giving?error=${data.error}`)
+      redirect(`/${subdomain}/admin/giving?error=${data.error}`)
     }
 
     // Store the connected account ID
@@ -74,9 +74,9 @@ export default async function StripeCallbackPage({
       })
       .eq("id", tenantId)
 
-    redirect(`/admin/giving?success=connected`)
+    redirect(`/${subdomain}/admin/giving?success=connected`)
   } catch (err) {
     console.error("Stripe Connect error:", err)
-    redirect(`/admin/giving?error=connection_failed`)
+    redirect(`/${subdomain}/admin/giving?error=connection_failed`)
   }
 }

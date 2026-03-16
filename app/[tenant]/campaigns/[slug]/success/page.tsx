@@ -25,7 +25,7 @@ export default async function CampaignSuccessPage({ params, searchParams }: Page
   const { session_id } = await searchParams
 
   if (!session_id) {
-    redirect(`/campaigns/${slug}`)
+    redirect(`/${tenantSubdomain}/campaigns/${slug}`)
   }
 
   const supabase = await createServerClient()
@@ -93,13 +93,13 @@ export default async function CampaignSuccessPage({ params, searchParams }: Page
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button asChild variant="default" className="flex-1">
-              <Link href={`/campaigns/${slug}`}>
+              <Link href={`/${tenantSubdomain}/campaigns/${slug}`}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Campaign
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex-1 bg-transparent">
-              <Link href="/">View All Campaigns</Link>
+              <Link href={`/${tenantSubdomain}`}>View All Campaigns</Link>
             </Button>
           </div>
         </CardContent>

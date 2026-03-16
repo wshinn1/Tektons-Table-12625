@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
-function TenantResetPasswordContent() {
+function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
@@ -58,7 +58,7 @@ function TenantResetPasswordContent() {
       } else {
         setSuccess(true)
         setTimeout(() => {
-          router.push("/auth/login")
+          router.push(`/${tenantSlug}/auth/login`)
         }, 3000)
       }
     } catch (err) {
@@ -82,7 +82,7 @@ function TenantResetPasswordContent() {
             </Alert>
 
             <Button asChild className="w-full">
-              <Link href="/auth/forgot-password">Request New Reset Link</Link>
+              <Link href={`/${tenantSlug}/auth/forgot-password`}>Request New Reset Link</Link>
             </Button>
           </CardContent>
         </Card>
@@ -111,7 +111,7 @@ function TenantResetPasswordContent() {
             <p className="text-sm text-muted-foreground text-center">Redirecting to login page...</p>
 
             <Button asChild className="w-full">
-              <Link href="/auth/login">Go to Login</Link>
+              <Link href={`/${tenantSlug}/auth/login`}>Go to Login</Link>
             </Button>
           </CardContent>
         </Card>
@@ -171,7 +171,14 @@ function TenantResetPasswordContent() {
   )
 }
 
-export default function TenantResetPassword() {
+import { use } from "react"
+
+export default function TenantResetPassword({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant: tenantSlug } = use(params)
   return (
     <Suspense
       fallback={
@@ -185,7 +192,7 @@ export default function TenantResetPassword() {
         </div>
       }
     >
-      <TenantResetPasswordContent />
+      <TenantResetPasswordContent tenantSlug={tenantSlug} />
     </Suspense>
   )
 }

@@ -78,11 +78,11 @@ export function TenantSidebar({
   const publicNavSections: NavSection[] = [
     {
       items: [
-        { label: "Home", href: `/` },
-        { label: "About", href: `/about` },
-        { label: "Support", href: `/giving` },
-        { label: "Subscribe", href: `/subscribe` },
-        { label: "Contact", href: `/contact` },
+        { label: "Home", href: `/${subdomain}` },
+        { label: "About", href: `/${subdomain}/about` },
+        { label: "Support", href: `/${subdomain}/giving` },
+        { label: "Subscribe", href: `/${subdomain}/subscribe` },
+        { label: "Contact", href: `/${subdomain}/contact` },
       ],
     },
   ]
@@ -92,23 +92,23 @@ export function TenantSidebar({
         {
           title: "ADMIN",
           items: [
-            { label: "New Post", href: `/admin/blog/create` },
-            { label: "Manage Posts", href: `/admin/blog` },
-            { label: "Edit About Page", href: `/admin/about` },
-            { label: "Manage Giving", href: `/admin/giving` },
-            { label: "Manage Campaigns", href: `/admin/campaigns` },
-            { label: "Form Submissions", href: `/admin/contact-submissions` },
-            { label: "Navigation Menu", href: `/admin/navigation` },
-            { label: "Email Newsletter", href: `/admin/newsletter` },
-            { label: "Supporters", href: `/admin/supporters` },
-            { label: "Financial Reports", href: `/admin/financial` },
-            { label: "Blog Analytics", href: `/admin/analytics` },
-            { label: "User Management", href: `/admin/users` },
-            { label: "Settings", href: `/admin/settings` },
+            { label: "New Post", href: `/${subdomain}/admin/blog/create` },
+            { label: "Manage Posts", href: `/${subdomain}/admin/blog` },
+            { label: "Edit About Page", href: `/${subdomain}/admin/about` },
+            { label: "Manage Giving", href: `/${subdomain}/admin/giving` },
+            { label: "Manage Campaigns", href: `/${subdomain}/admin/campaigns` },
+            { label: "Form Submissions", href: `/${subdomain}/admin/contact-submissions` },
+            { label: "Navigation Menu", href: `/${subdomain}/admin/navigation` },
+            { label: "Email Newsletter", href: `/${subdomain}/admin/newsletter` },
+            { label: "Supporters", href: `/${subdomain}/admin/supporters` },
+            { label: "Financial Reports", href: `/${subdomain}/admin/financial` },
+            { label: "Blog Analytics", href: `/${subdomain}/admin/analytics` },
+            { label: "User Management", href: `/${subdomain}/admin/users` },
+            { label: "Settings", href: `/${subdomain}/admin/settings` },
             ...(pageBuilderEnabled
               ? [
-                  { label: "Custom Pages", href: `/admin/pages` },
-                  { label: "Menu Manager", href: `/admin/menu` },
+                  { label: "Custom Pages", href: `/${subdomain}/admin/pages` },
+                  { label: "Menu Manager", href: `/${subdomain}/admin/menu` },
                 ]
               : []),
           ],
@@ -311,11 +311,11 @@ export function TenantSidebar({
                     return (
                       <Link
                         key={campaign.id}
-                        href={`/campaigns/${campaign.slug}`}
+                        href={`/${subdomain}/campaigns/${campaign.slug}`}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
                           "flex flex-col gap-1 px-3 py-2 rounded-lg text-sm font-open-sans transition-colors w-full text-left",
-                          isActive(`/campaigns/${campaign.slug}`)
+                          isActive(`/${subdomain}/campaigns/${campaign.slug}`)
                             ? "bg-green-50 text-green-900 font-bold"
                             : "text-black font-semibold hover:bg-gray-50",
                         )}

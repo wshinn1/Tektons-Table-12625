@@ -26,7 +26,7 @@ export default async function EditPagePage({ params }: Props) {
   }
 
   if (!tenant.page_builder_enabled) {
-    redirect(`/admin`)
+    redirect(`/${tenantSlug}/admin`)
   }
 
   const page = await getTenantPage(pageId)

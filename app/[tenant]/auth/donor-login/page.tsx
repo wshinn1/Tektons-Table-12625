@@ -36,7 +36,7 @@ export default function DonorLoginPage({
       if (result.error) {
         setError(result.error)
       } else {
-        router.push("/donor")
+        router.push(`/${tenantSlug}/donor`)
         router.refresh()
       }
     } catch (err) {
@@ -102,20 +102,20 @@ export default function DonorLoginPage({
             </Button>
 
             <div className="text-center text-sm">
-              <Link href="/auth/supporter-forgot-password" className="text-muted-foreground hover:text-primary">
+              <Link href={`/${tenantSlug}/auth/supporter-forgot-password`} className="text-muted-foreground hover:text-primary">
                 Forgot password?
               </Link>
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link href="/auth/donor-signup" className="text-primary hover:underline">
+              <Link href={`/${tenantSlug}/auth/donor-signup`} className="text-primary hover:underline">
                 Create one
               </Link>
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
-              <Link href="/" className="text-primary hover:underline">
+              <Link href={`/${tenantSlug}`} className="text-primary hover:underline">
                 Return to site
               </Link>
             </div>

@@ -22,7 +22,7 @@ export default async function DonationCheckoutPage({
   const isSubdomain = tenantSubdomain === subdomain
 
   if (!tierId && !customAmount) {
-    redirect(`/giving`)
+    redirect(`/${subdomain}/giving`)
   }
 
   const supabase = await createServerClient()
@@ -44,7 +44,7 @@ export default async function DonationCheckoutPage({
   if (tierId) {
     tier = DEFAULT_DONATION_TIERS.find((t) => t.id === tierId)
     if (!tier) {
-      redirect(`/giving`)
+      redirect(`/${subdomain}/giving`)
     }
     tierAmount = tier.amountInCents / 100
     isRecurring = tier.recurring
@@ -52,7 +52,7 @@ export default async function DonationCheckoutPage({
   } else if (customAmount) {
     const amount = Number.parseFloat(customAmount)
     if (Number.isNaN(amount) || amount <= 0) {
-      redirect(`/giving`)
+      redirect(`/${subdomain}/giving`)
     }
     tierAmount = amount
     isRecurring = donationType === "monthly"

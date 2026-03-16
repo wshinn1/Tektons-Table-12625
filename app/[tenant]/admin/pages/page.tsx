@@ -31,7 +31,7 @@ export default async function TenantPagesPage({ params }: Props) {
 
   // Check if page builder is enabled
   if (!tenant.page_builder_enabled) {
-    redirect(`/admin`)
+    redirect(`/${tenantSlug}/admin`)
   }
 
   const pages = await getTenantPages(tenant.id)
@@ -44,7 +44,7 @@ export default async function TenantPagesPage({ params }: Props) {
           <p className="text-muted-foreground">Create and manage custom pages for your site</p>
         </div>
         <Button asChild>
-          <Link href={`/admin/pages/new`}>
+          <Link href={`/${tenantSlug}/admin/pages/new`}>
             <PlusCircle className="mr-2 h-4 w-4" />
             New Page
           </Link>
@@ -58,7 +58,7 @@ export default async function TenantPagesPage({ params }: Props) {
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">No custom pages yet</p>
               <Button asChild>
-                <Link href={`/admin/pages/new`}>Create your first page</Link>
+                <Link href={`/${tenantSlug}/admin/pages/new`}>Create your first page</Link>
               </Button>
             </CardContent>
           </Card>
@@ -81,11 +81,11 @@ export default async function TenantPagesPage({ params }: Props) {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/admin/pages/${page.id}/edit`}>Edit</Link>
+                      <Link href={`/${tenantSlug}/admin/pages/${page.id}/edit`}>Edit</Link>
                     </Button>
                     {page.status === "published" && (
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/p/${page.slug}`} target="_blank">
+                        <Link href={`/${tenantSlug}/p/${page.slug}`} target="_blank">
                           <ExternalLink className="h-4 w-4" />
                         </Link>
                       </Button>

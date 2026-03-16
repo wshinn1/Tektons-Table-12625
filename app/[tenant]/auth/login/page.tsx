@@ -77,7 +77,7 @@ export default function TenantLoginPage() {
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+                    <Link href={`/${subdomain}/auth/forgot-password`} className="text-sm text-muted-foreground hover:text-primary">
                       Forgot password?
                     </Link>
                   </div>
@@ -105,7 +105,7 @@ export default function TenantLoginPage() {
               </div>
             </form>
             <div className="mt-4 text-center text-sm">
-              <Link href="/" className="text-muted-foreground hover:underline">
+              <Link href={`/${subdomain}`} className="text-muted-foreground hover:underline">
                 ← Back to site
               </Link>
             </div>

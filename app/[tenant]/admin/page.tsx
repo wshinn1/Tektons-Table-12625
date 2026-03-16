@@ -127,13 +127,13 @@ export default async function TenantAdminDashboard({
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <a href="/admin/blog/create" className="block text-sm text-blue-600 hover:underline">
+            <a href={`/${subdomain}/admin/blog/create`} className="block text-sm text-blue-600 hover:underline">
               Create New Post
             </a>
-            <a href="/admin/giving" className="block text-sm text-blue-600 hover:underline">
+            <a href={`/${subdomain}/admin/giving`} className="block text-sm text-blue-600 hover:underline">
               Set Up Giving Page
             </a>
-            <a href="/admin/newsletter" className="block text-sm text-blue-600 hover:underline">
+            <a href={`/${subdomain}/admin/newsletter`} className="block text-sm text-blue-600 hover:underline">
               Send Newsletter
             </a>
           </CardContent>
