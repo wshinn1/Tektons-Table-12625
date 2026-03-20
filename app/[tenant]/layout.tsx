@@ -775,6 +775,8 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
               user={user}
               pageBuilderEnabled={pageBuilderEnabled}
             />
+            {/* The sidebar component handles its own width (64 or 16 when collapsed) */}
+            {/* Content has ml-64 by default, but CSS transitions handle the sidebar collapse */}
             <main className="min-h-screen transition-all duration-300 md:ml-64">{children}</main>
           </div>
         </div>

@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, RefreshCw } from "lucide-react"
 
+// Use environment variable for main site URL, fallback to tektonstable.com for production
+const MAIN_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://tektonstable.com"
+
 export function SessionSyncPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
   const [isTransferring, setIsTransferring] = useState(false)
@@ -13,7 +16,7 @@ export function SessionSyncPrompt() {
     // Check if there's a session on the main domain
     const checkMainSession = async () => {
       try {
-        const response = await fetch("https://tektonstable.com/api/auth/check-main-session", {
+        const response = await fetch(`${MAIN_SITE_URL}/api/auth/check-main-session`, {
           credentials: "include",
         })
         const data = await response.json()
@@ -32,7 +35,7 @@ export function SessionSyncPrompt() {
   const handleTransfer = async () => {
     setIsTransferring(true)
     try {
-      const response = await fetch("https://tektonstable.com/api/auth/check-main-session", {
+      const response = await fetch(`${MAIN_SITE_URL}/api/auth/check-main-session`, {
         credentials: "include",
       })
       const data = await response.json()

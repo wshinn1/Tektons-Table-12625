@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useState, useEffect, useCallback } from "react"
@@ -65,7 +66,6 @@ export function TenantAdminSidebar({
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [isNavigating, setIsNavigating] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -79,10 +79,6 @@ export function TenantAdminSidebar({
       }
     }
   }, [subdomain, mounted])
-
-  useEffect(() => {
-    setIsNavigating(false)
-  }, [pathname])
 
   const toggleCollapsed = () => {
     const newState = !isCollapsed
@@ -103,19 +99,13 @@ export function TenantAdminSidebar({
   const allItems = [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
 
   const handleNavClick = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-      if (isNavigating) {
-        e.preventDefault()
-        return
+    (isMobile: boolean) => {
+      // For mobile, close the sheet - navigation happens naturally via Link
+      if (isMobile) {
+        setMobileOpen(false)
       }
-
-      e.preventDefault()
-
-      setIsNavigating(true)
-
-      window.location.href = href
     },
-    [isNavigating],
+    [],
   )
 
   const handleSignOut = async (formData: FormData) => {
@@ -165,44 +155,38 @@ export function TenantAdminSidebar({
           const Icon = item.icon
           const active = isActive(item.href)
           return (
-            <a
+            <Link
               key={item.href}
               href={item.href}
-              onClick={(e) => {
-                if (isMobile) setMobileOpen(false)
-                handleNavClick(e, item.href)
-              }}
+              onClick={() => handleNavClick(isMobile)}
               title={!isMobile && isCollapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation select-none",
+                active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
                 !isMobile && isCollapsed && "justify-center",
               )}
             >
               <Icon className="h-5 w-5 shrink-0" />
               {(isMobile || !isCollapsed) && <span>{item.label}</span>}
-            </a>
+            </Link>
           )
         })}
       </nav>
 
       {/* Footer */}
       <div className={cn("border-t border-gray-800 p-2 space-y-1", !isMobile && isCollapsed && "px-1")}>
-        <a
+        <Link
           href={`/${subdomain}`}
-          onClick={(e) => {
-            if (isMobile) setMobileOpen(false)
-            handleNavClick(e, `/${subdomain}`)
-          }}
+          onClick={() => handleNavClick(isMobile)}
           title={!isMobile && isCollapsed ? "View Site" : undefined}
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors",
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors touch-manipulation active:bg-gray-700 select-none",
             !isMobile && isCollapsed && "justify-center",
           )}
         >
           <ExternalLink className="h-5 w-5 shrink-0" />
           {(isMobile || !isCollapsed) && <span>View Site</span>}
-        </a>
+        </Link>
         <form action={handleSignOut}>
           <button
             type="submit"
