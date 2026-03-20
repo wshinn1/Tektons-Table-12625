@@ -1,24 +1,24 @@
 "use client"
 
 import type React from "react"
+import { Suspense } from "react"
 
 import { createClient as createBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useRouter, useSearchParams, useParams } from "next/navigation"
+import { useSearchParams, useParams } from "next/navigation"
 import { useState } from "react"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 
-export default function TenantLoginPage() {
+function TenantLoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
 
@@ -42,8 +42,13 @@ export default function TenantLoginPage() {
       }
 
       if (data.session) {
-        router.push(redirectTo)
-        router.refresh()
+        // Add a small delay to ensure cookies are properly set before navigation
+        // This helps with mobile browsers that may have race conditions
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Use window.location for a full page reload to ensure cookies are read fresh
+        // This prevents the mobile login loop issue
+        window.location.href = redirectTo
       }
     } catch (err: any) {
       setError(err.message || "Failed to sign in")
@@ -113,5 +118,24 @@ export default function TenantLoginPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function TenantLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10">
+        <div className="w-full max-w-sm">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Admin Login</CardTitle>
+              <CardDescription>Loading...</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    }>
+      <TenantLoginForm />
+    </Suspense>
   )
 }

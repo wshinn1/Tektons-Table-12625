@@ -74,7 +74,7 @@ const defaultNavItems: NavItem[] = [
   { id: "contact", label: "Contact", url: "/contact" },
 ]
 
-export default function TenantLayout({ children, params }: TenantLayoutProps) {
+function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -145,7 +145,6 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
                 setIsPersistedAdmin(true)
                 setIsTenantOwner(true)
                 setIsCheckingAuth(false)
-                console.log("[v0] Loaded cached admin session with pageBuilderEnabled:", cachedPageBuilderEnabled)
               } else if (isExpired) {
                 localStorage.removeItem(`tenant-owner-${detectedSubdomain}`)
               }
@@ -167,7 +166,7 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
     const inIframe = window.self !== window.top
     setIsInIframe(inIframe)
 
-    const embedParam = searchParams.get("embed") === "true"
+    const embedParam = searchParams?.get("embed") === "true"
     setIsEmbedMode(embedParam || inIframe)
 
     if (inIframe || embedParam) {
@@ -589,11 +588,20 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
           }
         }
 
+        // Use getUser() instead of getSession() as it's more reliable
+        // getUser() validates the session with the server, which is more accurate
+        // especially on mobile browsers where cookie timing can be inconsistent
         const {
-          data: { session },
-        } = await supabase.auth.getSession()
+          data: { user: currentUser },
+          error: userError,
+        } = await supabase.auth.getUser()
 
-        const currentUser = session?.user ?? null
+        // If there's an auth error (invalid/expired token), don't immediately clear state
+        // Just set user to null and let the auth state change handler deal with it
+        if (userError) {
+          console.log("[v0] initAuth: getUser error (may be expected for logged out users):", userError.message)
+        }
+
         setUser(currentUser)
         await checkTenantOwnership(currentUser, subdomain)
       } catch (error) {
@@ -813,6 +821,14 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
         )}
         <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>
       </div>
+    </Suspense>
+  )
+}
+
+export default function TenantLayout({ children, params }: TenantLayoutProps) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <TenantLayoutInner params={params}>{children}</TenantLayoutInner>
     </Suspense>
   )
 }
