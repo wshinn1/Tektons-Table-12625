@@ -589,11 +589,20 @@ export default function TenantLayout({ children, params }: TenantLayoutProps) {
           }
         }
 
+        // Use getUser() instead of getSession() as it's more reliable
+        // getUser() validates the session with the server, which is more accurate
+        // especially on mobile browsers where cookie timing can be inconsistent
         const {
-          data: { session },
-        } = await supabase.auth.getSession()
+          data: { user: currentUser },
+          error: userError,
+        } = await supabase.auth.getUser()
 
-        const currentUser = session?.user ?? null
+        // If there's an auth error (invalid/expired token), don't immediately clear state
+        // Just set user to null and let the auth state change handler deal with it
+        if (userError) {
+          console.log("[v0] initAuth: getUser error (may be expected for logged out users):", userError.message)
+        }
+
         setUser(currentUser)
         await checkTenantOwnership(currentUser, subdomain)
       } catch (error) {

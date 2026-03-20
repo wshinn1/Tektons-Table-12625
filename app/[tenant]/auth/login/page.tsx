@@ -42,8 +42,13 @@ export default function TenantLoginPage() {
       }
 
       if (data.session) {
-        router.push(redirectTo)
-        router.refresh()
+        // Add a small delay to ensure cookies are properly set before navigation
+        // This helps with mobile browsers that may have race conditions
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Use window.location for a full page reload to ensure cookies are read fresh
+        // This prevents the mobile login loop issue
+        window.location.href = redirectTo
       }
     } catch (err: any) {
       setError(err.message || "Failed to sign in")
