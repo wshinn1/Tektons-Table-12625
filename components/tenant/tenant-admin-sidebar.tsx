@@ -34,21 +34,24 @@ interface TenantAdminSidebarProps {
   pageBuilderEnabled?: boolean
 }
 
-const adminNavItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Manage Giving", href: "/admin/giving", icon: Heart },
-  { label: "Blog Posts", href: "/admin/blog", icon: FileText },
-  { label: "Campaigns", href: "/admin/campaigns", icon: FolderOpen },
-  { label: "Supporters", href: "/admin/supporters", icon: Users },
-  { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
-  { label: "Contact Forms", href: "/admin/contact-submissions", icon: MessageSquare },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Navigation", href: "/admin/navigation", icon: MenuIcon },
-  { label: "About Page", href: "/admin/about", icon: UserCircle },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+// Navigation items with paths relative to tenant root - subdomain will be prepended
+const getAdminNavItems = (subdomain: string) => [
+  { label: "Dashboard", href: `/${subdomain}/admin`, icon: LayoutDashboard },
+  { label: "Manage Giving", href: `/${subdomain}/admin/giving`, icon: Heart },
+  { label: "Blog Posts", href: `/${subdomain}/admin/blog`, icon: FileText },
+  { label: "Campaigns", href: `/${subdomain}/admin/campaigns`, icon: FolderOpen },
+  { label: "Supporters", href: `/${subdomain}/admin/supporters`, icon: Users },
+  { label: "Newsletter", href: `/${subdomain}/admin/newsletter`, icon: Mail },
+  { label: "Contact Forms", href: `/${subdomain}/admin/contact-submissions`, icon: MessageSquare },
+  { label: "Analytics", href: `/${subdomain}/admin/analytics`, icon: BarChart3 },
+  { label: "Navigation", href: `/${subdomain}/admin/navigation`, icon: MenuIcon },
+  { label: "About Page", href: `/${subdomain}/admin/about`, icon: UserCircle },
+  { label: "Settings", href: `/${subdomain}/admin/settings`, icon: Settings },
 ]
 
-const pageBuilderItems = [{ label: "Custom Pages", href: "/admin/pages", icon: FolderOpen }]
+const getPageBuilderItems = (subdomain: string) => [
+  { label: "Custom Pages", href: `/${subdomain}/admin/pages`, icon: FolderOpen },
+]
 
 export function TenantAdminSidebar({
   subdomain,
@@ -87,9 +90,12 @@ export function TenantAdminSidebar({
     localStorage.setItem(`tenant-admin-sidebar-collapsed-${subdomain}`, String(newState))
   }
 
+  const adminNavItems = getAdminNavItems(subdomain)
+  const pageBuilderItems = getPageBuilderItems(subdomain)
+
   const isActive = (href: string) => {
-    if (href === "/admin") {
-      return pathname === "/admin" || pathname === `/${subdomain}/admin`
+    if (href === `/${subdomain}/admin`) {
+      return pathname === `/${subdomain}/admin`
     }
     return pathname === href || pathname.startsWith(href + "/")
   }
@@ -183,10 +189,10 @@ export function TenantAdminSidebar({
       {/* Footer */}
       <div className={cn("border-t border-gray-800 p-2 space-y-1", !isMobile && isCollapsed && "px-1")}>
         <a
-          href="/"
+          href={`/${subdomain}`}
           onClick={(e) => {
             if (isMobile) setMobileOpen(false)
-            handleNavClick(e, "/")
+            handleNavClick(e, `/${subdomain}`)
           }}
           title={!isMobile && isCollapsed ? "View Site" : undefined}
           className={cn(
