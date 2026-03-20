@@ -2,6 +2,13 @@
   "name": "tektons-table-12625",
   "version": "0.1.0",
   "private": true,
+  "private": true,
+"scripts": {
+  "build": "next build",
+  "dev": "next dev",
+  "start": "next start"
+},
+"dependencies": {
   "dependencies": {
     "@ai-sdk/openai": "2.0.87",
     "@emotion/is-prop-valid": "latest",
