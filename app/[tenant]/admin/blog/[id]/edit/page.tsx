@@ -770,15 +770,37 @@ export default function EditBlogPost({ params }: Props) {
           Cancel
         </Button>
         <div className="flex gap-2 mr-16">
-          <Button variant="outline" size="sm" onClick={() => handleSave("draft")} disabled={isSaving}>
+          <Button 
+            type="button"
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.preventDefault()
+              console.log("[v0] Mobile Save button clicked (edit)")
+              handleSave("draft")
+            }}
+            disabled={isSaving}
+            className="touch-manipulation"
+          >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {status === "draft" ? "Save" : "Draft"}
           </Button>
           <Button 
+            type="button"
             size="sm" 
-            onClick={() => handleSave("published")} 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log("[v0] Mobile Publish button clicked (edit)")
+              handleSave("published")
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              console.log("[v0] Mobile Publish button touched (edit)")
+              handleSave("published")
+            }}
             disabled={isSaving} 
-            className="bg-green-600 hover:bg-green-700 active:bg-green-800"
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 touch-manipulation"
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {status === "published" ? "Update" : "Publish"}

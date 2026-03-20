@@ -791,18 +791,38 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           Cancel
         </Button>
         <div className="flex gap-2 mr-16">
-          <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || isLoadingTenant}>
+          <Button 
+            type="button"
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.preventDefault()
+              console.log("[v0] Mobile Save button clicked")
+              handleSaveDraft()
+            }}
+            disabled={isSaving || isLoadingTenant}
+            className="touch-manipulation"
+          >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save
           </Button>
           <Button 
+            type="button"
             size="sm" 
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
               console.log("[v0] Mobile Publish button clicked")
               handlePublish()
-            }} 
+            }}
+            onTouchEnd={(e) => {
+              // Handle touch events explicitly for mobile
+              e.preventDefault()
+              console.log("[v0] Mobile Publish button touched")
+              handlePublish()
+            }}
             disabled={isSaving || isLoadingTenant} 
-            className="bg-green-600 hover:bg-green-700 active:bg-green-800"
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 touch-manipulation"
           >
             {(isSaving || isLoadingTenant) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoadingTenant ? "..." : "Publish"}
