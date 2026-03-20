@@ -268,11 +268,14 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
     loadCategories()
   }, [tenantId])
 
-  useEffect(() => {
-    if (!slugManuallyEdited && title) {
-      setSlug(generateSlug(title))
+  // Update slug whenever title changes (unless manually edited)
+  const handleTitleChange = useCallback((newTitle: string) => {
+    setTitle(newTitle)
+    // Auto-update slug if not manually edited
+    if (!slugManuallyEdited) {
+      setSlug(generateSlug(newTitle))
     }
-  }, [title, slugManuallyEdited])
+  }, [slugManuallyEdited])
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSlugManuallyEdited(true)
@@ -293,10 +296,23 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
       const fileName = file.name.toLowerCase()
       const fileType = file.type.toLowerCase()
       const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
+      const hasDngExtension = fileName.endsWith(".dng")
       const hasHeicMimeType = fileType === "image/heic" || fileType === "image/heif"
+      const hasDngMimeType = fileType === "image/x-adobe-dng" || fileType === "image/dng"
       const hasEmptyOrGenericType = fileType === "" || fileType === "application/octet-stream"
 
       const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
+      const isDng = hasDngMimeType || (hasDngExtension && hasEmptyOrGenericType) || hasDngExtension
+
+      // DNG files are RAW camera images - they need special handling
+      // Since we can't convert DNG client-side, inform the user
+      if (isDng) {
+        toast.error(
+          "DNG (RAW) files are not supported. Please convert to JPEG or PNG first, or take a screenshot of the image in your Photos app.",
+          { duration: 8000 }
+        )
+        return null
+      }
 
       if (isHeic) {
         toast.loading("Converting image format...", { id: "image-upload" })
@@ -440,8 +456,8 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
       return
     }
 
-    if (!tenantId) {
-      toast.error("Please wait for page to load")
+    if (!tenantId || isLoadingTenant) {
+      toast.error("Please wait for page to load completely")
       return
     }
 
@@ -478,19 +494,25 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
   }
 
   async function handlePublish() {
+    console.log("[v0] handlePublish called", { title, tenantId, slug, isLoadingTenant })
+    
     if (!title.trim()) {
+      console.log("[v0] handlePublish: No title")
       toast.error("Please enter a title")
       return
     }
 
-    if (!tenantId) {
-      toast.error("Please wait for page to load")
+    if (!tenantId || isLoadingTenant) {
+      console.log("[v0] handlePublish: No tenantId or still loading", { tenantId, isLoadingTenant })
+      toast.error("Please wait for page to load completely")
       return
     }
 
+    console.log("[v0] handlePublish: Starting publish process")
     setIsSaving(true)
     try {
       const postSlug = slug || generateSlug(title)
+      console.log("[v0] handlePublish: Creating blog post with slug:", postSlug)
       await createBlogPost({
         title: title.trim(),
         subtitle: subtitle.trim() || undefined,
@@ -560,7 +582,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
               <Input
                 id="title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Enter your blog post title"
                 className="text-lg font-semibold"
               />
@@ -744,17 +766,46 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2">
+        {/* Spacer for sticky footer on mobile */}
+        <div className="h-20 md:hidden" />
+        
+        {/* Desktop buttons - hidden on mobile */}
+        <div className="hidden md:flex justify-end gap-2">
           <Button variant="outline" onClick={() => router.push(`/${tenant}/admin/blog`)}>
             Cancel
           </Button>
-          <Button variant="outline" onClick={handleSaveDraft} disabled={isSaving}>
+          <Button variant="outline" onClick={handleSaveDraft} disabled={isSaving || isLoadingTenant}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Draft
           </Button>
-          <Button onClick={handlePublish} disabled={isSaving} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={handlePublish} disabled={isSaving || isLoadingTenant} className="bg-green-600 hover:bg-green-700">
+            {(isSaving || isLoadingTenant) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoadingTenant ? "Loading..." : "Publish"}
+          </Button>
+        </div>
+      </div>
+      
+      {/* Mobile sticky footer - visible only on mobile with extra right padding to avoid chat widget */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-3 flex justify-between gap-2 md:hidden z-50 pb-safe">
+        <Button variant="outline" size="sm" onClick={() => router.push(`/${tenant}/admin/blog`)}>
+          Cancel
+        </Button>
+        <div className="flex gap-2 mr-16">
+          <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || isLoadingTenant}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Publish
+            Save
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={() => {
+              console.log("[v0] Mobile Publish button clicked")
+              handlePublish()
+            }} 
+            disabled={isSaving || isLoadingTenant} 
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800"
+          >
+            {(isSaving || isLoadingTenant) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoadingTenant ? "..." : "Publish"}
           </Button>
         </div>
       </div>
