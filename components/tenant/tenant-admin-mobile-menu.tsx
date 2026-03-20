@@ -122,14 +122,17 @@ export function TenantAdminMobileMenu({
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={handleMenuItemClick}
+                onClick={() => {
+                  // Close menu - navigation will happen naturally via Link
+                  setShowMenu(false)
+                }}
                 className={cn(
-                  "flex items-center justify-center gap-4 px-4 py-4 rounded-xl text-lg font-medium transition-colors",
-                  active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white",
+                  "flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium transition-colors w-full touch-manipulation select-none",
+                  active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
                 )}
               >
                 <Icon className="h-6 w-6 shrink-0" />
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
               </Link>
             )
           })}
@@ -139,22 +142,23 @@ export function TenantAdminMobileMenu({
         <div className="border-t border-gray-800 p-4 space-y-2">
           <Link
             href={`/${subdomain}`}
-            className="flex items-center justify-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+            onClick={() => setShowMenu(false)}
+            className="flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 select-none"
           >
             <ExternalLink className="h-6 w-6 shrink-0" />
-            <span>View Site</span>
+            <span className="flex-1">View Site</span>
           </Link>
           <button
             type="button"
             onClick={handleSignOut}
             disabled={isSigningOut}
             className={cn(
-              "w-full flex items-center justify-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-red-900/50 hover:text-red-300 transition-colors",
+              "w-full flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-red-900/50 hover:text-red-300 transition-colors touch-manipulation active:bg-red-800/50",
               isSigningOut && "opacity-50 cursor-not-allowed",
             )}
           >
             <LogOut className="h-6 w-6 shrink-0" />
-            <span>{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
+            <span className="flex-1">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
           </button>
         </div>
       </div>

@@ -569,6 +569,18 @@ export async function uploadBlogImage(formData: FormData) {
     return { success: false, error: "No file provided" }
   }
 
+  // Check if it's a DNG file first and reject with helpful message
+  const isDng = file.name.toLowerCase().endsWith('.dng') || 
+    file.type === 'image/x-adobe-dng' || 
+    file.type === 'image/dng'
+  
+  if (isDng) {
+    return { 
+      success: false, 
+      error: "DNG (RAW) files are not supported. Please convert to JPEG or PNG first, or take a screenshot of the image in your Photos app." 
+    }
+  }
+
   if (!file.type.startsWith("image/") && !file.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
     return { success: false, error: "File must be an image" }
   }

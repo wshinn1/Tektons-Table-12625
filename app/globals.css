@@ -403,3 +403,8 @@ html.embedded-mode .lg\:gap-12 {
 html.embedded-mode .support-chatbot {
   display: none !important;
 }
+
+/* Safe area padding for mobile devices with notches/home indicators */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}

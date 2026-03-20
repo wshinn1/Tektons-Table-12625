@@ -313,9 +313,21 @@ export default function EditBlogPost({ params }: Props) {
     const fileName = file.name.toLowerCase()
     const fileType = file.type.toLowerCase()
     const hasHeicExtension = fileName.endsWith(".heic") || fileName.endsWith(".heif")
+    const hasDngExtension = fileName.endsWith(".dng")
     const hasHeicMimeType = fileType === "image/heic" || fileType === "image/heif"
+    const hasDngMimeType = fileType === "image/x-adobe-dng" || fileType === "image/dng"
     const hasEmptyOrGenericType = fileType === "" || fileType === "application/octet-stream"
     const isHeic = hasHeicMimeType || (hasHeicExtension && hasEmptyOrGenericType) || hasHeicExtension
+    const isDng = hasDngMimeType || (hasDngExtension && hasEmptyOrGenericType) || hasDngExtension
+
+    // DNG files are RAW camera images - they need special handling
+    if (isDng) {
+      toast.error(
+        "DNG (RAW) files are not supported. Please convert to JPEG or PNG first, or take a screenshot of the image in your Photos app.",
+        { duration: 8000 }
+      )
+      return
+    }
 
     if (isHeic) {
       toast.loading("Converting image format...", { id: "image-upload" })
@@ -478,8 +490,10 @@ export default function EditBlogPost({ params }: Props) {
             </Button>
             <h1 className="text-lg font-semibold text-muted-foreground">Edit Blog Post</h1>
           </div>
-          <div className="flex gap-2">
+          {/* Desktop buttons */}
+          <div className="hidden md:flex gap-2">
             <Button variant="outline" onClick={() => handleSave("draft")} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {status === "draft" ? "Save Draft" : "Unpublish"}
             </Button>
             <Button
@@ -487,10 +501,14 @@ export default function EditBlogPost({ params }: Props) {
               disabled={isSaving}
               className="bg-green-600 hover:bg-green-700"
             >
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {status === "published" ? "Update" : "Publish"}
             </Button>
           </div>
         </div>
+        
+        {/* Spacer for mobile sticky footer */}
+        <div className="h-20 md:hidden" />
 
         <Card className="mb-6">
           <CardHeader>
@@ -744,6 +762,50 @@ export default function EditBlogPost({ params }: Props) {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Mobile sticky footer - visible only on mobile with extra right padding to avoid chat widget */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-3 flex justify-between gap-2 md:hidden z-50 pb-safe">
+        <Button variant="outline" size="sm" onClick={() => router.push(`/${tenant}/admin/blog`)}>
+          Cancel
+        </Button>
+        <div className="flex gap-2 mr-16">
+          <Button 
+            type="button"
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.preventDefault()
+              console.log("[v0] Mobile Save button clicked (edit)")
+              handleSave("draft")
+            }}
+            disabled={isSaving}
+            className="touch-manipulation"
+          >
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {status === "draft" ? "Save" : "Draft"}
+          </Button>
+          <Button 
+            type="button"
+            size="sm" 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log("[v0] Mobile Publish button clicked (edit)")
+              handleSave("published")
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              console.log("[v0] Mobile Publish button touched (edit)")
+              handleSave("published")
+            }}
+            disabled={isSaving} 
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 touch-manipulation"
+          >
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {status === "published" ? "Update" : "Publish"}
+          </Button>
+        </div>
       </div>
 
       <Dialog open={showNewCategoryDialog} onOpenChange={setShowNewCategoryDialog}>
