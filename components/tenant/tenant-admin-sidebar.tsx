@@ -208,29 +208,8 @@ export function TenantAdminSidebar({
 
   return (
     <>
-      <div
-        className="fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-800 px-4 h-14 flex items-center justify-between md:hidden"
-        style={{ zIndex: 9999 }}
-      >
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800 -ml-2">
-              <MenuIcon className="h-6 w-6" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0 bg-gray-900 border-gray-800" style={{ zIndex: 10000 }}>
-            <SheetTitle className="sr-only">Admin Menu</SheetTitle>
-            <div className="flex flex-col h-full text-white">
-              <NavContent isMobile={true} />
-            </div>
-          </SheetContent>
-        </Sheet>
-        <span className="text-white font-semibold truncate flex-1 text-center">{tenantName} Admin</span>
-        <div className="w-10" />
-      </div>
-
       {/* Desktop Sidebar - Always visible on md+ screens */}
+      {/* Note: Mobile menu is handled by TenantAdminMobileMenu component in the layout */}
       <aside
         className={cn(
           "fixed left-0 top-0 h-full bg-gray-900 text-white flex-col transition-all duration-300 z-40",

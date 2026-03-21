@@ -4,7 +4,6 @@ import type React from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
 import {
   LayoutDashboard,
   Heart,
@@ -63,7 +62,7 @@ export function TenantAdminMobileMenu({
   const [menuOpen, setMenuOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
-  console.log("[v0] TenantAdminMobileMenu rendered", { pathname, menuOpen, subdomain })
+
 
   const adminNavItems = getAdminNavItems(subdomain)
   const pageBuilderItems = getPageBuilderItems(subdomain)
@@ -85,7 +84,6 @@ export function TenantAdminMobileMenu({
 
   // Close menu when pathname changes (navigation completed)
   useEffect(() => {
-    console.log("[v0] pathname changed, closing menu", pathname)
     setMenuOpen(false)
   }, [pathname])
 
@@ -116,10 +114,7 @@ export function TenantAdminMobileMenu({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => {
-            console.log("[v0] Hamburger clicked, opening menu")
-            setMenuOpen(true)
-          }}
+          onClick={() => setMenuOpen(true)}
           className="text-white hover:bg-gray-800 -ml-2"
           aria-label="Open menu"
         >
@@ -174,19 +169,27 @@ export function TenantAdminMobileMenu({
                   const Icon = item.icon
                   const active = isActive(item.href)
                   return (
-                    <Link
+                    <button
                       key={item.href}
-                      href={item.href}
+                      type="button"
+                      onClick={() => {
+                        // Close menu first, then navigate
+                        setMenuOpen(false)
+                        // Use window.location for reliable navigation on iOS
+                        window.location.href = item.href
+                      }}
                       className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors w-full touch-manipulation select-none active:scale-[0.98]",
+                        "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors w-full select-none",
+                        "cursor-pointer text-left",
                         active 
                           ? "bg-primary text-white" 
                           : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
                       )}
+                      style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     >
                       <Icon className="h-5 w-5 shrink-0" />
                       <span className="flex-1">{item.label}</span>
-                    </Link>
+                    </button>
                   )
                 })}
               </div>
@@ -194,21 +197,27 @@ export function TenantAdminMobileMenu({
 
             {/* Footer */}
             <div className="border-t border-gray-800 p-3 space-y-1">
-              <Link
-                href={`/${subdomain}`}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 active:scale-[0.98] select-none"
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false)
+                  window.location.href = `/${subdomain}`
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full active:bg-gray-700 select-none cursor-pointer text-left"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 <ExternalLink className="h-5 w-5 shrink-0" />
                 <span className="flex-1">View Site</span>
-              </Link>
+              </button>
               <button
                 type="button"
                 onClick={handleSignOut}
                 disabled={isSigningOut}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-red-900/50 hover:text-red-300 transition-colors touch-manipulation active:bg-red-800/50 active:scale-[0.98]",
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-red-900/50 hover:text-red-300 transition-colors active:bg-red-800/50 cursor-pointer select-none text-left",
                   isSigningOut && "opacity-50 cursor-not-allowed",
                 )}
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 <LogOut className="h-5 w-5 shrink-0" />
                 <span className="flex-1">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
