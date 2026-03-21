@@ -52,9 +52,17 @@ function TenantLoginForm() {
       }
 
       if (data.session) {
-        // Add a small delay to ensure cookies are properly set before navigation
-        // This helps with mobile browsers that may have race conditions
-        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log("[v0] Login successful, session established")
+        
+        // Force a session refresh to ensure cookies are properly set
+        // This is critical for mobile browsers where cookie timing can be inconsistent
+        await supabase.auth.refreshSession()
+        
+        // Add a longer delay to ensure cookies are fully propagated before navigation
+        // Mobile browsers can have race conditions between cookie writes and navigation
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        console.log("[v0] Redirecting to:", redirectTo)
         
         // Use window.location for a full page reload to ensure cookies are read fresh
         // This prevents the mobile login loop issue

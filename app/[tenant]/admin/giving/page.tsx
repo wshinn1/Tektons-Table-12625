@@ -25,7 +25,7 @@ export default async function TenantGivingManager({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/${subdomain}/auth/login`)
+    redirect(`/${subdomain}/auth/login?redirect=/admin/giving`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
