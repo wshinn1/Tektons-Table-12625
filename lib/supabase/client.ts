@@ -55,7 +55,5 @@ export function createBrowserClient() {
   return browserClient
 }
 
-// Keep the existing default export for backward compatibility
-export function createClient() {
-  return createBrowserClient()
-}
+// Alias for backward compatibility - use the same function reference
+export const createClient = createBrowserClient
