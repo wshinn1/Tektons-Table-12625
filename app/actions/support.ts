@@ -65,6 +65,71 @@ Tekton's Table Support Team
   }
 }
 
+export async function submitTenantSupportRequest({
+  email,
+  name,
+  subject,
+  details,
+  tenantName,
+  subdomain,
+}: {
+  email: string
+  name: string
+  subject: string
+  details: string
+  tenantName: string
+  subdomain: string
+}) {
+  try {
+    if (!email || !subject || !details) {
+      return { success: false, error: "Please fill in all required fields." }
+    }
+
+    const resend = getResend()
+
+    const emailContent = `
+Tenant Support Request
+
+Tenant: ${tenantName} (${subdomain})
+From: ${name} (${email})
+Subject: ${subject}
+
+Details:
+${details}
+    `.trim()
+
+    await resend.emails.send({
+      from: `Tekton's Table Support <${FROM_EMAIL}>`,
+      to: SUPPORT_DESTINATION,
+      replyTo: email,
+      subject: `[Tenant Support] ${subject}`,
+      text: emailContent,
+    })
+
+    // Send confirmation to the tenant admin
+    await resend.emails.send({
+      from: `Tekton's Table <${FROM_EMAIL}>`,
+      to: email,
+      subject: `We received your support request: ${subject}`,
+      text: `Hi ${name},
+
+Thank you for reaching out. We've received your support request and will get back to you as soon as possible.
+
+Your request:
+${details}
+
+Best regards,
+Tekton's Table Support Team
+      `.trim(),
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error submitting tenant support request:", error)
+    return { success: false, error: "Failed to send message. Please try again later." }
+  }
+}
+
 export async function escalateChatToHuman({
   email,
   name,
