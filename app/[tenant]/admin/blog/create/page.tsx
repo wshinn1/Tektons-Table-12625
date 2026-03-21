@@ -148,8 +148,6 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
 
   useEffect(() => {
     let isMounted = true
-    let retryCount = 0
-    const maxRetries = 10
     
     async function loadTenant() {
       if (!tenant) {
@@ -157,7 +155,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         return
       }
 
-      // Method 1: Check DOM for tenant-data element (set by layout)
+      // Method 1: Check DOM for tenant-data element (set by layout) - try immediately
       const tenantDataEl = document.getElementById("tenant-data")
       const domTenantId = tenantDataEl?.getAttribute("data-tenant-id")
       if (domTenantId) {
@@ -195,19 +193,9 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
         // Ignore cache errors
       }
 
-      // Method 3: Wait for layout to populate DOM element
-      // The layout also fetches tenant data, so we can wait for it
-      if (retryCount < maxRetries) {
-        retryCount++
-        setTimeout(() => {
-          if (isMounted) {
-            loadTenant()
-          }
-        }, 300)
-        return
-      }
-
-      // Method 4: Fallback - fetch from database ourselves
+      // Method 3: Fetch from database immediately (don't wait for retries)
+      // This is more reliable on subdomain sites where the layout might not
+      // have populated the DOM element yet
       try {
         const supabase = createBrowserClient()
 
@@ -269,18 +257,21 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
   }, [tenantId])
 
   // Update slug whenever title changes (unless manually edited)
-  const handleTitleChange = useCallback((newTitle: string) => {
+  const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
     // Auto-update slug if not manually edited
     if (!slugManuallyEdited) {
-      setSlug(generateSlug(newTitle))
+      const newSlug = generateSlug(newTitle)
+      setSlug(newSlug)
     }
-  }, [slugManuallyEdited])
+  }
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSlugManuallyEdited(true)
     setSlug(generateSlug(e.target.value))
   }
+  
+
 
   const handleImageUpload = useCallback(
     async (file: File) => {
@@ -494,25 +485,19 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
   }
 
   async function handlePublish() {
-    console.log("[v0] handlePublish called", { title, tenantId, slug, isLoadingTenant })
-    
     if (!title.trim()) {
-      console.log("[v0] handlePublish: No title")
       toast.error("Please enter a title")
       return
     }
 
     if (!tenantId || isLoadingTenant) {
-      console.log("[v0] handlePublish: No tenantId or still loading", { tenantId, isLoadingTenant })
       toast.error("Please wait for page to load completely")
       return
     }
 
-    console.log("[v0] handlePublish: Starting publish process")
     setIsSaving(true)
     try {
       const postSlug = slug || generateSlug(title)
-      console.log("[v0] handlePublish: Creating blog post with slug:", postSlug)
       await createBlogPost({
         title: title.trim(),
         subtitle: subtitle.trim() || undefined,
@@ -795,11 +780,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
             type="button"
             variant="outline" 
             size="sm" 
-            onClick={(e) => {
-              e.preventDefault()
-              console.log("[v0] Mobile Save button clicked")
-              handleSaveDraft()
-            }}
+            onClick={handleSaveDraft}
             disabled={isSaving || isLoadingTenant}
             className="touch-manipulation"
           >
@@ -809,18 +790,7 @@ export default function TenantCreateBlogPostPage({ params }: Props) {
           <Button 
             type="button"
             size="sm" 
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              console.log("[v0] Mobile Publish button clicked")
-              handlePublish()
-            }}
-            onTouchEnd={(e) => {
-              // Handle touch events explicitly for mobile
-              e.preventDefault()
-              console.log("[v0] Mobile Publish button touched")
-              handlePublish()
-            }}
+            onClick={handlePublish}
             disabled={isSaving || isLoadingTenant} 
             className="bg-green-600 hover:bg-green-700 active:bg-green-800 touch-manipulation"
           >

@@ -109,7 +109,8 @@ async function uploadWithRetry(
   return { success: false, error: lastError?.message || "Upload failed after retries" }
 }
 
-const handleContentImageUpload = async (file: File): Promise<string | null> => {
+// Content image upload helper - requires tenantId for proper auth
+const createContentImageUploader = (currentTenantId: string) => async (file: File): Promise<string | null> => {
   let processedFile = file
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
@@ -158,6 +159,10 @@ const handleContentImageUpload = async (file: File): Promise<string | null> => {
   try {
     const formData = new FormData()
     formData.append("file", processedFile)
+    // Include tenantId for proper authorization on subdomain sites
+    if (currentTenantId) {
+      formData.append("tenantId", currentTenantId)
+    }
 
     const result = await uploadWithRetry(formData, isMobile ? 3 : 1)
 
@@ -378,6 +383,10 @@ export default function EditBlogPost({ params }: Props) {
     try {
       const formData = new FormData()
       formData.append("file", processedFile)
+      // Include tenantId for proper authorization on subdomain sites
+      if (tenantId) {
+        formData.append("tenantId", tenantId)
+      }
 
       const result = await uploadWithRetry(formData, isMobile ? 3 : 1)
 
@@ -721,7 +730,7 @@ export default function EditBlogPost({ params }: Props) {
               initialContent={content}
               onChange={setContent}
               placeholder="Start writing your blog post..."
-              onImageUpload={handleContentImageUpload}
+              onImageUpload={createContentImageUploader(tenantId)}
             />
           </CardContent>
         </Card>
