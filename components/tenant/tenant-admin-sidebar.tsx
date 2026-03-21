@@ -22,6 +22,7 @@ import {
   ChevronRight,
   ExternalLink,
   UserCircle,
+  HelpCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
@@ -48,6 +49,7 @@ const getAdminNavItems = (subdomain: string) => [
   { label: "Navigation", href: `/${subdomain}/admin/navigation`, icon: MenuIcon },
   { label: "About Page", href: `/${subdomain}/admin/about`, icon: UserCircle },
   { label: "Settings", href: `/${subdomain}/admin/settings`, icon: Settings },
+  { label: "Need Help?", href: `/${subdomain}/admin/help`, icon: HelpCircle },
 ]
 
 const getPageBuilderItems = (subdomain: string) => [
