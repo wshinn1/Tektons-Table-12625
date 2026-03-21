@@ -13,6 +13,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 
+// Tenant admin login form with enhanced error messaging
 function TenantLoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -32,9 +33,18 @@ function TenantLoginForm() {
 
     try {
       const supabase = createBrowserClient()
+      console.log("[v0] Tenant login attempt for:", email, "on subdomain:", subdomain)
+      
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
+      })
+
+      console.log("[v0] Tenant login result:", { 
+        success: !!data.session, 
+        error: signInError?.message,
+        errorCode: signInError?.code,
+        userEmail: data.user?.email 
       })
 
       if (signInError) {
@@ -51,7 +61,18 @@ function TenantLoginForm() {
         window.location.href = redirectTo
       }
     } catch (err: any) {
-      setError(err.message || "Failed to sign in")
+      console.log("[v0] Login error details:", err)
+      // Provide more helpful error messages
+      const errorMessage = err.message || "Failed to sign in"
+      if (errorMessage.includes("Invalid login credentials")) {
+        setError("Invalid email or password. Please check your credentials and try again, or use the 'Forgot password?' link to reset your password.")
+      } else if (errorMessage.includes("Email not confirmed")) {
+        setError("Please confirm your email address before signing in. Check your inbox for a confirmation link.")
+      } else if (errorMessage.includes("Too many requests")) {
+        setError("Too many login attempts. Please wait a few minutes and try again.")
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
