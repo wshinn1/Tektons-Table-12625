@@ -3,7 +3,7 @@
 import type React from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -18,8 +18,8 @@ import {
   MessageSquare,
   LogOut,
   ExternalLink,
-  ArrowLeft,
   UserCircle,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
@@ -60,32 +60,38 @@ export function TenantAdminMobileMenu({
   children,
 }: TenantAdminMobileMenuProps) {
   const pathname = usePathname()
-  const [showMenu, setShowMenu] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+
+  console.log("[v0] TenantAdminMobileMenu rendered", { pathname, menuOpen, subdomain })
 
   const adminNavItems = getAdminNavItems(subdomain)
   const pageBuilderItems = getPageBuilderItems(subdomain)
 
   // Check if a nav item is active based on the current pathname
-  const isActive = (href: string) => {
+  const isActive = useCallback((href: string) => {
     if (href === `/${subdomain}/admin`) {
       return pathname === `/${subdomain}/admin`
     }
     return pathname === href || pathname.startsWith(href + "/")
-  }
+  }, [pathname, subdomain])
 
-  const allItems = [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
+  const allItems = pageBuilderEnabled 
+    ? [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
+    : adminNavItems
 
   // Find current page label
   const currentPage = allItems.find((item) => isActive(item.href))?.label || "Admin"
 
-  const handleNavClick = () => {
-    // Hide the menu and show the page content
-    setShowMenu(false)
-  }
+  // Close menu when pathname changes (navigation completed)
+  useEffect(() => {
+    console.log("[v0] pathname changed, closing menu", pathname)
+    setMenuOpen(false)
+  }, [pathname])
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
+    setMenuOpen(false)
 
     try {
       if (typeof window !== "undefined" && window.localStorage) {
@@ -101,83 +107,116 @@ export function TenantAdminMobileMenu({
     return tenantSignOut(subdomain)
   }
 
-  // Show full-screen menu
-  if (showMenu) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-        {/* Header */}
-        <div className="border-b border-gray-800 p-4">
-          <div className="flex flex-col">
-            <span className="font-bold text-xl">{tenantName}</span>
-            {user?.email && <span className="text-sm text-gray-400">{user.email}</span>}
-          </div>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {allItems.map((item) => {
-            const Icon = item.icon
-            const active = isActive(item.href)
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={handleNavClick}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium transition-colors w-full touch-manipulation select-none",
-                  active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
-                )}
-              >
-                <Icon className="h-6 w-6 shrink-0" />
-                <span className="flex-1">{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="border-t border-gray-800 p-4 space-y-2">
-          <Link
-            href={`/${subdomain}`}
-            onClick={handleNavClick}
-            className="flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 select-none"
-          >
-            <ExternalLink className="h-6 w-6 shrink-0" />
-            <span className="flex-1">View Site</span>
-          </Link>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            className={cn(
-              "w-full flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-red-900/50 hover:text-red-300 transition-colors touch-manipulation active:bg-red-800/50",
-              isSigningOut && "opacity-50 cursor-not-allowed",
-            )}
-          >
-            <LogOut className="h-6 w-6 shrink-0" />
-            <span className="flex-1">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // Show page content with back button
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Top bar with back to menu button */}
-      <div className="fixed top-0 left-0 right-0 bg-gray-900 text-white h-14 flex items-center px-4 z-50">
+      {/* Fixed top bar with hamburger menu */}
+      <header 
+        className="fixed top-0 left-0 right-0 bg-gray-900 text-white h-14 flex items-center px-4 z-50"
+      >
         <Button
           variant="ghost"
-          size="sm"
-          onClick={() => setShowMenu(true)}
-          className="text-white hover:bg-gray-800 -ml-2 gap-2"
+          size="icon"
+          onClick={() => {
+            console.log("[v0] Hamburger clicked, opening menu")
+            setMenuOpen(true)
+          }}
+          className="text-white hover:bg-gray-800 -ml-2"
+          aria-label="Open menu"
         >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Menu</span>
+          <MenuIcon className="h-6 w-6" />
         </Button>
-        <span className="flex-1 text-center font-semibold truncate pr-16">{currentPage}</span>
-      </div>
+        <span className="flex-1 text-center font-semibold truncate px-2">{currentPage}</span>
+        {/* Spacer to balance the hamburger button */}
+        <div className="w-10" />
+      </header>
+
+      {/* Slide-out menu overlay */}
+      {menuOpen && (
+        <div 
+          className="fixed inset-0 z-[100]"
+          aria-modal="true"
+          role="dialog"
+        >
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMenuOpen(false)}
+            aria-hidden="true"
+          />
+          
+          {/* Menu panel */}
+          <nav 
+            className="absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-gray-900 text-white flex flex-col shadow-2xl animate-in slide-in-from-left duration-200"
+          >
+            {/* Header with close button */}
+            <div className="border-b border-gray-800 p-4 flex items-start justify-between">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="font-bold text-xl truncate">{tenantName}</span>
+                {user?.email && (
+                  <span className="text-sm text-gray-400 truncate">{user.email}</span>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMenuOpen(false)}
+                className="text-gray-400 hover:text-white hover:bg-gray-800 shrink-0 -mr-2"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Nav items - scrollable */}
+            <div className="flex-1 p-3 overflow-y-auto overscroll-contain">
+              <div className="space-y-1">
+                {allItems.map((item) => {
+                  const Icon = item.icon
+                  const active = isActive(item.href)
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors w-full touch-manipulation select-none active:scale-[0.98]",
+                        active 
+                          ? "bg-primary text-white" 
+                          : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
+                      )}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="flex-1">{item.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-800 p-3 space-y-1">
+              <Link
+                href={`/${subdomain}`}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 active:scale-[0.98] select-none"
+              >
+                <ExternalLink className="h-5 w-5 shrink-0" />
+                <span className="flex-1">View Site</span>
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-red-900/50 hover:text-red-300 transition-colors touch-manipulation active:bg-red-800/50 active:scale-[0.98]",
+                  isSigningOut && "opacity-50 cursor-not-allowed",
+                )}
+              >
+                <LogOut className="h-5 w-5 shrink-0" />
+                <span className="flex-1">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* Page content */}
       <main className="pt-14">{children}</main>
