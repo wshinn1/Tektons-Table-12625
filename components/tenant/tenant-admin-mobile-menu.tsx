@@ -4,7 +4,7 @@ import type React from "react"
 
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   LayoutDashboard,
   Heart,
@@ -52,6 +52,9 @@ const getPageBuilderItems = (subdomain: string) => [
   { label: "Custom Pages", href: `/${subdomain}/admin/pages`, icon: FolderOpen },
 ]
 
+// Storage key for menu state
+const getMenuStateKey = (subdomain: string) => `tenant-mobile-menu-state-${subdomain}`
+
 export function TenantAdminMobileMenu({
   subdomain,
   tenantName,
@@ -61,12 +64,48 @@ export function TenantAdminMobileMenu({
 }: TenantAdminMobileMenuProps) {
   const pathname = usePathname()
   const router = useRouter()
-  // Track whether user explicitly requested the menu vs content view
-  const [showMenu, setShowMenu] = useState(true)
+  
+  // Start with null to indicate "not yet determined" state
+  const [showMenu, setShowMenu] = useState<boolean | null>(null)
   const [isSigningOut, setIsSigningOut] = useState(false)
-  // Track the pathname when a navigation was initiated
-  const pendingNavigationRef = useRef<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
   const previousPathnameRef = useRef(pathname)
+  const hasInitializedRef = useRef(false)
+  
+  // Initialize from sessionStorage on mount (client-side only)
+  useEffect(() => {
+    if (hasInitializedRef.current) return
+    hasInitializedRef.current = true
+    
+    try {
+      const stored = sessionStorage.getItem(getMenuStateKey(subdomain))
+      if (stored) {
+        const { showMenu: savedShowMenu, timestamp } = JSON.parse(stored)
+        // Only use saved state if it's less than 30 minutes old
+        if (Date.now() - timestamp < 30 * 60 * 1000) {
+          console.log("[v0] Mobile menu: Restored showMenu state from sessionStorage:", savedShowMenu)
+          setShowMenu(savedShowMenu)
+          return
+        }
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+    // Default to showing menu
+    setShowMenu(true)
+  }, [subdomain])
+  
+  // Persist menu state to sessionStorage
+  const persistMenuState = useCallback((show: boolean) => {
+    try {
+      sessionStorage.setItem(
+        getMenuStateKey(subdomain),
+        JSON.stringify({ showMenu: show, timestamp: Date.now() })
+      )
+    } catch (e) {
+      // Ignore errors
+    }
+  }, [subdomain])
 
   const adminNavItems = getAdminNavItems(subdomain)
   const pageBuilderItems = getPageBuilderItems(subdomain)
@@ -83,22 +122,30 @@ export function TenantAdminMobileMenu({
   // Find current page label
   const currentPage = allItems.find((item) => isActive(item.href))?.label || "Admin"
 
-  // Effect to detect when navigation completes and show content
+  // When pathname changes and we were navigating, clear the navigating state
   useEffect(() => {
-    // If we have a pending navigation and the pathname changed to match it
-    if (pendingNavigationRef.current && pathname === pendingNavigationRef.current) {
-      console.log("[v0] Mobile menu: Navigation completed to", pathname)
-      setShowMenu(false)
-      pendingNavigationRef.current = null
+    if (pathname !== previousPathnameRef.current) {
+      console.log("[v0] Mobile menu: Pathname changed to", pathname)
+      setIsNavigating(false)
+      previousPathnameRef.current = pathname
     }
-    // If pathname changed (any navigation happened) and we're not showing menu, stay on content
-    else if (pathname !== previousPathnameRef.current && !showMenu) {
-      // Navigation happened while showing content, stay on content
-      console.log("[v0] Mobile menu: Pathname changed while showing content")
-    }
-    
-    previousPathnameRef.current = pathname
-  }, [pathname, showMenu])
+  }, [pathname])
+  
+  // Custom setShowMenu that also persists to sessionStorage
+  const updateShowMenu = useCallback((show: boolean) => {
+    setShowMenu(show)
+    persistMenuState(show)
+  }, [persistMenuState])
+  
+  // Handle navigation to a menu item using direct window.location for reliable navigation
+  const handleNavigation = useCallback((href: string) => {
+    console.log("[v0] Mobile menu: Navigating to", href)
+    setIsNavigating(true)
+    // Persist state BEFORE navigating
+    persistMenuState(false)
+    // Use window.location for reliable full navigation
+    window.location.href = href
+  }, [persistMenuState])
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -139,15 +186,8 @@ export function TenantAdminMobileMenu({
               <button
                 key={item.href}
                 type="button"
-                onClick={() => {
-                  console.log("[v0] Mobile menu: Navigating to", item.href)
-                  // Set the pending navigation target
-                  pendingNavigationRef.current = item.href
-                  // Use router.push for programmatic navigation
-                  router.push(item.href)
-                  // Immediately hide menu and show content
-                  setShowMenu(false)
-                }}
+                disabled={isNavigating}
+                onClick={() => handleNavigation(item.href)}
                 className={cn(
                   "flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium transition-colors w-full touch-manipulation select-none text-left",
                   active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
@@ -164,10 +204,8 @@ export function TenantAdminMobileMenu({
         <div className="border-t border-gray-800 p-4 space-y-2">
           <button
             type="button"
-            onClick={() => {
-              router.push(`/${subdomain}`)
-              setShowMenu(false)
-            }}
+            disabled={isNavigating}
+            onClick={() => handleNavigation(`/${subdomain}`)}
             className="flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 select-none text-left"
           >
             <ExternalLink className="h-6 w-6 shrink-0" />
@@ -198,7 +236,7 @@ export function TenantAdminMobileMenu({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setShowMenu(true)}
+          onClick={() => updateShowMenu(true)}
           className="text-white hover:bg-gray-800 -ml-2 gap-2"
         >
           <ArrowLeft className="h-5 w-5" />
