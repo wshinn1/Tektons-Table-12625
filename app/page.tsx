@@ -1,3 +1,4 @@
+// v1.0.0 - Homepage with cart merge and checkout improvements
 import { MarketingNavClient } from "@/components/marketing-nav-client"
 import { HomepageSectionRenderer } from "@/components/homepage-section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
