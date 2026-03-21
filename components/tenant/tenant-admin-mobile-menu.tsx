@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState } from "react"
+import Link from "next/link"
 import {
   LayoutDashboard,
   Heart,
@@ -33,28 +33,24 @@ interface TenantAdminMobileMenuProps {
   children: React.ReactNode
 }
 
-// Navigation items - these use browser-visible paths (no subdomain prefix)
-// The middleware handles rewriting subdomain.tektonstable.com/admin to /subdomain/admin internally
-const adminNavItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Manage Giving", href: "/admin/giving", icon: Heart },
-  { label: "Blog Posts", href: "/admin/blog", icon: FileText },
-  { label: "Campaigns", href: "/admin/campaigns", icon: FolderOpen },
-  { label: "Supporters", href: "/admin/supporters", icon: Users },
-  { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
-  { label: "Contact Forms", href: "/admin/contact-submissions", icon: MessageSquare },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Navigation", href: "/admin/navigation", icon: MenuIcon },
-  { label: "About Page", href: "/admin/about", icon: UserCircle },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+// Navigation items - uses subdomain prefix for internal routing
+const getAdminNavItems = (subdomain: string) => [
+  { label: "Dashboard", href: `/${subdomain}/admin`, icon: LayoutDashboard },
+  { label: "Manage Giving", href: `/${subdomain}/admin/giving`, icon: Heart },
+  { label: "Blog Posts", href: `/${subdomain}/admin/blog`, icon: FileText },
+  { label: "Campaigns", href: `/${subdomain}/admin/campaigns`, icon: FolderOpen },
+  { label: "Supporters", href: `/${subdomain}/admin/supporters`, icon: Users },
+  { label: "Newsletter", href: `/${subdomain}/admin/newsletter`, icon: Mail },
+  { label: "Contact Forms", href: `/${subdomain}/admin/contact-submissions`, icon: MessageSquare },
+  { label: "Analytics", href: `/${subdomain}/admin/analytics`, icon: BarChart3 },
+  { label: "Navigation", href: `/${subdomain}/admin/navigation`, icon: MenuIcon },
+  { label: "About Page", href: `/${subdomain}/admin/about`, icon: UserCircle },
+  { label: "Settings", href: `/${subdomain}/admin/settings`, icon: Settings },
 ]
 
-const pageBuilderItems = [
-  { label: "Custom Pages", href: "/admin/pages", icon: FolderOpen },
+const getPageBuilderItems = (subdomain: string) => [
+  { label: "Custom Pages", href: `/${subdomain}/admin/pages`, icon: FolderOpen },
 ]
-
-// Storage key for menu state
-const getMenuStateKey = (subdomain: string) => `tenant-mobile-menu-state-${subdomain}`
 
 export function TenantAdminMobileMenu({
   subdomain,
@@ -64,62 +60,18 @@ export function TenantAdminMobileMenu({
   children,
 }: TenantAdminMobileMenuProps) {
   const pathname = usePathname()
-  
-  // Start with null to indicate "not yet determined" state
-  const [showMenu, setShowMenu] = useState<boolean | null>(null)
+  const [showMenu, setShowMenu] = useState(true)
   const [isSigningOut, setIsSigningOut] = useState(false)
-  const [isNavigating, setIsNavigating] = useState(false)
-  const previousPathnameRef = useRef(pathname)
-  const hasInitializedRef = useRef(false)
-  
-  // Initialize from sessionStorage on mount (client-side only)
-  useEffect(() => {
-    if (hasInitializedRef.current) return
-    hasInitializedRef.current = true
-    
-    try {
-      const stored = sessionStorage.getItem(getMenuStateKey(subdomain))
-      if (stored) {
-        const { showMenu: savedShowMenu, timestamp } = JSON.parse(stored)
-        // Only use saved state if it's less than 30 minutes old
-        if (Date.now() - timestamp < 30 * 60 * 1000) {
-          console.log("[v0] Mobile menu: Restored showMenu state from sessionStorage:", savedShowMenu)
-          setShowMenu(savedShowMenu)
-          return
-        }
-      }
-    } catch (e) {
-      // Ignore errors
-    }
-    // Default to showing menu
-    setShowMenu(true)
-  }, [subdomain])
-  
-  // Persist menu state to sessionStorage
-  const persistMenuState = useCallback((show: boolean) => {
-    try {
-      sessionStorage.setItem(
-        getMenuStateKey(subdomain),
-        JSON.stringify({ showMenu: show, timestamp: Date.now() })
-      )
-    } catch (e) {
-      // Ignore errors
-    }
-  }, [subdomain])
+
+  const adminNavItems = getAdminNavItems(subdomain)
+  const pageBuilderItems = getPageBuilderItems(subdomain)
 
   // Check if a nav item is active based on the current pathname
-  // The pathname from Next.js will be the internal rewritten path (e.g., /ministry/admin/giving)
-  // but our hrefs are browser paths (e.g., /admin/giving), so we need to handle both
   const isActive = (href: string) => {
-    // For the dashboard, exact match is needed
-    if (href === "/admin") {
-      return pathname === "/admin" || pathname === `/${subdomain}/admin`
+    if (href === `/${subdomain}/admin`) {
+      return pathname === `/${subdomain}/admin`
     }
-    // For other pages, check if pathname matches or starts with the href
-    // Also check the rewritten path format
-    const rewrittenHref = `/${subdomain}${href}`
-    return pathname === href || pathname.startsWith(href + "/") ||
-           pathname === rewrittenHref || pathname.startsWith(rewrittenHref + "/")
+    return pathname === href || pathname.startsWith(href + "/")
   }
 
   const allItems = [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
@@ -127,30 +79,10 @@ export function TenantAdminMobileMenu({
   // Find current page label
   const currentPage = allItems.find((item) => isActive(item.href))?.label || "Admin"
 
-  // When pathname changes and we were navigating, clear the navigating state
-  useEffect(() => {
-    if (pathname !== previousPathnameRef.current) {
-      console.log("[v0] Mobile menu: Pathname changed to", pathname)
-      setIsNavigating(false)
-      previousPathnameRef.current = pathname
-    }
-  }, [pathname])
-  
-  // Custom setShowMenu that also persists to sessionStorage
-  const updateShowMenu = useCallback((show: boolean) => {
-    setShowMenu(show)
-    persistMenuState(show)
-  }, [persistMenuState])
-  
-  // Handle navigation to a menu item using direct window.location for reliable navigation
-  const handleNavigation = useCallback((href: string) => {
-    console.log("[v0] Mobile menu: Navigating to", href)
-    setIsNavigating(true)
-    // Persist state BEFORE navigating
-    persistMenuState(false)
-    // Use window.location for reliable full navigation
-    window.location.href = href
-  }, [persistMenuState])
+  const handleNavClick = () => {
+    // Hide the menu and show the page content
+    setShowMenu(false)
+  }
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -166,7 +98,6 @@ export function TenantAdminMobileMenu({
 
     await new Promise((resolve) => setTimeout(resolve, 50))
 
-    const formData = new FormData()
     return tenantSignOut(subdomain)
   }
 
@@ -188,34 +119,32 @@ export function TenantAdminMobileMenu({
             const Icon = item.icon
             const active = isActive(item.href)
             return (
-              <button
+              <Link
                 key={item.href}
-                type="button"
-                disabled={isNavigating}
-                onClick={() => handleNavigation(item.href)}
+                href={item.href}
+                onClick={handleNavClick}
                 className={cn(
-                  "flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium transition-colors w-full touch-manipulation select-none text-left",
+                  "flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium transition-colors w-full touch-manipulation select-none",
                   active ? "bg-primary text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700",
                 )}
               >
                 <Icon className="h-6 w-6 shrink-0" />
                 <span className="flex-1">{item.label}</span>
-              </button>
+              </Link>
             )
           })}
         </nav>
 
         {/* Footer */}
         <div className="border-t border-gray-800 p-4 space-y-2">
-          <button
-            type="button"
-            disabled={isNavigating}
-            onClick={() => handleNavigation("/")}
-            className="flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 select-none text-left"
+          <Link
+            href={`/${subdomain}`}
+            onClick={handleNavClick}
+            className="flex items-center gap-4 px-4 py-4 rounded-xl text-lg font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full touch-manipulation active:bg-gray-700 select-none"
           >
             <ExternalLink className="h-6 w-6 shrink-0" />
             <span className="flex-1">View Site</span>
-          </button>
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
@@ -241,7 +170,7 @@ export function TenantAdminMobileMenu({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => updateShowMenu(true)}
+          onClick={() => setShowMenu(true)}
           className="text-white hover:bg-gray-800 -ml-2 gap-2"
         >
           <ArrowLeft className="h-5 w-5" />
