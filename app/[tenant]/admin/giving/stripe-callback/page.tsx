@@ -26,7 +26,7 @@ export default async function StripeCallbackPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/${subdomain}/auth/login`)
+    redirect(`/${subdomain}/auth/login?redirect=/admin/giving`)
   }
 
   // Parse state to get tenant ID

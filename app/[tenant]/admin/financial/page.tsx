@@ -21,7 +21,7 @@ export default async function TenantFinancialReports({
 
   if (!user) {
     console.log("[v0] Financial page - no user, redirecting to login")
-    redirect(`/${subdomain}/auth/login`)
+    redirect(`/${subdomain}/auth/login?redirect=/admin/financial`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()

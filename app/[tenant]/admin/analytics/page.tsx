@@ -16,7 +16,7 @@ export default async function TenantBlogAnalytics({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/${subdomain}/auth/login`)
+    redirect(`/${subdomain}/auth/login?redirect=/admin/analytics`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()

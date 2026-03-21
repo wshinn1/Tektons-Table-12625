@@ -15,7 +15,7 @@ export default async function CampaignAnalyticsPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/${subdomain}/auth/login`)
+    redirect(`/${subdomain}/auth/login?redirect=/admin/campaigns/${campaignId}/analytics`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
