@@ -20,12 +20,22 @@ export default async function TenantGivingManager({
   const { success, error } = await searchParams
   const supabase = await createClient()
 
+  console.log("[v0] TenantGivingManager - subdomain:", subdomain)
+  
   const {
     data: { user },
+    error: authError
   } = await supabase.auth.getUser()
 
+  console.log("[v0] TenantGivingManager - user:", user?.id, user?.email)
+  console.log("[v0] TenantGivingManager - authError:", authError?.message)
+
   if (!user) {
-    redirect(`/${subdomain}/auth/login?redirect=/${subdomain}/admin/giving`)
+    console.log("[v0] TenantGivingManager - No user, redirecting to login")
+    // Use the subdomain-prefixed path because this is a server component 
+    // that runs after middleware rewriting. The browser is on subdomain.tektonstable.com
+    // but internally we're at /[tenant]/admin/giving, so redirect needs the full internal path.
+    redirect(`/${subdomain}/auth/login?redirect=/admin/giving`)
   }
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()

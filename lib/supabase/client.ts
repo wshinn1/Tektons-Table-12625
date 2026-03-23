@@ -3,6 +3,25 @@ import { createBrowserClient as createSupabaseBrowserClient } from "@supabase/ss
 // Singleton instance to prevent multiple clients
 let browserClient: ReturnType<typeof createSupabaseBrowserClient> | null = null
 
+// Helper to build cookie string with proper domain for cross-subdomain auth
+function buildCookieString(name: string, value: string, options?: { maxAge?: number }): string {
+  const hostname = window.location.hostname
+  const isProduction = hostname.includes('tektonstable.com')
+  
+  let cookieStr = `${name}=${value}; path=/; SameSite=Lax`
+  
+  if (isProduction) {
+    // Use root domain to share cookies across all subdomains
+    cookieStr += `; domain=.tektonstable.com; Secure`
+  }
+  
+  // Set max age (default 1 year)
+  const maxAge = options?.maxAge ?? 60 * 60 * 24 * 365
+  cookieStr += `; max-age=${maxAge}`
+  
+  return cookieStr
+}
+
 export function createBrowserClient(forceNew = false) {
   // Allow forcing a new client to ensure fresh auth state
   if (browserClient && !forceNew) {
@@ -14,33 +33,16 @@ export function createBrowserClient(forceNew = false) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // Use default cookie handling but ensure proper domain for subdomains
         getAll() {
-          return document.cookie.split('; ').map(cookie => {
+          // Parse all cookies from document.cookie
+          return document.cookie.split('; ').filter(Boolean).map(cookie => {
             const [name, ...rest] = cookie.split('=')
             return { name, value: rest.join('=') }
-          }).filter(c => c.name)
+          })
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            const isProduction = window.location.hostname.includes('tektonstable.com')
-            const domain = isProduction ? '.tektonstable.com' : undefined
-            
-            let cookieStr = `${name}=${value}`
-            cookieStr += `; path=/`
-            cookieStr += `; SameSite=Lax`
-            
-            if (isProduction) {
-              cookieStr += `; Secure`
-              if (domain) {
-                cookieStr += `; domain=${domain}`
-              }
-            }
-            
-            // Set max age to 1 year
-            cookieStr += `; max-age=${60 * 60 * 24 * 365}`
-            
-            document.cookie = cookieStr
+            document.cookie = buildCookieString(name, value, options)
           })
         },
       },

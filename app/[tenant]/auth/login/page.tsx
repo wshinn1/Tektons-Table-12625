@@ -25,10 +25,20 @@ function TenantLoginForm() {
 
   const subdomain = params.tenant as string
   const redirectParam = searchParams.get("redirect") || "/admin/giving"
-  // Ensure redirect URL includes the subdomain prefix for proper routing
-  const redirectTo = redirectParam.startsWith(`/${subdomain}`) 
-    ? redirectParam 
-    : `/${subdomain}${redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`}`
+  
+  // When on a subdomain (e.g., wesshinn.tektonstable.com), we should NOT include
+  // the subdomain in the path because the middleware handles the rewriting.
+  // Strip the subdomain prefix if it exists in the redirect param.
+  let redirectTo = redirectParam
+  if (redirectTo.startsWith(`/${subdomain}/`)) {
+    redirectTo = redirectTo.replace(`/${subdomain}`, '')
+  } else if (redirectTo.startsWith(`/${subdomain}`)) {
+    redirectTo = redirectTo.replace(`/${subdomain}`, '') || '/'
+  }
+  // Ensure it starts with /
+  if (!redirectTo.startsWith('/')) {
+    redirectTo = `/${redirectTo}`
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,16 +58,30 @@ function TenantLoginForm() {
       }
 
       if (data.session) {
+        console.log("[v0] Login successful - user:", data.session.user.email)
+        console.log("[v0] Session access_token (first 20 chars):", data.session.access_token?.substring(0, 20))
+        
         // Force a session refresh to ensure cookies are properly set
-        await supabase.auth.refreshSession()
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+        console.log("[v0] After refreshSession - success:", !!refreshData?.session, "error:", refreshError?.message)
         
         // Verify the session is actually persisted
-        const { data: finalCheck } = await supabase.auth.getSession()
+        const { data: finalCheck, error: finalError } = await supabase.auth.getSession()
+        console.log("[v0] Final session check - success:", !!finalCheck?.session, "error:", finalError?.message)
         
         if (!finalCheck?.session) {
           setError("Session could not be established. Please try again or clear your browser cookies.")
           return
         }
+        
+        // Log all cookies to see what's set - specifically look for Supabase auth cookies
+        const allCookies = document.cookie.split(';').map(c => c.trim())
+        const authCookies = allCookies.filter(c => c.startsWith('sb-'))
+        console.log("[v0] All cookie names:", allCookies.map(c => c.split('=')[0]))
+        console.log("[v0] Supabase auth cookies found:", authCookies.length)
+        console.log("[v0] Auth cookie names:", authCookies.map(c => c.split('=')[0]))
+        console.log("[v0] Current hostname:", window.location.hostname)
+        console.log("[v0] Redirecting to:", redirectTo)
         
         // Add delay to ensure cookies are fully propagated before navigation
         await new Promise(resolve => setTimeout(resolve, 500))

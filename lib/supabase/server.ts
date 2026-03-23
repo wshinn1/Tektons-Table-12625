@@ -44,6 +44,9 @@ export async function createServerClient() {
 
   const cookieStore = await cookies()
 
+  const isProduction = process.env.NODE_ENV === "production"
+  const cookieDomain = isProduction ? ".tektonstable.com" : undefined
+  
   return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -52,13 +55,16 @@ export async function createServerClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) => {
-            const cookieOptions = {
+            // Merge Supabase's options with our domain settings
+            cookieStore.set(name, value, {
               ...options,
-              domain: process.env.NODE_ENV === "production" ? ".tektonstable.com" : undefined,
-              sameSite: "lax" as const,
-              secure: process.env.NODE_ENV === "production",
-            }
-            cookieStore.set(name, value, cookieOptions)
+              domain: cookieDomain,
+              path: '/',
+              sameSite: 'lax',
+              secure: isProduction,
+              // Preserve max-age from Supabase if set, otherwise use 1 year
+              maxAge: options?.maxAge ?? 60 * 60 * 24 * 365,
+            })
           })
         } catch {
           // setAll called from Server Component, ignored if middleware refreshes sessions

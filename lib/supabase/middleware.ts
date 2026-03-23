@@ -40,78 +40,35 @@ export async function updateSession(request: NextRequest) {
   })
 
   let user = null
-  if (!request.nextUrl.pathname.startsWith("/auth/callback")) {
+  const pathname = request.nextUrl.pathname
+  const isAdminRoute = pathname.includes("/admin/")
+  
+  if (!pathname.startsWith("/auth/callback")) {
     try {
       const { data, error } = await supabase.auth.getUser()
       if (error) {
-        // Silently handle auth errors - user will be null
-        // This prevents "Invalid Refresh Token" errors from flooding logs
+        // Log auth errors for admin routes to help debug login loop issues
+        if (isAdminRoute) {
+          console.log("[v0] Middleware auth error on admin route:", pathname, error.message)
+        }
       } else {
         user = data?.user
+        if (isAdminRoute) {
+          console.log("[v0] Middleware user on admin route:", pathname, user?.email)
+        }
       }
     } catch (e) {
       // Silently handle any auth errors for anonymous users
-    }
-  }
-
-  const host = request.headers.get("host") || ""
-  const hostname = host.split(":")[0]
-  const parts = hostname.split(".")
-
-  const isV0Preview = hostname.endsWith(".vusercontent.net") || hostname.endsWith(".vercel.app")
-  const isMainDomain = parts.length <= 2 || hostname === "localhost" || hostname.startsWith("localhost:") || isV0Preview
-  const subdomain = !isMainDomain ? parts[0] : null
-
-  const isMarketingPage =
-    request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname === "/about" ||
-    request.nextUrl.pathname === "/pricing" ||
-    request.nextUrl.pathname === "/features" ||
-    request.nextUrl.pathname === "/contact" ||
-    request.nextUrl.pathname.startsWith("/auth") ||
-    request.nextUrl.pathname.startsWith("/api/")
-
-  if (subdomain && !isMarketingPage) {
-    const url = request.nextUrl.clone()
-
-    // Only prepend subdomain if the path doesn't already start with it
-    // This prevents double-subdomain issues like /wesshinn/wesshinn/admin/...
-    if (!request.nextUrl.pathname.startsWith(`/${subdomain}`)) {
-      url.pathname = `/${subdomain}${request.nextUrl.pathname}`
-    }
-
-    const response = NextResponse.rewrite(url)
-
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      const cookieOptions = {
-        ...cookie.options,
-        domain: process.env.NODE_ENV === "production" ? ".tektonstable.com" : undefined,
-        sameSite: "lax" as const,
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365, // 1 year
+      if (isAdminRoute) {
+        console.log("[v0] Middleware catch error on admin route:", pathname, e)
       }
-      response.cookies.set(cookie.name, cookie.value, cookieOptions)
-    })
-
-    // Store subdomain in headers for components to access
-    response.headers.set("x-subdomain", subdomain)
-
-    return response
+    }
   }
 
-  // Main domain - let through as normal
-  if (isMainDomain && request.nextUrl.pathname === "/") {
-    return supabaseResponse
-  }
-
-  // Store subdomain in headers for use in components
-  const requestHeaders = new Headers(request.headers)
-  if (subdomain) {
-    requestHeaders.set("x-subdomain", subdomain)
-  }
-
-  // Redirect unauthenticated users trying to access protected routes
+  // NOTE: Subdomain routing is handled by the root middleware.ts
+  // This function only handles session management and main domain auth redirects.
+  
+  // Redirect unauthenticated users trying to access protected routes on main domain
   if (
     !user &&
     !request.nextUrl.pathname.startsWith("/auth") &&
@@ -122,6 +79,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Check if user needs onboarding on main domain
   if (user && request.nextUrl.pathname === "/dashboard") {
     try {
       const { data: tenant } = await supabase.from("tenants").select("id").eq("id", user.id).single()
