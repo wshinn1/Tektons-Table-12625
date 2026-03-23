@@ -31,17 +31,28 @@ export default function DonorLoginPage({
     setLoading(true)
 
     try {
+      console.log("[v0] Donor login - attempting login for:", email)
       const result = await loginSupporter({ email, password })
+      console.log("[v0] Donor login - result:", result)
 
       if (result.error) {
         setError(result.error)
+        setLoading(false)
       } else {
-        router.push(`/${tenantSlug}/donor`)
-        router.refresh()
+        console.log("[v0] Donor login - success, waiting for cookies to propagate")
+        // Add delay to ensure cookies are properly set before navigation
+        // This prevents the login loop on slower connections
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Use window.location for a full page reload to ensure server reads fresh cookies
+        // router.push/refresh can cause race conditions with cookie propagation
+        const targetUrl = `/${tenantSlug}/donor`
+        console.log("[v0] Donor login - redirecting to:", targetUrl)
+        window.location.href = targetUrl
       }
     } catch (err) {
+      console.log("[v0] Donor login - error:", err)
       setError("An unexpected error occurred")
-    } finally {
       setLoading(false)
     }
   }

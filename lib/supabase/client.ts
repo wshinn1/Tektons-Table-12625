@@ -3,8 +3,9 @@ import { createBrowserClient as createSupabaseBrowserClient } from "@supabase/ss
 // Singleton instance to prevent multiple clients
 let browserClient: ReturnType<typeof createSupabaseBrowserClient> | null = null
 
-export function createBrowserClient() {
-  if (browserClient) {
+export function createBrowserClient(forceNew = false) {
+  // Allow forcing a new client to ensure fresh auth state
+  if (browserClient && !forceNew) {
     return browserClient
   }
   
