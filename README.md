@@ -54,7 +54,7 @@ Tekton's Table is a comprehensive SaaS platform that provides:
 
 ## Project Structure
 
-```
+\`\`\`
 ├── app/
 │   ├── [tenant]/              # Tenant-specific routes (subdomains)
 │   │   ├── admin/             # Tenant admin dashboard
@@ -105,7 +105,7 @@ Tekton's Table is a comprehensive SaaS platform that provides:
 │   │   └── middleware.ts      # Auth middleware
 │   └── utils.ts               # Utility functions
 └── scripts/                   # Database migrations
-```
+\`\`\`
 
 ## Features
 
@@ -256,7 +256,7 @@ Authentication is handled via Supabase Auth with custom middleware for:
 
 Required environment variables:
 
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -298,7 +298,7 @@ CRON_SECRET=
 
 # Page Builder
 PUCK_API_KEY=
-```
+\`\`\`
 
 ## Getting Started
 
@@ -312,32 +312,32 @@ PUCK_API_KEY=
 ### Installation
 
 1. Clone the repository:
-```bash
+\`\`\`bash
 git clone https://github.com/yourusername/tektonstable.git
 cd tektonstable
-```
+\`\`\`
 
 2. Install dependencies:
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 3. Set up environment variables:
-```bash
+\`\`\`bash
 cp .env.example .env.local
 # Edit .env.local with your credentials
-```
+\`\`\`
 
 4. Run database migrations:
-```bash
+\`\`\`bash
 # Migrations are in /scripts folder
 # Execute via Supabase dashboard or CLI
-```
+\`\`\`
 
 5. Start the development server:
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 6. Open [http://localhost:3000](http://localhost:3000)
 

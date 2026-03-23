@@ -5,6 +5,15 @@ import { type NextRequest, NextResponse } from "next/server"
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("x-forwarded-host") || request.headers.get("host") || ""
   const path = request.nextUrl.pathname
+  
+  // Debug logging for admin routes
+  if (path.includes("/admin/")) {
+    console.log("[v0] ROOT middleware - hostname:", hostname, "path:", path)
+    const allCookies = request.cookies.getAll()
+    const authCookies = allCookies.filter(c => c.name.includes("auth") || c.name.includes("sb-"))
+    console.log("[v0] ROOT middleware - all cookies:", allCookies.map(c => c.name).join(", "))
+    console.log("[v0] ROOT middleware - auth cookies:", authCookies.map(c => `${c.name}=${c.value?.substring(0,20)}...`).join(", "))
+  }
 
   const isBuilderPreview = path.startsWith("/builder-preview")
 
@@ -59,6 +68,11 @@ export async function middleware(request: NextRequest) {
 
   // Update session and get response
   let response = await updateSession(request)
+  
+  // Debug logging for admin routes - check what cookies are on the response
+  if (path.includes("/admin/") && response instanceof NextResponse) {
+    console.log("[v0] ROOT middleware - after updateSession, response cookies:", response.cookies.getAll().map(c => c.name).join(", "))
+  }
 
   if ((isTenantSubdomain || isEmbedMode) && response instanceof NextResponse) {
     // Allow embedding from any origin for tenant sites
