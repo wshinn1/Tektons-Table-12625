@@ -3,7 +3,6 @@
 A multi-tenant missionary and ministry fundraising platform built with modern web technologies. Tekton's Table enables missionaries, churches, and nonprofits to create their own branded fundraising sites with zero subscription fees.
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/weshinn-6609s-projects/v0-tektons-tablev2main-7v)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/jZ71XOQXiqq)
 
 ## Overview
 
@@ -388,12 +387,12 @@ Organizations connect their Stripe accounts to receive direct payouts:
 
 ## Build Information
 
-This project was built using:
+Built using a spec-driven development approach — architecture and data modeling planned in markdown before execution, then developed collaboratively using:
 - **v0.app** - AI-powered development platform by Vercel
 - **Cursor** - AI-powered code editor
 - **GitHub Copilot** - AI pair programming
 
-The development approach combined AI assistance with manual refinement to create a production-ready platform.
+The project started with comprehensive planning documents defining the database schema, multi-tenant architecture, authentication flows, and feature requirements before any code was written. This structured approach enabled rapid iteration while maintaining architectural consistency across 100+ database tables and dozens of interconnected features.
 
 ## Contributing
 
@@ -413,5 +412,3 @@ For support:
 ---
 
 **Live Site**: [https://tektonstable.com](https://tektonstable.com)
-
-**Build with v0**: [https://v0.app/chat/jZ71XOQXiqq](https://v0.app/chat/jZ71XOQXiqq)
