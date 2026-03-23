@@ -35,13 +35,16 @@ export default function DonorLoginPage({
 
       if (result.error) {
         setError(result.error)
+        setLoading(false)
       } else {
-        router.push(`/${tenantSlug}/donor`)
-        router.refresh()
+        // Add delay to ensure cookies are properly set before navigation
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Use window.location for a full page reload to ensure server reads fresh cookies
+        window.location.href = `/${tenantSlug}/donor`
       }
     } catch (err) {
       setError("An unexpected error occurred")
-    } finally {
       setLoading(false)
     }
   }

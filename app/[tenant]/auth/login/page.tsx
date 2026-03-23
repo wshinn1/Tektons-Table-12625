@@ -23,8 +23,12 @@ function TenantLoginForm() {
   const searchParams = useSearchParams()
   const params = useParams()
 
-  const redirectTo = searchParams.get("redirect") || "/admin/giving"
   const subdomain = params.tenant as string
+  const redirectParam = searchParams.get("redirect") || "/admin/giving"
+  // Ensure redirect URL includes the subdomain prefix for proper routing
+  const redirectTo = redirectParam.startsWith(`/${subdomain}`) 
+    ? redirectParam 
+    : `/${subdomain}${redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`}`
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,18 +37,10 @@ function TenantLoginForm() {
 
     try {
       const supabase = createBrowserClient()
-      console.log("[v0] Tenant login attempt for:", email, "on subdomain:", subdomain)
       
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
-
-      console.log("[v0] Tenant login result:", { 
-        success: !!data.session, 
-        error: signInError?.message,
-        errorCode: signInError?.code,
-        userEmail: data.user?.email 
       })
 
       if (signInError) {
@@ -52,24 +48,24 @@ function TenantLoginForm() {
       }
 
       if (data.session) {
-        console.log("[v0] Login successful, session established")
-        
         // Force a session refresh to ensure cookies are properly set
-        // This is critical for mobile browsers where cookie timing can be inconsistent
         await supabase.auth.refreshSession()
         
-        // Add a longer delay to ensure cookies are fully propagated before navigation
-        // Mobile browsers can have race conditions between cookie writes and navigation
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Verify the session is actually persisted
+        const { data: finalCheck } = await supabase.auth.getSession()
         
-        console.log("[v0] Redirecting to:", redirectTo)
+        if (!finalCheck?.session) {
+          setError("Session could not be established. Please try again or clear your browser cookies.")
+          return
+        }
+        
+        // Add delay to ensure cookies are fully propagated before navigation
+        await new Promise(resolve => setTimeout(resolve, 500))
         
         // Use window.location for a full page reload to ensure cookies are read fresh
-        // This prevents the mobile login loop issue
         window.location.href = redirectTo
       }
     } catch (err: any) {
-      console.log("[v0] Login error details:", err)
       // Provide more helpful error messages
       const errorMessage = err.message || "Failed to sign in"
       if (errorMessage.includes("Invalid login credentials")) {

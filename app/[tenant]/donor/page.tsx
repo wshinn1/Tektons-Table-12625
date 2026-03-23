@@ -13,11 +13,22 @@ export default async function DonorDashboard({
   const { tenant: tenantSlug } = await params
   const supabase = await createServerClient()
 
+  console.log("[v0] Donor page - checking auth for tenant:", tenantSlug)
+
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser()
 
+  console.log("[v0] Donor page - auth result:", {
+    hasUser: !!user,
+    userId: user?.id,
+    userEmail: user?.email,
+    authError: authError?.message
+  })
+
   if (!user) {
+    console.log("[v0] Donor page - no user found, redirecting to login")
     redirect(`/${tenantSlug}/auth/donor-login?redirect=/${tenantSlug}/donor`)
   }
 
