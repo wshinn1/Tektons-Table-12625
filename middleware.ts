@@ -78,6 +78,19 @@ export async function middleware(request: NextRequest) {
   }
 
   if (subdomain && response instanceof NextResponse) {
+    // Helper to copy cookies from original response to new response
+    const copyResponseCookies = (originalResponse: NextResponse, newResponse: NextResponse) => {
+      originalResponse.cookies.getAll().forEach((cookie) => {
+        newResponse.cookies.set(cookie.name, cookie.value, {
+          domain: process.env.NODE_ENV === "production" ? ".tektonstable.com" : undefined,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+        })
+      })
+    }
+
     if (path.startsWith(`/${subdomain}`)) {
       response.headers.set("x-tenant-subdomain", subdomain)
       return response
@@ -86,9 +99,10 @@ export async function middleware(request: NextRequest) {
     if (path.startsWith("/admin")) {
       const url = request.nextUrl.clone()
       url.pathname = `/${subdomain}${path}`
-      response = NextResponse.rewrite(url)
-      response.headers.set("x-tenant-subdomain", subdomain)
-      return response
+      const newResponse = NextResponse.rewrite(url)
+      copyResponseCookies(response, newResponse)
+      newResponse.headers.set("x-tenant-subdomain", subdomain)
+      return newResponse
     }
 
     response.headers.set("x-tenant-subdomain", subdomain)
@@ -108,8 +122,10 @@ export async function middleware(request: NextRequest) {
       // Rewrite to tenant route
       const url = request.nextUrl.clone()
       url.pathname = `/${subdomain}${path}`
-      response = NextResponse.rewrite(url)
-      response.headers.set("x-tenant-subdomain", subdomain)
+      const newResponse = NextResponse.rewrite(url)
+      copyResponseCookies(response, newResponse)
+      newResponse.headers.set("x-tenant-subdomain", subdomain)
+      response = newResponse
     }
   } else if (isRootDomain) {
     if (response instanceof NextResponse) {

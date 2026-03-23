@@ -20,17 +20,11 @@ export default async function TenantGivingManager({
   const { success, error } = await searchParams
   const supabase = await createClient()
 
-  console.log("[v0] Giving page - checking auth for subdomain:", subdomain)
-
   const {
     data: { user },
-    error: authError,
   } = await supabase.auth.getUser()
 
-  console.log("[v0] Giving page - auth result:", { hasUser: !!user, userId: user?.id, error: authError?.message })
-
   if (!user) {
-    console.log("[v0] Giving page - no user, redirecting to login")
     redirect(`/${subdomain}/auth/login?redirect=/${subdomain}/admin/giving`)
   }
 

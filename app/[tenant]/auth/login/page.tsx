@@ -23,8 +23,12 @@ function TenantLoginForm() {
   const searchParams = useSearchParams()
   const params = useParams()
 
-  const redirectTo = searchParams.get("redirect") || "/admin/giving"
   const subdomain = params.tenant as string
+  const redirectParam = searchParams.get("redirect") || "/admin/giving"
+  // Ensure redirect URL includes the subdomain prefix for proper routing
+  const redirectTo = redirectParam.startsWith(`/${subdomain}`) 
+    ? redirectParam 
+    : `/${subdomain}${redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`}`
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,14 +48,11 @@ function TenantLoginForm() {
       }
 
       if (data.session) {
-        console.log("[v0] Tenant login - session established for:", data.user?.email)
-        
         // Force a session refresh to ensure cookies are properly set
         await supabase.auth.refreshSession()
         
         // Verify the session is actually persisted
         const { data: finalCheck } = await supabase.auth.getSession()
-        console.log("[v0] Tenant login - session check:", !!finalCheck?.session)
         
         if (!finalCheck?.session) {
           setError("Session could not be established. Please try again or clear your browser cookies.")
@@ -59,14 +60,10 @@ function TenantLoginForm() {
         }
         
         // Add delay to ensure cookies are fully propagated before navigation
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Redirect with subdomain prefix to ensure correct routing
-        const fullRedirectPath = redirectTo.startsWith(`/${subdomain}`) ? redirectTo : `/${subdomain}${redirectTo}`
-        console.log("[v0] Tenant login - redirecting to:", fullRedirectPath)
+        await new Promise(resolve => setTimeout(resolve, 500))
         
         // Use window.location for a full page reload to ensure cookies are read fresh
-        window.location.href = fullRedirectPath
+        window.location.href = redirectTo
       }
     } catch (err: any) {
       // Provide more helpful error messages

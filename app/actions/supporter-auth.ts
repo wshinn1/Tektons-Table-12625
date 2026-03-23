@@ -83,19 +83,11 @@ export async function loginSupporter({
   email: string
   password: string
 }) {
-  console.log("[v0] loginSupporter - starting login for:", email)
   const supabase = await createServerClient()
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
-  })
-
-  console.log("[v0] loginSupporter - auth result:", {
-    hasSession: !!data?.session,
-    hasUser: !!data?.user,
-    userId: data?.user?.id,
-    error: error?.message
   })
 
   if (error) {
