@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-
 
 interface BlogPost {
   id: string
@@ -30,22 +29,16 @@ export function BlogHeroSliderSection({
   tenantSlug,
 }: BlogHeroSliderSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const isNavigatingRef = useRef(false)
 
-  // Auto-rotate every 5 seconds if not hovering
+  // Auto-rotate every 5 seconds
   useEffect(() => {
-    if (hoveredIndex !== null) return
     const interval = setInterval(() => {
-      if (!isNavigatingRef.current) {
-        setActiveIndex((prev) => (prev + 1) % Math.min(posts.length, 4))
-      }
+      setActiveIndex((prev) => (prev + 1) % Math.min(posts.length, 4))
     }, 5000)
     return () => clearInterval(interval)
-  }, [posts.length, hoveredIndex])
+  }, [posts.length])
 
   const displayPosts = posts.slice(0, 4)
-  const currentImageIndex = hoveredIndex !== null ? hoveredIndex : activeIndex
 
   // Split tagline to highlight the word
   const renderTagline = () => {
@@ -80,12 +73,6 @@ export function BlogHeroSliderSection({
     return null
   }
 
-  const handleLinkClick = () => {
-    // Prevent state updates during navigation to avoid React reconciliation conflicts
-    isNavigatingRef.current = true
-    setHoveredIndex(null)
-  }
-
   return (
     <section className="relative w-full h-[600px] overflow-hidden">
       {/* Background Images - render all and use opacity for transitions */}
@@ -93,9 +80,9 @@ export function BlogHeroSliderSection({
         <div
           key={post.id}
           className={`absolute inset-0 transition-opacity duration-700 ${
-            currentImageIndex === index ? "opacity-100" : "opacity-0"
+            activeIndex === index ? "opacity-100" : "opacity-0"
           }`}
-          aria-hidden={currentImageIndex !== index}
+          aria-hidden={activeIndex !== index}
         >
           {post.featured_image_url ? (
             <Image
@@ -121,29 +108,18 @@ export function BlogHeroSliderSection({
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">{renderTagline()}</h1>
         </div>
 
-        {/* Post Navigation */}
+        {/* Post Navigation - Simple links, no hover state management */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {displayPosts.map((post, index) => (
             <Link
               key={post.id}
               href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
-              className="group"
-              onMouseEnter={() => {
-                if (!isNavigatingRef.current) {
-                  setHoveredIndex(index)
-                }
-              }}
-              onMouseLeave={() => {
-                if (!isNavigatingRef.current) {
-                  setHoveredIndex(null)
-                }
-              }}
-              onClick={handleLinkClick}
+              className="group block"
             >
               <div className="space-y-2">
                 <h3
                   className={`text-white text-sm md:text-base font-medium leading-tight transition-opacity ${
-                    currentImageIndex === index ? "opacity-100" : "opacity-70 group-hover:opacity-100"
+                    activeIndex === index ? "opacity-100" : "opacity-70 group-hover:opacity-100"
                   }`}
                 >
                   {post.title}
