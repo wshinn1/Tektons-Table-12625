@@ -60,7 +60,6 @@ export async function updateSession(request: NextRequest) {
   })
 
   let user = null
-  const pathname = request.nextUrl.pathname
   const isAdminRoute = pathname.includes("/admin/")
   
   if (!pathname.startsWith("/auth/callback")) {
