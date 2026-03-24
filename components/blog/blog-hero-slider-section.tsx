@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -31,19 +31,21 @@ export function BlogHeroSliderSection({
 }: BlogHeroSliderSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const isNavigatingRef = useRef(false)
 
   // Auto-rotate every 5 seconds if not hovering
   useEffect(() => {
     if (hoveredIndex !== null) return
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % Math.min(posts.length, 4))
+      if (!isNavigatingRef.current) {
+        setActiveIndex((prev) => (prev + 1) % Math.min(posts.length, 4))
+      }
     }, 5000)
     return () => clearInterval(interval)
   }, [posts.length, hoveredIndex])
 
   const displayPosts = posts.slice(0, 4)
   const currentImageIndex = hoveredIndex !== null ? hoveredIndex : activeIndex
-  const currentPost = displayPosts[currentImageIndex]
 
   // Split tagline to highlight the word
   const renderTagline = () => {
@@ -78,27 +80,39 @@ export function BlogHeroSliderSection({
     return null
   }
 
+  const handleLinkClick = () => {
+    // Prevent state updates during navigation to avoid React reconciliation conflicts
+    isNavigatingRef.current = true
+    setHoveredIndex(null)
+  }
+
   return (
     <section className="relative w-full h-[600px] overflow-hidden">
-      {/* Background Image */}
-      <div
-        key={currentPost?.id || "placeholder"}
-        className="absolute inset-0 transition-opacity duration-700"
-      >
-        {currentPost?.featured_image_url ? (
-          <Image
-            src={currentPost.featured_image_url || "/placeholder.svg"}
-            alt={currentPost.title}
-            fill
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-stone-700 to-stone-900" />
-        )}
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40" />
-      </div>
+      {/* Background Images - render all and use opacity for transitions */}
+      {displayPosts.map((post, index) => (
+        <div
+          key={post.id}
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            currentImageIndex === index ? "opacity-100" : "opacity-0"
+          }`}
+          aria-hidden={currentImageIndex !== index}
+        >
+          {post.featured_image_url ? (
+            <Image
+              src={post.featured_image_url || "/placeholder.svg"}
+              alt={post.title}
+              fill
+              className="object-cover"
+              priority={index === 0}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-stone-700 to-stone-900" />
+          )}
+        </div>
+      ))}
+      
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col justify-between px-8 md:px-16 py-12">
@@ -114,8 +128,17 @@ export function BlogHeroSliderSection({
               key={post.id}
               href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
               className="group"
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              onMouseEnter={() => {
+                if (!isNavigatingRef.current) {
+                  setHoveredIndex(index)
+                }
+              }}
+              onMouseLeave={() => {
+                if (!isNavigatingRef.current) {
+                  setHoveredIndex(null)
+                }
+              }}
+              onClick={handleLinkClick}
             >
               <div className="space-y-2">
                 <h3

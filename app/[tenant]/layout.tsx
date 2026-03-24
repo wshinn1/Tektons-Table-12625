@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useEffect, useState, useCallback, useRef } from "react"
-import { flushSync } from "react-dom"
 import { TenantNavbar } from "@/components/tenant/tenant-navbar"
 import { TenantAdminSidebar } from "@/components/tenant/tenant-admin-sidebar"
 import { TenantAdminMobileMenu } from "@/components/tenant/tenant-admin-mobile-menu"
@@ -622,15 +621,15 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_OUT") {
         console.log("[v0] Sign out detected, clearing state")
-        flushSync(() => {
-          setUser(null)
-          setIsTenantOwner(false)
-          setIsDonor(false)
-          setCampaigns([])
-          setIsCheckingAuth(false)
-          ownershipVerifiedRef.current = false
-          setIsPersistedAdmin(false)
-        })
+        // Use regular state updates instead of flushSync to avoid React reconciliation conflicts
+        // during navigation transitions
+        setUser(null)
+        setIsTenantOwner(false)
+        setIsDonor(false)
+        setCampaigns([])
+        setIsCheckingAuth(false)
+        ownershipVerifiedRef.current = false
+        setIsPersistedAdmin(false)
 
         try {
           if (typeof window !== "undefined" && window.localStorage) {
