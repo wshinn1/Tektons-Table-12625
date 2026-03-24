@@ -354,11 +354,11 @@ export default async function TenantHomePage({
                   </p>
                 )}
                 <div className="pt-4">
-                  <button className="relative inline-flex items-center gap-2 border border-black text-black px-6 py-3 rounded-full text-sm font-medium uppercase tracking-wide overflow-hidden transition-colors duration-300 font-raleway group/btn">
-                    <span className="absolute inset-0 bg-[#7DD3E8] translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></span>
+                  <span className="relative inline-flex items-center gap-2 border border-black text-black px-6 py-3 rounded-full text-sm font-medium uppercase tracking-wide overflow-hidden transition-colors duration-300 font-raleway group/btn">
+                    <span className="absolute inset-0 bg-[#7DD3E8] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
                     <span className="relative z-10">READ MORE</span>
                     <ChevronRight className="h-4 w-4 relative z-10" />
-                  </button>
+                  </span>
                 </div>
               </div>
             </Link>
