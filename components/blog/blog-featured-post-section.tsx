@@ -19,9 +19,10 @@ interface BlogPost {
 interface BlogFeaturedPostSectionProps {
   post: BlogPost | null
   className?: string
+  tenantSlug?: string
 }
 
-export function BlogFeaturedPostSection({ post, className = "" }: BlogFeaturedPostSectionProps) {
+export function BlogFeaturedPostSection({ post, className = "", tenantSlug }: BlogFeaturedPostSectionProps) {
   if (!post) {
     return null
   }
@@ -30,7 +31,7 @@ export function BlogFeaturedPostSection({ post, className = "" }: BlogFeaturedPo
     <section className={`py-12 px-6 ${className}`}>
       <div className="max-w-6xl mx-auto">
         <Link
-          href={`/blog/${post.slug}`}
+          href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
           className="group block bg-white border border-gray-100 transition-all duration-300 hover:shadow-xl"
         >
           <div className="grid md:grid-cols-2 gap-0">

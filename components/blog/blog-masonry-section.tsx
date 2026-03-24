@@ -1,3 +1,10 @@
+/**
+ * Blog Masonry Section Component
+ * 
+ * Fix: 2026-03-24 - Replaced onClick handlers with Next.js Link component
+ * to resolve multi-click navigation issue on tenant blog posts.
+ * PR: Blog post navigation fix - single click now works correctly.
+ */
 import Link from "next/link"
 import Image from "next/image"
 import { ChevronRight, Crown } from "lucide-react"
@@ -27,9 +34,10 @@ interface BlogMasonrySectionProps {
   columns?: 2 | 3
   rows?: 2 | 3
   className?: string
+  tenantSlug?: string
 }
 
-export function BlogMasonrySection({ posts, columns = 2, rows = 2, className = "" }: BlogMasonrySectionProps) {
+export function BlogMasonrySection({ posts, columns = 2, rows = 2, className = "", tenantSlug }: BlogMasonrySectionProps) {
   const maxPosts = columns * rows
   const displayPosts = posts.slice(0, maxPosts)
 
@@ -49,7 +57,7 @@ export function BlogMasonrySection({ posts, columns = 2, rows = 2, className = "
             return (
               <Link
                 key={post.id}
-                href={`/blog/${post.slug}`}
+                href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
                 className="group block bg-white transition-all duration-300 hover:shadow-xl"
               >
                 {/* Image */}

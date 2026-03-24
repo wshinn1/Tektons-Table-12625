@@ -32,9 +32,10 @@ interface BlogSectionRendererProps {
   sections: BlogSection[]
   posts: BlogPost[]
   featuredPostId?: string | null
+  tenantSlug?: string
 }
 
-export function BlogSectionRenderer({ sections, posts, featuredPostId }: BlogSectionRendererProps) {
+export function BlogSectionRenderer({ sections, posts, featuredPostId, tenantSlug }: BlogSectionRendererProps) {
   // Get featured post either by ID or first post
   const featuredPost = featuredPostId ? posts.find((p) => p.id === featuredPostId) || posts[0] : posts[0]
 
@@ -55,6 +56,7 @@ export function BlogSectionRenderer({ sections, posts, featuredPostId }: BlogSec
                   posts={posts.slice(0, 4)}
                   tagline={section.content?.tagline || "TEKTON'S TABLE, personal editorial daily magazine."}
                   highlightWord={section.content?.highlightWord || "editorial"}
+                  tenantSlug={tenantSlug}
                 />
               )
 
@@ -62,7 +64,7 @@ export function BlogSectionRenderer({ sections, posts, featuredPostId }: BlogSec
               const selectedPost = section.content?.featuredPostId
                 ? posts.find((p) => p.id === section.content.featuredPostId)
                 : featuredPost
-              return <BlogFeaturedPostSection key={section.id} post={selectedPost || null} />
+              return <BlogFeaturedPostSection key={section.id} post={selectedPost || null} tenantSlug={tenantSlug} />
 
             case "blog_masonry":
               return (
@@ -71,6 +73,7 @@ export function BlogSectionRenderer({ sections, posts, featuredPostId }: BlogSec
                   posts={masonryPosts}
                   columns={section.content?.columns || 2}
                   rows={section.content?.rows || 2}
+                  tenantSlug={tenantSlug}
                 />
               )
 

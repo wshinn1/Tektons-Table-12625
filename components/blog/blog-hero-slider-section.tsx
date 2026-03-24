@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { motion, AnimatePresence } from "framer-motion"
+
 
 interface BlogPost {
   id: string
@@ -20,12 +20,14 @@ interface BlogHeroSliderSectionProps {
   posts: BlogPost[]
   tagline?: string
   highlightWord?: string
+  tenantSlug?: string
 }
 
 export function BlogHeroSliderSection({
   posts,
   tagline = "TEKTON'S TABLE, personal editorial daily magazine.",
   highlightWord = "editorial",
+  tenantSlug,
 }: BlogHeroSliderSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -78,31 +80,25 @@ export function BlogHeroSliderSection({
 
   return (
     <section className="relative w-full h-[600px] overflow-hidden">
-      {/* Background Image with Animation */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentPost?.id || "placeholder"}
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.7 }}
-          className="absolute inset-0"
-        >
-          {currentPost?.featured_image_url ? (
-            <Image
-              src={currentPost.featured_image_url || "/placeholder.svg"}
-              alt={currentPost.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-stone-700 to-stone-900" />
-          )}
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/40" />
-        </motion.div>
-      </AnimatePresence>
+      {/* Background Image */}
+      <div
+        key={currentPost?.id || "placeholder"}
+        className="absolute inset-0 transition-opacity duration-700"
+      >
+        {currentPost?.featured_image_url ? (
+          <Image
+            src={currentPost.featured_image_url || "/placeholder.svg"}
+            alt={currentPost.title}
+            fill
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-stone-700 to-stone-900" />
+        )}
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
 
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col justify-between px-8 md:px-16 py-12">
@@ -116,7 +112,7 @@ export function BlogHeroSliderSection({
           {displayPosts.map((post, index) => (
             <Link
               key={post.id}
-              href={`/blog/${post.slug}`}
+              href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
               className="group"
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
