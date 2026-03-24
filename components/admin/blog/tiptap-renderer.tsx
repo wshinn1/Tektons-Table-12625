@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
@@ -13,6 +14,12 @@ interface TiptapRendererProps {
 }
 
 export function TiptapRenderer({ content }: TiptapRendererProps) {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   let parsedContent
   try {
     if (typeof content === "string") {
@@ -27,7 +34,10 @@ export function TiptapRenderer({ content }: TiptapRendererProps) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        link: false,
+        underline: false,
+      } as any),
       Underline,
       Link.configure({
         openOnClick: true,
@@ -46,6 +56,7 @@ export function TiptapRenderer({ content }: TiptapRendererProps) {
     ],
     content: parsedContent,
     editable: false,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none max-w-none",
@@ -53,7 +64,7 @@ export function TiptapRenderer({ content }: TiptapRendererProps) {
     },
   })
 
-  if (!editor) {
+  if (!isMounted || !editor) {
     return null
   }
 
