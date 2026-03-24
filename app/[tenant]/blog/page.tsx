@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { createServerClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
 import { notFound } from "next/navigation"
@@ -153,7 +152,7 @@ export default async function TenantBlogIndexPage({
 
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link key={post.id} href={`/${tenantSlug}/blog/${post.slug}`} className="group">
+            <a key={post.id} href={`/${tenantSlug}/blog/${post.slug}`} className="group block">
               <article className="h-full">
                 {post.featured_image_url && (
                   <div className="mb-6 aspect-[16/10] w-full overflow-hidden rounded-lg">
@@ -169,7 +168,7 @@ export default async function TenantBlogIndexPage({
                   {post.categories && post.categories.length > 0 && (
                     <div className="mb-3 flex flex-wrap gap-2">
                       {post.categories.map((cat: any) => (
-                        <Badge key={cat.category.id} variant="secondary" className="text-xs font-medium">
+                        <Badge key={cat.category.id} variant="secondary" className="text-xs font-medium pointer-events-none">
                           {cat.category.name}
                         </Badge>
                       ))}
@@ -197,7 +196,7 @@ export default async function TenantBlogIndexPage({
                   </div>
                 </div>
               </article>
-            </Link>
+            </a>
           ))}
         </div>
 
