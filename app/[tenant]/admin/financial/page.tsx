@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/donation-tiers"
 import { DollarSign, Users, Calendar } from "lucide-react"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function TenantFinancialReports({
   params,
@@ -31,7 +32,7 @@ export default async function TenantFinancialReports({
     notFound()
   }
 
-  if (tenant.email !== user.email) {
+  if (!emailsMatch(tenant.email, user.email)) {
     console.log("[v0] Financial page - not tenant owner")
     redirect(`/${subdomain}`)
   }

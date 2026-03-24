@@ -15,10 +15,30 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Check if the user-agent suggests Safari (ITP issues)
+  const userAgent = request.headers.get('user-agent') || ''
+  const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent)
+  const pathname = request.nextUrl.pathname
+  
+  // Log Safari requests to admin routes for debugging
+  if (isSafari && pathname.includes('/admin')) {
+    console.log("[v0] Safari detected in middleware - UA:", userAgent.substring(0, 100))
+    const allCookies = request.cookies.getAll()
+    const authCookies = allCookies.filter(c => c.name.includes('auth') || c.name.startsWith('sb-'))
+    console.log("[v0] Safari middleware cookies:", authCookies.map(c => `${c.name}=${c.value.substring(0,30)}...`))
+  }
+
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
-        return request.cookies.getAll()
+        const cookies = request.cookies.getAll()
+        
+        // Extra logging for Safari on admin routes
+        if (isSafari && pathname.includes('/admin')) {
+          console.log("[v0] Safari getAll cookies:", cookies.map(c => c.name).join(', '))
+        }
+        
+        return cookies
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
@@ -40,7 +60,6 @@ export async function updateSession(request: NextRequest) {
   })
 
   let user = null
-  const pathname = request.nextUrl.pathname
   const isAdminRoute = pathname.includes("/admin/")
   
   if (!pathname.startsWith("/auth/callback")) {

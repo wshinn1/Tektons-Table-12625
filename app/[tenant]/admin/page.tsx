@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Users, DollarSign, TrendingUp, HelpCircle } from "lucide-react"
 import Link from "next/link"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function TenantAdminDashboard({
   params,
@@ -13,15 +14,24 @@ export default async function TenantAdminDashboard({
   const supabase = await createClient()
 
   console.log("[v0] TenantAdminDashboard: Starting for subdomain:", subdomain)
+  
+  // Get session to check if cookies are being read properly
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  console.log("[v0] TenantAdminDashboard: Session check - has session:", !!sessionData?.session, "error:", sessionError?.message)
+  if (sessionData?.session) {
+    console.log("[v0] TenantAdminDashboard: Session user email:", sessionData.session.user?.email)
+    console.log("[v0] TenantAdminDashboard: Session expires at:", sessionData.session.expires_at)
+  }
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser()
 
-  console.log("[v0] TenantAdminDashboard: User:", user?.email || "not logged in")
+  console.log("[v0] TenantAdminDashboard: getUser result - user:", user?.email || "not logged in", "error:", userError?.message)
 
   if (!user) {
-    console.log("[v0] TenantAdminDashboard: No user, redirecting to login")
+    console.log("[v0] TenantAdminDashboard: No user, redirecting to login. Session existed:", !!sessionData?.session)
     redirect(`/${subdomain}/auth/login?redirect=/admin`)
   }
 
@@ -34,7 +44,11 @@ export default async function TenantAdminDashboard({
 
   console.log("[v0] TenantAdminDashboard: Tenant:", tenant?.email || "not found", "Error:", tenantError?.message)
 
-  if (!tenant || tenant.email !== user.email) {
+  // Use case-insensitive email comparison
+  const isOwner = emailsMatch(tenant?.email, user.email)
+  console.log("[v0] TenantAdminDashboard: Email comparison - tenant:", tenant?.email, "user:", user.email, "match:", isOwner)
+  
+  if (!tenant || !isOwner) {
     console.log(
       "[v0] TenantAdminDashboard: Not owner, redirecting. Tenant email:",
       tenant?.email,

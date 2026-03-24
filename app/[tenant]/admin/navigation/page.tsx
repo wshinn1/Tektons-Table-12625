@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound, redirect } from "next/navigation"
 import { NavigationManager } from "@/components/tenant/navigation-manager"
+import { emailsMatch } from "@/lib/utils"
 
 interface Props {
   params: Promise<{
@@ -36,7 +37,7 @@ export default async function TenantNavigationPage({ params }: Props) {
   }
 
   // Verify ownership
-  if (tenant.email !== user.email) {
+  if (!emailsMatch(tenant.email, user.email)) {
     redirect(`/${tenantSlug}`)
   }
 

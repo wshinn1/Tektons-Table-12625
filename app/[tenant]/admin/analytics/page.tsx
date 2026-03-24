@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, MessageCircle, TrendingUp } from "lucide-react"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function TenantBlogAnalytics({
   params,
@@ -21,7 +22,7 @@ export default async function TenantBlogAnalytics({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 

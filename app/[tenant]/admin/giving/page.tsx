@@ -8,6 +8,7 @@ import { getGivingStats } from "@/app/actions/giving"
 import { formatCurrency } from "@/lib/donation-tiers"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, XCircle } from "lucide-react"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function TenantGivingManager({
   params,
@@ -40,7 +41,7 @@ export default async function TenantGivingManager({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 

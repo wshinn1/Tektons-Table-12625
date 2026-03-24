@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import { ContactSubmissionsList } from "@/components/tenant/admin/contact-submissions-list"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function ContactSubmissionsPage({
   params,
@@ -28,7 +29,7 @@ export default async function ContactSubmissionsPage({
     notFound()
   }
 
-  if (tenant.email !== user.email) {
+  if (!emailsMatch(tenant.email, user.email)) {
     console.log("[v0] Contact submissions - not tenant owner", { tenantEmail: tenant.email, userEmail: user.email })
     redirect(`/${tenantSlug}`)
   }

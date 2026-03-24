@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AboutPageEditor } from "@/components/tenant/admin/about-page-editor"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function EditAboutPage({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant: tenantSlug } = await params
@@ -16,7 +17,7 @@ export default async function EditAboutPage({ params }: { params: Promise<{ tena
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", tenantSlug).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     console.log("[v0] About page auth check:", { tenantEmail: tenant?.email, userEmail: user.email, allowed: false })
     redirect(`/${tenantSlug}`)
   }

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { SupportersManager } from "@/components/tenant/supporters-manager"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function TenantSupportersManager({
   params,
@@ -22,7 +23,7 @@ export default async function TenantSupportersManager({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 

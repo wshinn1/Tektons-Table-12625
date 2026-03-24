@@ -4,6 +4,7 @@ import { CampaignForm } from "@/components/tenant/campaign-form"
 import { DeleteCampaignDialog } from "@/components/tenant/delete-campaign-dialog"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function EditCampaignPage({
   params,
@@ -23,7 +24,7 @@ export default async function EditCampaignPage({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import { CampaignAnalyticsDashboard } from "@/components/tenant/campaign-analytics-dashboard"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function CampaignAnalyticsPage({
   params,
@@ -24,7 +25,7 @@ export default async function CampaignAnalyticsPage({
     notFound()
   }
 
-  if (tenant.email !== user.email) {
+  if (!emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 

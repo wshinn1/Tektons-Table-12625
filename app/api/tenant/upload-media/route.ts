@@ -2,6 +2,7 @@ import { put } from "@vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { emailsMatch } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,8 +60,8 @@ export async function POST(request: NextRequest) {
         }
         uploadPath = `media/platform/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
       } else {
-        // Check if user owns this tenant or is super admin
-        if (tenant.email !== user.email && !isSuperAdmin) {
+        // Check if user owns this tenant or is super admin (case-insensitive email check)
+        if (!emailsMatch(tenant.email, user.email) && !isSuperAdmin) {
           console.log("[v0] User does not own this tenant and is not super admin")
           return NextResponse.json({ error: "Access denied" }, { status: 403 })
         }

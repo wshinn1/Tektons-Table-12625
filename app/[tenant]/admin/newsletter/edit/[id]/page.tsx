@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { NewsletterPuckEditor } from "@/components/tenant/newsletter-puck-editor"
 import { getSubscriberGroups } from "@/app/actions/subscriber-groups"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function EditNewsletterPage({
   params,
@@ -21,7 +22,7 @@ export default async function EditNewsletterPage({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 
