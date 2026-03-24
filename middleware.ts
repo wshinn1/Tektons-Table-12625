@@ -122,13 +122,14 @@ export async function middleware(request: NextRequest) {
     response.headers.set("x-tenant-subdomain", subdomain)
 
     // This allows tenant-specific login pages like /auth/donor-login and /auth/login
+    // Also rewrite /blog paths to tenant blog on subdomains
     if (
       !path.startsWith(`/${subdomain}`) &&
       (path === "/" ||
         path.startsWith("/auth") || // Rewrite auth paths for tenant subdomains
+        path.startsWith("/blog") || // Rewrite blog paths for tenant subdomains
         (!path.startsWith("/api") &&
           !path.startsWith("/dashboard") &&
-          !path.startsWith("/blog") &&
           !path.startsWith("/help") &&
           !path.startsWith("/how-it-works") &&
           !path.startsWith("/supporter")))
