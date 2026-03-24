@@ -12,6 +12,7 @@ import Link from "next/link"
 import { submitTenantSupportRequest } from "@/app/actions/support"
 import { createClient } from "@/lib/supabase/client"
 import useSWR from "swr"
+import { emailsMatch } from "@/lib/utils"
 
 export default function TenantHelpPage() {
   const params = useParams()
@@ -40,7 +41,7 @@ export default function TenantHelpPage() {
       .eq("subdomain", subdomain)
       .single()
 
-    if (!tenant || tenant.email !== user.email) {
+    if (!tenant || !emailsMatch(tenant.email, user.email)) {
       router.push(`/${subdomain}`)
       return null
     }

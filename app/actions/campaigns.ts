@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { emailsMatch } from "@/lib/utils"
 
 export interface Campaign {
   id: string
@@ -343,7 +344,7 @@ export async function updateCampaignNotificationPreference(
     // Verify tenant ownership
     const { data: tenant } = await supabase.from("tenants").select("email").eq("id", tenantId).single()
 
-    if (!tenant || tenant.email !== user.email) {
+    if (!tenant || !emailsMatch(tenant.email, user.email)) {
       return { success: false, error: "Unauthorized" }
     }
 

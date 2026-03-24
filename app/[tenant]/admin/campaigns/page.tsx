@@ -8,6 +8,7 @@ import { Plus, Edit, Eye } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/donation-tiers"
 import { getAllCampaigns, getCampaignStats } from "@/app/actions/campaigns"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function CampaignsAdminPage({
   params,
@@ -27,7 +28,7 @@ export default async function CampaignsAdminPage({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", subdomain).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${subdomain}`)
   }
 

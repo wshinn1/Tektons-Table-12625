@@ -6,6 +6,7 @@ import { CampaignNotificationSettings } from "@/components/tenant/admin/campaign
 import { BlogWidgetSettings } from "@/components/tenant/admin/blog-widget-settings"
 import { HomepageWidgetSettings } from "@/components/tenant/admin/homepage-widget-settings"
 import { BrandingSettings } from "@/components/tenant/admin/branding-settings"
+import { emailsMatch } from "@/lib/utils"
 
 export default async function TenantSettingsPage({
   params,
@@ -25,7 +26,7 @@ export default async function TenantSettingsPage({
 
   const { data: tenant } = await supabase.from("tenants").select("*").eq("subdomain", tenantSlug).single()
 
-  if (!tenant || tenant.email !== user.email) {
+  if (!tenant || !emailsMatch(tenant.email, user.email)) {
     redirect(`/${tenantSlug}`)
   }
 
