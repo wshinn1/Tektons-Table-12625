@@ -114,7 +114,9 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   const authCheckInProgressRef = useRef(false)
   const lastAuthCheckRef = useRef<number>(0)
   const pathnameRef = useRef(pathname)
-  const [isNavigating, setIsNavigating] = useState(false) // Changed from ref to state
+  // Use a ref for synchronous navigation detection (checked immediately in auth handlers)
+  // The ref is set in capture phase BEFORE React handles the click
+  const isNavigatingRef = useRef(false)
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -182,7 +184,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current)
     }
-    setIsNavigating(false)
+    isNavigatingRef.current = false
   }, [pathname])
 
   useEffect(() => {
@@ -190,21 +192,25 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
       const target = e.target as HTMLElement
       const link = target.closest("a")
       if (link && link.href && !link.target && link.href.startsWith(window.location.origin)) {
-        // Internal navigation - use requestAnimationFrame to avoid interfering with React's click handling
-        requestAnimationFrame(() => {
-          setIsNavigating(true)
-        })
+        // Internal navigation - set ref SYNCHRONOUSLY to prevent auth checks during navigation
+        // This must happen in capture phase BEFORE React's Link handles the click
+        isNavigatingRef.current = true
+        
         // Clear after 2 seconds in case navigation doesn't complete
+        if (navigationTimeoutRef.current) {
+          clearTimeout(navigationTimeoutRef.current)
+        }
         navigationTimeoutRef.current = setTimeout(() => {
-          setIsNavigating(false)
+          isNavigatingRef.current = false
         }, 2000)
       }
     }
 
-    // Use bubble phase instead of capture to avoid interfering with React
-    document.addEventListener("click", handleClick, false)
+    // Use capture phase to set the ref BEFORE React's Link component handles the click
+    // This ensures isNavigatingRef.current is true before any navigation-triggered auth checks
+    document.addEventListener("click", handleClick, true)
     return () => {
-      document.removeEventListener("click", handleClick, false)
+      document.removeEventListener("click", handleClick, true)
       if (navigationTimeoutRef.current) {
         clearTimeout(navigationTimeoutRef.current)
       }
@@ -214,12 +220,14 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   useEffect(() => {
     if (pathname !== pathnameRef.current) {
       console.log("[v0] TenantLayout: Route changing from", pathnameRef.current, "to", pathname)
-      setIsNavigating(true) // Set state immediately so auth check sees it
+      // Note: isNavigatingRef should already be true from the click handler
+      // This is just a backup
+      isNavigatingRef.current = true
       pathnameRef.current = pathname
 
       // Clear navigation flag after transition completes
       const timer = setTimeout(() => {
-        setIsNavigating(false)
+        isNavigatingRef.current = false
         console.log("[v0] TenantLayout: Navigation complete")
       }, 1500) // Increased to 1.5s for safety
 
@@ -246,7 +254,8 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
 
   const checkTenantOwnership = useCallback(
     async (currentUser: User | null, currentSubdomain: string) => {
-      if (isNavigating) {
+      // Use ref for synchronous check - this is set in capture phase before React handles link clicks
+      if (isNavigatingRef.current) {
         console.log("[v0] TenantLayout: Skipping auth check during navigation")
         return
       }
@@ -374,7 +383,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
         return false
       }
     },
-    [checkDonorStatus, isNavigating], // Added isNavigating to deps
+    [checkDonorStatus], // isNavigatingRef is a ref, doesn't need to be in deps
   )
 
   const refreshSession = useCallback(async () => {
@@ -619,6 +628,12 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip all auth state handling during navigation to prevent React reconciliation conflicts
+      if (isNavigatingRef.current) {
+        console.log("[v0] Skipping auth state change during navigation:", event)
+        return
+      }
+      
       if (event === "SIGNED_OUT") {
         console.log("[v0] Sign out detected, clearing state")
         // Use regular state updates instead of flushSync to avoid React reconciliation conflicts
