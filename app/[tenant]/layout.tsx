@@ -191,8 +191,10 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
       const target = e.target as HTMLElement
       const link = target.closest("a")
       if (link && link.href && !link.target && link.href.startsWith(window.location.origin)) {
-        // Internal navigation - set navigating state immediately
-        setIsNavigating(true)
+        // Internal navigation - use requestAnimationFrame to avoid interfering with React's click handling
+        requestAnimationFrame(() => {
+          setIsNavigating(true)
+        })
         // Clear after 2 seconds in case navigation doesn't complete
         navigationTimeoutRef.current = setTimeout(() => {
           setIsNavigating(false)
@@ -200,10 +202,10 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
       }
     }
 
-    // Use capture phase to intercept before React handles it
-    document.addEventListener("click", handleClick, true)
+    // Use bubble phase instead of capture to avoid interfering with React
+    document.addEventListener("click", handleClick, false)
     return () => {
-      document.removeEventListener("click", handleClick, true)
+      document.removeEventListener("click", handleClick, false)
       if (navigationTimeoutRef.current) {
         clearTimeout(navigationTimeoutRef.current)
       }
