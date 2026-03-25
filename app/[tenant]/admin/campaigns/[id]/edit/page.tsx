@@ -49,7 +49,7 @@ export default async function EditCampaignPage({
         </div>
         <div className="flex gap-2">
           <DeleteCampaignDialog campaignId={campaign.id} campaignTitle={campaign.title} tenantId={tenant.id} />
-          <Link href={`/campaigns/${campaign.slug}`}>
+          <Link href={`/${subdomain}/campaigns/${campaign.slug}`}>
             <Button variant="outline">View Public Page</Button>
           </Link>
         </div>

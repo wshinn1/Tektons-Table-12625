@@ -211,10 +211,10 @@ export function GivingWidget({
               {/* Buttons */}
               <div className="space-y-2">
                 <Button asChild size="lg" className="w-full font-semibold">
-                  <Link href="/giving">Donate now</Link>
+                  <Link href={`/${subdomain}/giving`}>Donate now</Link>
                 </Button>
                 <Button asChild size="lg" variant="secondary" className="w-full">
-                  <Link href="/about">Learn More</Link>
+                  <Link href={`/${subdomain}/about`}>Learn More</Link>
                 </Button>
               </div>
 
@@ -290,10 +290,10 @@ export function GivingWidget({
 
           <div className="space-y-2">
             <Button asChild size={compact ? "default" : "lg"} className="w-full font-semibold">
-              <Link href="/giving">Donate now</Link>
+              <Link href={`/${subdomain}/giving`}>Donate now</Link>
             </Button>
             <Button asChild size={compact ? "default" : "lg"} variant="secondary" className="w-full">
-              <Link href="/about">Learn More</Link>
+              <Link href={`/${subdomain}/about`}>Learn More</Link>
             </Button>
           </div>
 

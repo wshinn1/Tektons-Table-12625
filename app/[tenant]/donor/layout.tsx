@@ -60,7 +60,7 @@ export default function DonorLayout({
     if (!currentUser) {
       console.log("[v0] No user, redirecting to donor login")
       setIsCheckingAuth(false)
-      router.push(`/auth/donor-login`)
+      router.push(`/${tenantSlug}/auth/donor-login`)
       return
     }
 
@@ -76,7 +76,7 @@ export default function DonorLayout({
     if (!tenantData) {
       console.log("[v0] Tenant not found")
       setIsCheckingAuth(false)
-      router.push("/")
+      router.push(`/${tenantSlug}`)
       return
     }
 

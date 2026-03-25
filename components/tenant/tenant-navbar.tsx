@@ -178,11 +178,11 @@ export function TenantNavbar({
                           return (
                             <a
                               key={campaign.id}
-                              href={`/campaigns/${campaign.slug}`}
+                              href={`/${subdomain}/campaigns/${campaign.slug}`}
                               className="block px-4 py-3 hover:bg-gray-50 transition-colors"
                               onClick={(e) => {
                                 setCampaignsOpen(false)
-                                handleNavClick(e, `/campaigns/${campaign.slug}`)
+                                handleNavClick(e, `/${subdomain}/campaigns/${campaign.slug}`)
                               }}
                             >
                               <div className="font-semibold text-sm text-gray-900 mb-1">{campaign.title}</div>
@@ -202,8 +202,8 @@ export function TenantNavbar({
               {/* Auth Links */}
               {user ? (
                 <a
-                  href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin"}
-                  onClick={(e) => handleNavClick(e, isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin")}
+                  href={isTenantOwner ? `/${subdomain}/admin` : isDonor ? `/${subdomain}/donor` : `/${subdomain}/admin`}
+                  onClick={(e) => handleNavClick(e, isTenantOwner ? `/${subdomain}/admin` : isDonor ? `/${subdomain}/donor` : `/${subdomain}/admin`)}
                   className="ml-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold hover:bg-[#1e3a8a]/90 transition-colors font-open-sans"
                 >
                   {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
@@ -211,15 +211,15 @@ export function TenantNavbar({
               ) : (
                 <div className="flex items-center gap-2 ml-2">
                   <a
-                    href="/auth/donor-login"
-                    onClick={(e) => handleNavClick(e, "/auth/donor-login")}
+                    href={`/${subdomain}/auth/donor-login`}
+                    onClick={(e) => handleNavClick(e, `/${subdomain}/auth/donor-login`)}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors font-open-sans"
                   >
                     Donor Login
                   </a>
                   <a
-                    href="/auth/login"
-                    onClick={(e) => handleNavClick(e, "/auth/login")}
+                    href={`/${subdomain}/auth/login`}
+                    onClick={(e) => handleNavClick(e, `/${subdomain}/auth/login`)}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors font-open-sans"
                   >
                     Admin Login
@@ -267,11 +267,11 @@ export function TenantNavbar({
                     return (
                       <a
                         key={campaign.id}
-                        href={`/campaigns/${campaign.slug}`}
+                        href={`/${subdomain}/campaigns/${campaign.slug}`}
                         className="block px-4 py-3 hover:bg-gray-50"
                         onClick={(e) => {
                           setMobileMenuOpen(false)
-                          handleNavClick(e, `/campaigns/${campaign.slug}`)
+                          handleNavClick(e, `/${subdomain}/campaigns/${campaign.slug}`)
                         }}
                       >
                         <div className="font-semibold text-sm text-gray-900 mb-1">{campaign.title}</div>
@@ -289,11 +289,11 @@ export function TenantNavbar({
               <div className="pt-2 border-t border-gray-100 mt-2">
                 {user ? (
                   <a
-                    href={isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin"}
+                    href={isTenantOwner ? `/${subdomain}/admin` : isDonor ? `/${subdomain}/donor` : `/${subdomain}/admin`}
                     className="block px-4 py-3 bg-[#1e3a8a] text-white rounded-lg text-sm font-semibold text-center"
                     onClick={(e) => {
                       setMobileMenuOpen(false)
-                      handleNavClick(e, isTenantOwner ? "/admin" : isDonor ? "/donor" : "/admin")
+                      handleNavClick(e, isTenantOwner ? `/${subdomain}/admin` : isDonor ? `/${subdomain}/donor` : `/${subdomain}/admin`)
                     }}
                   >
                     {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
@@ -301,21 +301,21 @@ export function TenantNavbar({
                 ) : (
                   <div className="space-y-2">
                     <a
-                      href="/auth/donor-login"
+                      href={`/${subdomain}/auth/donor-login`}
                       className="block px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold text-center"
                       onClick={(e) => {
                         setMobileMenuOpen(false)
-                        handleNavClick(e, "/auth/donor-login")
+                        handleNavClick(e, `/${subdomain}/auth/donor-login`)
                       }}
                     >
                       Donor Login
                     </a>
                     <a
-                      href="/auth/login"
+                      href={`/${subdomain}/auth/login`}
                       className="block px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold text-center"
                       onClick={(e) => {
                         setMobileMenuOpen(false)
-                        handleNavClick(e, "/auth/login")
+                        handleNavClick(e, `/${subdomain}/auth/login`)
                       }}
                     >
                       Admin Login

@@ -25,22 +25,22 @@ export function TenantDonorSidebar({ tenantName, tenantSlug, donorName, donorEma
   const menuItems = [
     {
       label: "Dashboard",
-      href: "/donor",
+      href: `/${tenantSlug}/donor`,
       icon: LayoutDashboard,
     },
     {
       label: "Giving History",
-      href: "/donor/giving",
+      href: `/${tenantSlug}/donor/giving`,
       icon: History,
     },
     {
       label: "Manage Recurring",
-      href: "/donor/recurring",
+      href: `/${tenantSlug}/donor/recurring`,
       icon: CreditCard,
     },
     {
       label: "Settings",
-      href: "/donor/settings",
+      href: `/${tenantSlug}/donor/settings`,
       icon: Settings,
     },
   ]
@@ -135,7 +135,7 @@ export function TenantDonorSidebar({ tenantName, tenantSlug, donorName, donorEma
       {/* Footer */}
       <div className="border-t border-slate-700 p-2">
         <Link
-          href="/"
+          href={`/${tenantSlug}`}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors",
             collapsed && "justify-center",

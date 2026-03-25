@@ -54,7 +54,7 @@ export default async function CampaignDonatePage({ params }: PageProps) {
     <div className="min-h-screen bg-background">
       <div className="container max-w-2xl mx-auto py-12 px-4">
         {/* Back button */}
-        <Link href={`/campaigns/${slug}`}>
+        <Link href={`/${tenantSubdomain}/campaigns/${slug}`}>
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Campaign

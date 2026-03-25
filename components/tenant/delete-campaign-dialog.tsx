@@ -21,9 +21,10 @@ interface DeleteCampaignDialogProps {
   campaignId: string
   campaignTitle: string
   tenantId: string
+  subdomain: string
 }
 
-export function DeleteCampaignDialog({ campaignId, campaignTitle, tenantId }: DeleteCampaignDialogProps) {
+export function DeleteCampaignDialog({ campaignId, campaignTitle, tenantId, subdomain }: DeleteCampaignDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
@@ -42,7 +43,7 @@ export function DeleteCampaignDialog({ campaignId, campaignTitle, tenantId }: De
       if (!response.ok) throw new Error("Failed to delete campaign")
 
       toast.success("Campaign deleted successfully")
-      router.push(`/admin/campaigns`)
+      router.push(`/${subdomain}/admin/campaigns`)
       router.refresh()
     } catch (error) {
       console.error("Error deleting campaign:", error)
