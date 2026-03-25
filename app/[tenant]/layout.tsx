@@ -789,7 +789,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
             siteDescription={branding.siteDescription}
             subdomain={subdomain}
           />
-          {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
+          <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
 
           <div className="md:hidden">
             <TenantAdminMobileMenu
@@ -843,7 +843,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
         siteDescription={branding.siteDescription}
         subdomain={subdomain}
       />
-      {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
+      <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
       {!isAdminPage && (
         <TenantNavbar
           tenantName={tenantName}
