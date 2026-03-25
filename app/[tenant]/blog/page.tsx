@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { headers } from "next/headers"
+import { Suspense } from "react"
 import { createServerClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { BlogFilters } from "@/components/blog/blog-filters"
@@ -123,6 +125,17 @@ export default async function TenantBlogIndexPage({
   const { tenant: tenantSlug } = await params
   const tenant = await getTenant(tenantSlug)
 
+  // Detect subdomain vs root-domain access.
+  // On subdomains, middleware rewrites /blog → /tenant/blog server-side but browser URL stays /blog.
+  // Links must use the browser-visible URL format so Next.js client router doesn't get confused.
+  const headersList = await headers()
+  const hostname = headersList.get("x-forwarded-host") || headersList.get("host") || ""
+  const isSubdomainAccess =
+    hostname.includes(".tektonstable.com") &&
+    !hostname.startsWith("www.") &&
+    !hostname.startsWith("admin.")
+  const blogBasePath = isSubdomainAccess ? `/blog` : `/${tenantSlug}/blog`
+
   if (!tenant) {
     notFound()
   }
@@ -148,7 +161,9 @@ export default async function TenantBlogIndexPage({
           <p className="text-xl text-muted-foreground">Stories, updates, and insights from my ministry</p>
         </header>
 
-        <BlogFilters categories={categories} tags={tags} basePath={`/${tenantSlug}/blog`} />
+        <Suspense fallback={null}>
+          <BlogFilters categories={categories} tags={tags} basePath={blogBasePath} />
+        </Suspense>
 
         <div className="grid gap-8 md:grid-cols-2">
           {posts.map((post) => {
@@ -158,7 +173,7 @@ export default async function TenantBlogIndexPage({
             return (
               <article key={post.id} className="h-full">
                 <Link 
-                  href={`/${tenantSlug}/blog/${post.slug}`} 
+                  href={`${blogBasePath}/${post.slug}`} 
                   className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
                 >
                   {/* Image */}
@@ -216,7 +231,9 @@ export default async function TenantBlogIndexPage({
           </div>
         )}
 
-        <BlogPagination currentPage={page} totalPages={totalPages} basePath={`/${tenantSlug}/blog`} />
+        <Suspense fallback={null}>
+          <BlogPagination currentPage={page} totalPages={totalPages} basePath={blogBasePath} />
+        </Suspense>
       </div>
     </main>
   )
