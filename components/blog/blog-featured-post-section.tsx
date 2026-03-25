@@ -34,10 +34,6 @@ export function BlogFeaturedPostSection({ post, className = "", tenantSlug }: Bl
         <a
           href={postUrl}
           className="group block bg-white border border-gray-100 transition-all duration-300 hover:shadow-xl"
-          onClick={(e) => {
-            e.preventDefault()
-            window.location.href = postUrl
-          }}
         >
           <div className="grid md:grid-cols-2 gap-0">
             {/* Content Side */}

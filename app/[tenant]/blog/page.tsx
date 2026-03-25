@@ -156,11 +156,6 @@ export default async function TenantBlogIndexPage({
               <a 
                 href={`/${tenantSlug}/blog/${post.slug}`} 
                 className="group block"
-                onClick={(e) => {
-                  // Force navigation using window.location for reliable single-click
-                  e.preventDefault()
-                  window.location.href = `/${tenantSlug}/blog/${post.slug}`
-                }}
               >
                 {post.featured_image_url && (
                   <div className="mb-6 aspect-[16/10] w-full overflow-hidden rounded-lg">

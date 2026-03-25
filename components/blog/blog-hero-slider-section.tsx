@@ -112,42 +112,43 @@ export function BlogHeroSliderSection({
           {displayPosts.map((post, index) => {
             const postUrl = tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`
             return (
-            <a
-              key={post.id}
-              href={postUrl}
-              className="group block"
-              onClick={(e) => {
-                e.preventDefault()
-                window.location.href = postUrl
-              }}
-            >
-              <div className="space-y-2">
-                <h3
-                  className={`text-white text-sm md:text-base font-medium leading-tight transition-opacity ${
-                    activeIndex === index ? "opacity-100" : "opacity-70 group-hover:opacity-100"
-                  }`}
-                >
-                  {post.title}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-white/80">
-                  {post.resource_category && (
-                    <span className="bg-white/20 px-2 py-1 uppercase tracking-wider font-semibold">
-                      {post.resource_category.name}
+              <a
+                key={post.id}
+                href={postUrl}
+                className="group block"
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.location.href = postUrl
+                }}
+              >
+                <div className="space-y-2">
+                  <h3
+                    className={`text-white text-sm md:text-base font-medium leading-tight transition-opacity ${
+                      activeIndex === index ? "opacity-100" : "opacity-70 group-hover:opacity-100"
+                    }`}
+                  >
+                    {post.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs text-white/80">
+                    {post.resource_category && (
+                      <span className="bg-white/20 px-2 py-1 uppercase tracking-wider font-semibold">
+                        {post.resource_category.name}
+                      </span>
+                    )}
+                    <span>
+                      {new Date(post.published_at)
+                        .toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                        .toUpperCase()}
                     </span>
-                  )}
-                  <span>
-                    {new Date(post.published_at)
-                      .toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                      .toUpperCase()}
-                  </span>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+              </a>
+            )
+          })}
         </div>
       </div>
     </section>

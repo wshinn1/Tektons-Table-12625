@@ -57,10 +57,6 @@ export function BlogMasonrySection({ posts, columns = 2, rows = 2, className = "
                 key={post.id}
                 href={postUrl}
                 className="group block bg-white transition-all duration-300 hover:shadow-xl"
-                onClick={(e) => {
-                  e.preventDefault()
-                  window.location.href = postUrl
-                }}
               >
                 {/* Image */}
                 <div className="aspect-video w-full overflow-hidden bg-gray-100 relative">
