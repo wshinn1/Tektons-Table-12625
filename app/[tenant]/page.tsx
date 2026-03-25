@@ -296,81 +296,86 @@ export default async function TenantHomePage({
 
   const postsWithAuthors = posts || []
 
+  // Helper function to estimate read time based on excerpt length (rough estimate)
+  const estimateReadTime = (excerpt: string | null) => {
+    if (!excerpt) return "3 min read"
+    const wordCount = excerpt.split(/\s+/).length
+    // Assume excerpt is ~10% of full content, average reading speed 200 wpm
+    const estimatedFullWordCount = wordCount * 10
+    const minutes = Math.max(2, Math.ceil(estimatedFullWordCount / 200))
+    return `${minutes} min read`
+  }
+
   const BlogGrid = () => (
-    <div className={`space-y-12 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
+    <div className={`space-y-12 ${raleway.variable}`}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {postsWithAuthors.map((post, index) => {
           const categories =
             post.blog_post_categories?.map((cat: any) => cat.blog_categories?.name).filter(Boolean) || []
+          const primaryCategory = categories[0] || "Update"
 
           return (
             <Link
               key={post.id}
               href={`/${tenantSlug}/blog/${post.slug}`}
-              className="group block bg-white transition-all duration-300 hover:shadow-xl"
+              className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="aspect-video w-full overflow-hidden bg-muted relative">
-                {categories.length > 0 && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <div className="bg-black text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider font-raleway">
-                      {categories.join(", ")}
-                    </div>
-                  </div>
-                )}
+              {/* Image */}
+              <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
                 {post.featured_image_url ? (
                   <Image
                     src={post.featured_image_url || "/placeholder.svg"}
                     alt={post.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                     priority={index < 2}
                     loading={index < 2 ? "eager" : "lazy"}
                     quality={75}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                  <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
                 )}
               </div>
-              <div className="p-8 space-y-4 text-center">
-                <p className="text-sm text-muted-foreground uppercase tracking-wider font-bebas">
+              
+              {/* Content */}
+              <div className="p-6 space-y-3">
+                {/* Category with red dash */}
+                <div className="flex items-center gap-2">
+                  <span className="text-red-500 font-medium">—</span>
+                  <span className="text-red-500 text-sm font-medium font-raleway">
+                    {primaryCategory}
+                  </span>
+                </div>
+                
+                {/* Title */}
+                <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance font-raleway group-hover:text-gray-700 transition-colors">
+                  {post.title}
+                </h2>
+                
+                {/* Date and read time */}
+                <p className="text-sm text-gray-500 font-raleway">
                   {new Date(post.published_at).toLocaleDateString("en-US", {
                     month: "long",
                     day: "numeric",
                     year: "numeric",
                   })}
+                  <span className="mx-2">•</span>
+                  {estimateReadTime(post.excerpt)}
                 </p>
-                <div className="space-y-3">
-                  <h2 className="text-2xl text-balance leading-tight uppercase tracking-wide font-montserrat font-black">
-                    {post.title}
-                  </h2>
-                  <div className="flex justify-center">
-                    <div className="w-12 h-1 bg-orange-500"></div>
-                  </div>
-                </div>
-                {post.excerpt && (
-                  <p className="text-muted-foreground text-pretty line-clamp-3 leading-relaxed font-raleway">
-                    {post.excerpt}
-                  </p>
-                )}
-                <div className="pt-4">
-                  <button className="relative inline-flex items-center gap-2 border border-black text-black px-6 py-3 rounded-full text-sm font-medium uppercase tracking-wide overflow-hidden transition-colors duration-300 font-raleway group/btn">
-                    <span className="absolute inset-0 bg-[#7DD3E8] translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></span>
-                    <span className="relative z-10">READ MORE</span>
-                    <ChevronRight className="h-4 w-4 relative z-10" />
-                  </button>
-                </div>
               </div>
             </Link>
           )
         })}
       </div>
+      
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-8 font-raleway">
           <Button
             variant="outline"
             size="sm"
-            className="text-black font-raleway bg-transparent"
+            className="text-gray-700 font-raleway bg-transparent border-gray-300 hover:bg-gray-50"
             asChild={currentPage > 1}
             disabled={currentPage === 1}
           >
@@ -386,13 +391,13 @@ export default async function TenantHomePage({
               </span>
             )}
           </Button>
-          <span className="text-sm text-black px-4 font-raleway">
+          <span className="text-sm text-gray-600 px-4 font-raleway">
             Page {currentPage} of {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
-            className="text-black font-raleway bg-transparent"
+            className="text-gray-700 font-raleway bg-transparent border-gray-300 hover:bg-gray-50"
             asChild={currentPage < totalPages}
             disabled={currentPage === totalPages}
           >
