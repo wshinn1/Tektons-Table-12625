@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { createServerClient } from "@/lib/supabase/server"
-import { Badge } from "@/components/ui/badge"
 import { notFound } from "next/navigation"
 import { BlogFilters } from "@/components/blog/blog-filters"
 import { BlogPagination } from "@/components/blog/blog-pagination"
@@ -151,57 +150,60 @@ export default async function TenantBlogIndexPage({
 
         <BlogFilters categories={categories} tags={tags} basePath={`/${tenantSlug}/blog`} />
 
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => (
-            <article key={post.id} className="h-full">
-              <Link 
-                href={`/${tenantSlug}/blog/${post.slug}`} 
-                className="group block"
-              >
-                {post.featured_image_url && (
-                  <div className="mb-6 aspect-[16/10] w-full overflow-hidden rounded-lg">
-                    <img
-                      src={post.featured_image_url || "/placeholder.svg"}
-                      alt={post.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
+        <div className="grid gap-8 md:grid-cols-2">
+          {posts.map((post) => {
+            const primaryCategory = post.categories?.[0]?.category?.name || "Update"
+            const readTime = post.read_time || 3
+            
+            return (
+              <article key={post.id} className="h-full">
+                <Link 
+                  href={`/${tenantSlug}/blog/${post.slug}`} 
+                  className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
+                >
+                  {/* Image */}
+                  <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
+                    {post.featured_image_url ? (
+                      <img
+                        src={post.featured_image_url || "/placeholder.svg"}
+                        alt={post.title}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
+                    )}
                   </div>
-                )}
-
-                <div>
-                  {post.categories && post.categories.length > 0 && (
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      {post.categories.map((cat: any) => (
-                        <Badge key={cat.category.id} variant="secondary" className="text-xs font-medium pointer-events-none">
-                          {cat.category.name}
-                        </Badge>
-                      ))}
+                  
+                  {/* Content */}
+                  <div className="p-6 space-y-3">
+                    {/* Category with red dash */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-500 font-medium">—</span>
+                      <span className="text-red-500 text-sm font-medium">
+                        {primaryCategory}
+                      </span>
                     </div>
-                  )}
-
-                  <h2 className="mb-3 text-2xl font-bold leading-tight tracking-tight transition-colors group-hover:text-primary">
-                    {post.title}
-                  </h2>
-
-                  {post.subtitle && (
-                    <p className="mb-4 line-clamp-2 text-base leading-relaxed text-muted-foreground">{post.subtitle}</p>
-                  )}
-
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{post.read_time} min read</span>
-                    <span>·</span>
-                    <time dateTime={post.published_at}>
+                    
+                    {/* Title */}
+                    <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance group-hover:text-gray-700 transition-colors">
+                      {post.title}
+                    </h2>
+                    
+                    {/* Date and read time */}
+                    <p className="text-sm text-gray-500">
                       {new Date(post.published_at).toLocaleDateString("en-US", {
-                        month: "short",
+                        month: "long",
                         day: "numeric",
                         year: "numeric",
                       })}
-                    </time>
+                      <span className="mx-2">•</span>
+                      {readTime} min read
+                    </p>
                   </div>
-                </div>
-              </Link>
-            </article>
-          ))}
+                </Link>
+              </article>
+            )
+          })}
         </div>
 
         {posts.length === 0 && (
