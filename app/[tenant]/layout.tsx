@@ -7,6 +7,12 @@
  * Added isNavigatingRef.current checks after await calls in async functions
  * to prevent setState during Suspense hydration (React error #327).
  * Affected functions: checkTenantOwnership, fetchTenantSettings, fetchNavItems, fetchActiveCampaigns
+ * 
+ * Fix: tenant-data div always renders
+ * Date: 2026-03-25
+ * 
+ * Changed tenant-data div from conditional rendering to always render with nullish coalescing.
+ * Ensures #tenant-data element is always in DOM for queries, using empty string fallback when tenantId is null.
  */
 
 import type React from "react"
