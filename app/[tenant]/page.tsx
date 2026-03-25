@@ -306,7 +306,7 @@ export default async function TenantHomePage({
           return (
             <Link
               key={post.id}
-              href={`/blog/${post.slug}`}
+              href={`/${tenantSlug}/blog/${post.slug}`}
               className="group block bg-white transition-all duration-300 hover:shadow-xl"
             >
               <div className="aspect-video w-full overflow-hidden bg-muted relative">

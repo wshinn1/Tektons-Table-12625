@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { createServerClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
 import { notFound } from "next/navigation"
@@ -153,7 +154,7 @@ export default async function TenantBlogIndexPage({
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <article key={post.id} className="h-full">
-              <a 
+              <Link 
                 href={`/${tenantSlug}/blog/${post.slug}`} 
                 className="group block"
               >
@@ -198,7 +199,7 @@ export default async function TenantBlogIndexPage({
                     </time>
                   </div>
                 </div>
-              </a>
+              </Link>
             </article>
           ))}
         </div>

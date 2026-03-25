@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 
 interface BlogPost {
   id: string
@@ -112,14 +113,10 @@ export function BlogHeroSliderSection({
           {displayPosts.map((post, index) => {
             const postUrl = tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`
             return (
-              <a
+              <Link
                 key={post.id}
                 href={postUrl}
                 className="group block"
-                onClick={(e) => {
-                  e.preventDefault()
-                  window.location.href = postUrl
-                }}
               >
                 <div className="space-y-2">
                   <h3
@@ -146,7 +143,7 @@ export function BlogHeroSliderSection({
                     </span>
                   </div>
                 </div>
-              </a>
+              </Link>
             )
           })}
         </div>
