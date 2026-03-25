@@ -4,7 +4,7 @@ import { NewsletterPuckEditor } from "./newsletter-puck-editor"
 import { SubscribersList } from "./subscribers-list"
 import { NewslettersList } from "./newsletters-list"
 
-export function NewsletterDashboard({ tenantId, tenantName }: { tenantId: string; tenantName?: string }) {
+export function NewsletterDashboard({ tenantId, tenantSlug, tenantName }: { tenantId: string; tenantSlug: string; tenantName?: string }) {
   return (
     <div className="space-y-6">
       <div>
@@ -21,15 +21,15 @@ export function NewsletterDashboard({ tenantId, tenantName }: { tenantId: string
         </TabsList>
 
         <TabsContent value="compose" className="space-y-6">
-          <NewsletterPuckEditor tenantId={tenantId} tenantName={tenantName || "Your Organization"} />
+          <NewsletterPuckEditor tenantId={tenantId} tenantSlug={tenantSlug} tenantName={tenantName || "Your Organization"} />
         </TabsContent>
 
         <TabsContent value="drafts" className="space-y-6">
-          <NewslettersList tenantId={tenantId} statusFilter="draft" />
+          <NewslettersList tenantId={tenantId} subdomain={tenantSlug} statusFilter="draft" />
         </TabsContent>
 
         <TabsContent value="sent" className="space-y-6">
-          <NewslettersList tenantId={tenantId} statusFilter="sent" />
+          <NewslettersList tenantId={tenantId} subdomain={tenantSlug} statusFilter="sent" />
         </TabsContent>
 
         <TabsContent value="subscribers" className="space-y-6">
