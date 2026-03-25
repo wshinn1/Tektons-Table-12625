@@ -254,10 +254,14 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
         .eq("email", currentUser.email)
         .maybeSingle()
 
-      setIsDonor(!!supporter)
+      if (!isNavigatingRef.current) {
+        setIsDonor(!!supporter)
+      }
     } catch (error) {
       console.error("Error checking donor status:", error)
-      setIsDonor(false)
+      if (!isNavigatingRef.current) {
+        setIsDonor(false)
+      }
     }
   }, [])
 
@@ -829,32 +833,30 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className={`min-h-screen bg-gray-50 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
-        <GoogleAnalytics />
-        <TenantHead
+    <div className={`min-h-screen bg-gray-50 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
+      <GoogleAnalytics />
+      <TenantHead
+        tenantName={tenantName}
+        faviconUrl={branding.faviconUrl}
+        ogImageUrl={branding.ogImageUrl}
+        siteTitle={branding.siteTitle}
+        siteDescription={branding.siteDescription}
+        subdomain={subdomain}
+      />
+      {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
+      {!isAdminPage && (
+        <TenantNavbar
           tenantName={tenantName}
-          faviconUrl={branding.faviconUrl}
-          ogImageUrl={branding.ogImageUrl}
-          siteTitle={branding.siteTitle}
-          siteDescription={branding.siteDescription}
-          subdomain={subdomain}
+          navItems={navItems}
+          user={user}
+          isTenantOwner={isTenantOwner}
+          isDonor={isDonor}
+          campaigns={campaigns}
+          isCheckingAuth={isCheckingAuth}
         />
-        {tenantId && <div id="tenant-data" data-tenant-id={tenantId} className="hidden" />}
-        {!isAdminPage && (
-          <TenantNavbar
-            tenantName={tenantName}
-            navItems={navItems}
-            user={user}
-            isTenantOwner={isTenantOwner}
-            isDonor={isDonor}
-            campaigns={campaigns}
-            isCheckingAuth={isCheckingAuth}
-          />
-        )}
-        <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>
-      </div>
-    </Suspense>
+      )}
+      <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>
+    </div>
   )
 }
 
