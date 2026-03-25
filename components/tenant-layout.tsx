@@ -84,17 +84,17 @@ export async function TenantLayout({
                   </Link>
                 </li>
                 <li>
-                  <Link href="/help" className="text-muted-foreground hover:text-foreground">
+                  <Link href={`${basePath}/help`} className="text-muted-foreground hover:text-foreground">
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
+                  <Link href={`${basePath}/privacy`} className="text-muted-foreground hover:text-foreground">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="text-muted-foreground hover:text-foreground">
+                  <Link href={`${basePath}/terms`} className="text-muted-foreground hover:text-foreground">
                     Terms & Conditions
                   </Link>
                 </li>

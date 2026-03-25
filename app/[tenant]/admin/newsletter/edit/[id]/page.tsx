@@ -41,6 +41,7 @@ export default async function EditNewsletterPage({
   return (
     <NewsletterPuckEditor
       tenantId={tenant.id}
+      tenantSlug={subdomain}
       tenantName={tenant.name || tenant.subdomain}
       newsletter={newsletter}
       groups={groups}

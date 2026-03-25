@@ -28,5 +28,5 @@ export default async function ComposeNewsletterPage({
 
   const groups = await getSubscriberGroups(tenant.id)
 
-  return <NewsletterPuckEditor tenantId={tenant.id} tenantName={tenant.name || tenant.subdomain} groups={groups} />
+  return <NewsletterPuckEditor tenantId={tenant.id} tenantSlug={subdomain} tenantName={tenant.name || tenant.subdomain} groups={groups} />
 }

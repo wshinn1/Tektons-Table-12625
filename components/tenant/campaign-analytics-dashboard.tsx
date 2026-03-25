@@ -85,7 +85,7 @@ export function CampaignAnalyticsDashboard({ campaign, donations, subdomain }: P
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Link href="/admin/campaigns">
+            <Link href={`/${subdomain}/admin/campaigns`}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Campaigns
