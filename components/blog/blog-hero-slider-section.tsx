@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import Image from "next/image"
 
 interface BlogPost {
@@ -108,13 +107,19 @@ export function BlogHeroSliderSection({
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">{renderTagline()}</h1>
         </div>
 
-        {/* Post Navigation - Simple links, no hover state management */}
+        {/* Post Navigation - Plain anchor tags for reliable single-click navigation */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-          {displayPosts.map((post, index) => (
-            <Link
+          {displayPosts.map((post, index) => {
+            const postUrl = tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`
+            return (
+            <a
               key={post.id}
-              href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
+              href={postUrl}
               className="group block"
+              onClick={(e) => {
+                e.preventDefault()
+                window.location.href = postUrl
+              }}
             >
               <div className="space-y-2">
                 <h3
@@ -141,7 +146,7 @@ export function BlogHeroSliderSection({
                   </span>
                 </div>
               </div>
-            </Link>
+            </a>
           ))}
         </div>
       </div>

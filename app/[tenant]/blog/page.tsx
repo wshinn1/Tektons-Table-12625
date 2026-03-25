@@ -152,8 +152,16 @@ export default async function TenantBlogIndexPage({
 
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <a key={post.id} href={`/${tenantSlug}/blog/${post.slug}`} className="group block">
-              <article className="h-full">
+            <article key={post.id} className="h-full">
+              <a 
+                href={`/${tenantSlug}/blog/${post.slug}`} 
+                className="group block"
+                onClick={(e) => {
+                  // Force navigation using window.location for reliable single-click
+                  e.preventDefault()
+                  window.location.href = `/${tenantSlug}/blog/${post.slug}`
+                }}
+              >
                 {post.featured_image_url && (
                   <div className="mb-6 aspect-[16/10] w-full overflow-hidden rounded-lg">
                     <img
@@ -195,8 +203,8 @@ export default async function TenantBlogIndexPage({
                     </time>
                   </div>
                 </div>
-              </article>
-            </a>
+              </a>
+            </article>
           ))}
         </div>
 
