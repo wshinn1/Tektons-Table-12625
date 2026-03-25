@@ -26,11 +26,13 @@ export function BlogFeaturedPostSection({ post, className = "", tenantSlug }: Bl
     return null
   }
 
+  const postUrl = tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`
+  
   return (
     <section className={`py-12 px-6 ${className}`}>
       <div className="max-w-6xl mx-auto">
         <a
-          href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
+          href={postUrl}
           className="group block bg-white border border-gray-100 transition-all duration-300 hover:shadow-xl"
         >
           <div className="grid md:grid-cols-2 gap-0">

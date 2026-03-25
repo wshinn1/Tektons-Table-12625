@@ -51,10 +51,11 @@ export function BlogMasonrySection({ posts, columns = 2, rows = 2, className = "
           {displayPosts.map((post, index) => {
             const blogCategories = post.categories?.map((c) => c.category.name).filter(Boolean) || []
 
+            const postUrl = tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`
             return (
               <a
                 key={post.id}
-                href={tenantSlug ? `/${tenantSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
+                href={postUrl}
                 className="group block bg-white transition-all duration-300 hover:shadow-xl"
               >
                 {/* Image */}
