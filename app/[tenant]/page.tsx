@@ -562,7 +562,7 @@ export default async function TenantHomePage({
           </>
         )}
       </div>
-      <CollapsibleCTA />
+      <CollapsibleCTA subdomain={tenant.subdomain} />
     </div>
   )
 }

@@ -31,7 +31,7 @@ export default async function SubscribeSuccessPage({ params }: { params: Promise
             <h3 className="font-semibold">What's Next?</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <Button asChild variant="outline" className="h-auto py-4 justify-start bg-transparent">
-                <Link href={`/blog`}>
+                <Link href={`/${tenantSlug}/blog`}>
                   <div className="flex items-start gap-3">
                     <BookOpen className="h-5 w-5 mt-0.5" />
                     <div className="text-left">
@@ -43,7 +43,7 @@ export default async function SubscribeSuccessPage({ params }: { params: Promise
               </Button>
 
               <Button asChild variant="outline" className="h-auto py-4 justify-start bg-transparent">
-                <Link href={`/giving`}>
+                <Link href={`/${tenantSlug}/giving`}>
                   <div className="flex items-start gap-3">
                     <Heart className="h-5 w-5 mt-0.5" />
                     <div className="text-left">
@@ -58,7 +58,7 @@ export default async function SubscribeSuccessPage({ params }: { params: Promise
 
           <div className="pt-4 border-t">
             <Button asChild className="w-full">
-              <Link href={`/`}>Go to Homepage</Link>
+              <Link href={`/${tenantSlug}`}>Go to Homepage</Link>
             </Button>
           </div>
         </CardContent>

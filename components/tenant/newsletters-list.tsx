@@ -20,7 +20,7 @@ interface Newsletter {
   created_at: string
 }
 
-export function NewslettersList({ tenantId, statusFilter }: { tenantId: string; statusFilter?: "draft" | "sent" }) {
+export function NewslettersList({ tenantId, subdomain, statusFilter }: { tenantId: string; subdomain: string; statusFilter?: "draft" | "sent" }) {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -43,7 +43,7 @@ export function NewslettersList({ tenantId, statusFilter }: { tenantId: string; 
   }
 
   const handleEdit = (id: string) => {
-    router.push(`/admin/newsletter/edit/${id}`)
+    router.push(`/${subdomain}/admin/newsletter/edit/${id}`)
   }
 
   const title = statusFilter === "draft" ? "Draft Newsletters" : "Sent Newsletters"

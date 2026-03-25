@@ -74,7 +74,7 @@ export function CampaignWidget({ campaign, progressPercent, donationCount, subdo
           {/* Action buttons with GREEN theme */}
           <div className="space-y-3">
             <Button asChild size="lg" className="w-full font-semibold bg-green-600 hover:bg-green-700 text-white">
-              <Link href={`/campaigns/${campaign.slug}/donate`}>Donate now</Link>
+              <Link href={`/${subdomain}/campaigns/${campaign.slug}/donate`}>Donate now</Link>
             </Button>
             <Button
               onClick={() => setShowShare(true)}

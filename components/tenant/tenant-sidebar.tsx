@@ -272,7 +272,7 @@ export function TenantSidebar({
             </form>
           ) : (
             <a
-              href="https://tektonstable.com/auth/login"
+              href={`/${subdomain}/auth/login`}
               className="flex items-center gap-2 px-3 py-2 text-sm font-open-sans font-bold text-black rounded-lg hover:bg-[#1e3a8a] hover:text-white transition-colors block"
             >
               Sign In

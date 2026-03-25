@@ -63,10 +63,10 @@ export default async function DonationCancelPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href={`/campaigns/${slug}/donate`} className="flex-1">
+            <Link href={`/${tenantSubdomain}/campaigns/${slug}/donate`} className="flex-1">
               <Button className="w-full bg-green-600 hover:bg-green-700">Try Again</Button>
             </Link>
-            <Link href={`/campaigns/${slug}`} className="flex-1">
+            <Link href={`/${tenantSubdomain}/campaigns/${slug}`} className="flex-1">
               <Button variant="outline" className="w-full bg-transparent">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Campaign

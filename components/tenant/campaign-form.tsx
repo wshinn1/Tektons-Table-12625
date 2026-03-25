@@ -181,7 +181,7 @@ export function CampaignForm({ tenantId, subdomain, campaign }: CampaignFormProp
 
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      router.push(`/admin/campaigns`)
+      router.push(`/${subdomain}/admin/campaigns`)
       router.refresh()
     } catch (error) {
       console.error("Failed to save campaign:", error)

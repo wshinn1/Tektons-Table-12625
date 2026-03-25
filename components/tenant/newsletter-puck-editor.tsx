@@ -29,6 +29,7 @@ interface Newsletter {
 
 interface NewsletterPuckEditorProps {
   tenantId: string
+  tenantSlug: string
   tenantName: string
   newsletter?: Newsletter
   groups?: SubscriberGroup[]
@@ -52,7 +53,7 @@ function loadPuckStyles() {
   })
 }
 
-export function NewsletterPuckEditor({ tenantId, tenantName, newsletter, groups = [] }: NewsletterPuckEditorProps) {
+export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newsletter, groups = [] }: NewsletterPuckEditorProps) {
   const [subject, setSubject] = useState(newsletter?.subject || "")
   const [preheader, setPreheader] = useState(newsletter?.preheader || "")
   const [puckData, setPuckData] = useState<Data>(newsletter?.puck_data || defaultEmailTemplate)
@@ -240,7 +241,7 @@ export function NewsletterPuckEditor({ tenantId, tenantName, newsletter, groups 
       })
 
       // Redirect to newsletter list
-      window.location.href = `/${tenantId}/admin/newsletter`
+      window.location.href = `/${tenantSlug}/admin/newsletter`
     } catch (error) {
       toast({
         title: "Error",
@@ -309,7 +310,7 @@ export function NewsletterPuckEditor({ tenantId, tenantName, newsletter, groups 
       <div className="border-b bg-background p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <Link href={`/admin/newsletter`}>
+            <Link href={`/${tenantSlug}/admin/newsletter`}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back

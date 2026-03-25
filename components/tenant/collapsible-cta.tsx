@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ChevronUp } from "lucide-react"
 
-export function CollapsibleCTA() {
+export function CollapsibleCTA({ subdomain }: { subdomain: string }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -55,7 +55,7 @@ export function CollapsibleCTA() {
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Button size="default" variant="default" asChild>
-                <Link href="/giving">Make a Donation</Link>
+                <Link href={`/${subdomain}/giving`}>Make a Donation</Link>
               </Button>
               <Button
                 size="default"
@@ -63,7 +63,7 @@ export function CollapsibleCTA() {
                 className="border-gray-300 text-gray-900 hover:bg-gray-50 bg-transparent"
                 asChild
               >
-                <Link href="/contact">Get in Touch</Link>
+                <Link href={`/${subdomain}/contact`}>Get in Touch</Link>
               </Button>
             </div>
           </div>

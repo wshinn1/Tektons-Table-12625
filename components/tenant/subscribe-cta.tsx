@@ -20,7 +20,7 @@ export function SubscribeCTA({ tenantName, tenantSlug }: { tenantName: string; t
             </p>
             <div className="flex gap-3">
               <Button asChild size="sm" className="bg-white text-blue-700 hover:bg-blue-50">
-                <Link href={`/subscribe`}>
+                <Link href={`/${tenantSlug}/subscribe`}>
                   <Mail className="h-4 w-4 mr-2" />
                   Subscribe
                 </Link>
@@ -31,7 +31,7 @@ export function SubscribeCTA({ tenantName, tenantSlug }: { tenantName: string; t
                 size="sm"
                 className="border-white/50 text-white hover:bg-white/10 hover:text-white bg-transparent"
               >
-                <Link href={`/giving`}>
+                <Link href={`/${tenantSlug}/giving`}>
                   <Heart className="h-4 w-4 mr-2" />
                   Support
                 </Link>

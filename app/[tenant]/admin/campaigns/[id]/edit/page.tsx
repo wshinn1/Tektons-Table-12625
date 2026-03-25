@@ -48,8 +48,8 @@ export default async function EditCampaignPage({
           <p className="text-muted-foreground mt-2">Update your campaign details and settings</p>
         </div>
         <div className="flex gap-2">
-          <DeleteCampaignDialog campaignId={campaign.id} campaignTitle={campaign.title} tenantId={tenant.id} />
-          <Link href={`/campaigns/${campaign.slug}`}>
+          <DeleteCampaignDialog campaignId={campaign.id} campaignTitle={campaign.title} tenantId={tenant.id} subdomain={subdomain} />
+          <Link href={`/${subdomain}/campaigns/${campaign.slug}`}>
             <Button variant="outline">View Public Page</Button>
           </Link>
         </div>
