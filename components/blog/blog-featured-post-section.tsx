@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Crown } from "lucide-react"
 
 interface BlogPost {
@@ -31,7 +32,7 @@ export function BlogFeaturedPostSection({ post, className = "", tenantSlug }: Bl
   return (
     <section className={`py-12 px-6 ${className}`}>
       <div className="max-w-6xl mx-auto">
-        <a
+        <Link
           href={postUrl}
           className="group block bg-white border border-gray-100 transition-all duration-300 hover:shadow-xl"
         >
@@ -94,7 +95,7 @@ export function BlogFeaturedPostSection({ post, className = "", tenantSlug }: Bl
               )}
             </div>
           </div>
-        </a>
+        </Link>
       </div>
     </section>
   )
