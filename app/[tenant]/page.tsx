@@ -119,6 +119,7 @@ export default async function TenantHomePage({
 
   const headersList = await headers()
   const subdomain = headersList.get("x-tenant-subdomain") || ""
+  const blogBasePath = subdomain ? `/blog` : `/${tenantSlug}/blog`
 
   if (!subdomain) {
     console.log("[v0] Tenant page - No subdomain header, rendering platform homepage")
@@ -317,7 +318,7 @@ export default async function TenantHomePage({
           return (
             <Link
               key={post.id}
-              href={`/${tenantSlug}/blog/${post.slug}`}
+              href={`${blogBasePath}/${post.slug}`}
               className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
             >
               {/* Image */}
