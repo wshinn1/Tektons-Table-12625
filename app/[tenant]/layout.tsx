@@ -1,5 +1,14 @@
 "use client"
 
+/**
+ * Fix: Double-click issue on tenant blog masonry cards
+ * Date: 2026-03-25
+ * 
+ * Added isNavigatingRef.current checks after await calls in async functions
+ * to prevent setState during Suspense hydration (React error #327).
+ * Affected functions: checkTenantOwnership, fetchTenantSettings, fetchNavItems, fetchActiveCampaigns
+ */
+
 import type React from "react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { TenantNavbar } from "@/components/tenant/tenant-navbar"
