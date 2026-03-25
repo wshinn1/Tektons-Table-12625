@@ -96,7 +96,7 @@ export function BlogHeroSliderSection({
           )}
         </div>
       ))}
-      
+
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/40" />
 
