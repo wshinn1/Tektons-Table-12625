@@ -22,7 +22,7 @@ import { TenantAdminSidebar } from "@/components/tenant/tenant-admin-sidebar"
 import { TenantAdminMobileMenu } from "@/components/tenant/tenant-admin-mobile-menu"
 import { createBrowserClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import * as Sentry from "@sentry/nextjs"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
 import { GoogleAnalytics } from "@/components/google-analytics"
@@ -91,7 +91,6 @@ const defaultNavItems: NavItem[] = [
 function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const tenantSlug = params.tenant as string
 
   const isBlogPostPage = pathname?.includes("/blog/") && !pathname?.endsWith("/blog")
@@ -182,7 +181,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
     const inIframe = window.self !== window.top
     setIsInIframe(inIframe)
 
-    const embedParam = searchParams?.get("embed") === "true"
+    const embedParam = new URLSearchParams(window.location.search).get("embed") === "true"
     setIsEmbedMode(embedParam || inIframe)
 
     if (inIframe || embedParam) {
@@ -192,7 +191,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
     return () => {
       document.documentElement.classList.remove("embedded-mode")
     }
-  }, [searchParams])
+  }, [])
 
   useEffect(() => {
     // When pathname changes, we just finished navigating
@@ -867,9 +866,5 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
 }
 
 export default function TenantLayout({ children, params }: TenantLayoutProps) {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
-      <TenantLayoutInner params={params}>{children}</TenantLayoutInner>
-    </Suspense>
-  )
+  return <TenantLayoutInner params={params}>{children}</TenantLayoutInner>
 }
