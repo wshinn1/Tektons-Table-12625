@@ -1,5 +1,14 @@
 "use client"
 
+/**
+ * Fix: Double-click issue on tenant blog masonry cards
+ * Date: 2026-03-25
+ * 
+ * Added isNavigatingRef.current checks after await calls in async functions
+ * to prevent setState during Suspense hydration (React error #327).
+ * Affected functions: checkTenantOwnership, fetchTenantSettings, fetchNavItems, fetchActiveCampaigns
+ */
+
 import type React from "react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { TenantNavbar } from "@/components/tenant/tenant-navbar"
@@ -318,6 +327,12 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
           return false
         }
 
+        // Abort if navigation started while we were awaiting the Supabase response
+        if (isNavigatingRef.current) {
+          authCheckInProgressRef.current = false
+          return
+        }
+
         if (tenant) {
           setTenantId(tenant.id)
           setTenantName(tenant.full_name || tenant.subdomain)
@@ -514,7 +529,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   const fetchNavItems = async (currentTenantId: string) => {
     try {
       const items = await getMenuItemsByLocation(currentTenantId, "navbar")
-      if (items && items.length > 0) {
+      if (items && items.length > 0 && !isNavigatingRef.current) {
         setNavItems(
           items.map((item) => ({
             id: item.id,
@@ -546,7 +561,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
         return
       }
 
-      if (data) {
+      if (data && !isNavigatingRef.current) {
         setCampaigns(data)
       }
     } catch (error) {
@@ -727,7 +742,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
         .eq("subdomain", detectedSubdomain)
         .maybeSingle()
 
-      if (tenant) {
+      if (tenant && !isNavigatingRef.current) {
         console.log("[v0] Tenant settings fetched:", {
           subdomain: detectedSubdomain,
           page_builder_enabled: tenant.page_builder_enabled,
