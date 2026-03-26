@@ -172,7 +172,7 @@ export default async function TenantBlogIndexPage({
             
             return (
               <article key={post.id} className="h-full">
-                <Link 
+                <a 
                   href={`${blogBasePath}/${post.slug}`} 
                   className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
                 >
@@ -215,7 +215,7 @@ export default async function TenantBlogIndexPage({
                       {readTime} min read
                     </p>
                   </div>
-                </Link>
+                </a>
               </article>
             )
           })}
