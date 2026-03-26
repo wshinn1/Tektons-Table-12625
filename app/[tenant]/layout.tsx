@@ -843,6 +843,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
       <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
       {!isAdminPage && (
         <TenantNavbar
+          subdomain={subdomain}
           tenantName={tenantName}
           navItems={navItems}
           user={user}

@@ -203,6 +203,12 @@ export default async function TenantBlogIndexPage({
                     <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance group-hover:text-gray-700 transition-colors">
                       {post.title}
                     </h2>
+
+                    {post.subtitle && (
+                      <p className="text-sm text-gray-600 leading-snug line-clamp-2">
+                        {post.subtitle}
+                      </p>
+                    )}
                     
                     {/* Date and read time */}
                     <p className="text-sm text-gray-500">

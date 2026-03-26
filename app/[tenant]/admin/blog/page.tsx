@@ -2,7 +2,7 @@ import { getBlogPosts } from "@/app/actions/blog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
+
 import { PlusCircle } from "lucide-react"
 import { createServerClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
@@ -33,10 +33,10 @@ export default async function TenantBlogPage({ params }: Props) {
           <p className="text-muted-foreground">Manage your blog posts</p>
         </div>
         <Button asChild>
-          <Link href={`/${tenantSlug}/admin/blog/create`}>
+          <a href={`/${tenantSlug}/admin/blog/create`}>
             <PlusCircle className="mr-2 h-4 w-4" />
             New Post
-          </Link>
+          </a>
         </Button>
       </div>
 
@@ -46,7 +46,7 @@ export default async function TenantBlogPage({ params }: Props) {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground mb-4">No blog posts yet</p>
               <Button asChild>
-                <Link href={`/${tenantSlug}/admin/blog/create`}>Create your first post</Link>
+                <a href={`/${tenantSlug}/admin/blog/create`}>Create your first post</a>
               </Button>
             </CardContent>
           </Card>
@@ -69,10 +69,10 @@ export default async function TenantBlogPage({ params }: Props) {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/${tenantSlug}/admin/blog/${post.id}/edit`}>Edit</Link>
+                      <a href={`/${tenantSlug}/admin/blog/${post.id}/edit`}>Edit</a>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/${tenantSlug}/blog/${post.slug}`}>View</Link>
+                      <a href={`/${tenantSlug}/blog/${post.slug}`}>View</a>
                     </Button>
                   </div>
                 </div>
