@@ -9,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Heart } from "lucide-react"
 import { formatCurrency } from "@/lib/donation-tiers"
 import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
 
 interface DonationFlowClientProps {
   subdomain: string
@@ -34,7 +33,6 @@ export function DonationFlowClient({
   progressPercent,
   supportersCount,
 }: DonationFlowClientProps) {
-  const router = useRouter()
   const [isNavigating, setIsNavigating] = useState(false)
   const [donationType, setDonationType] = useState<"once" | "monthly">("monthly")
   const [selectedAmount, setSelectedAmount] = useState<number | null>(PRESET_AMOUNTS[SUGGESTED_INDEX])
@@ -67,8 +65,10 @@ export function DonationFlowClient({
       anonymous: displayAnonymous.toString(),
     })
 
-    // Use tenant-scoped route
-    router.push(`/${subdomain}/giving/checkout?${params.toString()}`)
+    const isSubdomain = window.location.hostname.includes('.tektonstable.com') &&
+      !window.location.hostname.startsWith('www.')
+    const prefix = isSubdomain ? '' : `/${subdomain}`
+    window.location.href = `${prefix}/giving/checkout?${params.toString()}`
   }
 
   return (
