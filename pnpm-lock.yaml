@@ -221,6 +221,9 @@ importers:
       pg-native:
         specifier: latest
         version: 3.7.0
+      qr-code-styling:
+        specifier: 1.9.2
+        version: 1.9.2
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -4277,6 +4280,13 @@ packages:
 
   qler@0.6.2:
     resolution: {integrity: sha512-W29Qj+cztc+zCwcTVAHrDLhzweRPScPrCJTn2OKmMFHly+44ipZt6AWNwajYIsAw3MVCtlxv//08esiLvmf1sw==}
+
+  qr-code-styling@1.9.2:
+    resolution: {integrity: sha512-RgJaZJ1/RrXJ6N0j7a+pdw3zMBmzZU4VN2dtAZf8ZggCfRB5stEQ3IoDNGaNhYY3nnZKYlYSLl5YkfWN5dPutg==}
+    engines: {node: '>=18.18.0'}
+
+  qrcode-generator@1.5.2:
+    resolution: {integrity: sha512-pItrW0Z9HnDBnFmgiNrY1uxRdri32Uh9EjNYLPVC2zZ3ZRIIEqBoDgm4DkvDwNNDHTK7FNkmr8zAa77BYc9xNw==}
 
   qs@6.15.0:
     resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
@@ -9088,6 +9098,12 @@ snapshots:
     dependencies:
       p-queue: 6.6.2
       uuid: 3.4.0
+
+  qr-code-styling@1.9.2:
+    dependencies:
+      qrcode-generator: 1.5.2
+
+  qrcode-generator@1.5.2: {}
 
   qs@6.15.0:
     dependencies:
