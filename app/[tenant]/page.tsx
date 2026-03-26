@@ -185,6 +185,7 @@ export default async function TenantHomePage({
         id,
         slug,
         title,
+        subtitle,
         excerpt,
         featured_image_url,
         published_at,
@@ -311,10 +312,6 @@ export default async function TenantHomePage({
     <div className={`space-y-12 ${raleway.variable}`}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {postsWithAuthors.map((post, index) => {
-          const categories =
-            post.blog_post_categories?.map((cat: any) => cat.blog_categories?.name).filter(Boolean) || []
-          const primaryCategory = categories[0] || "Update"
-
           return (
             <a
               key={post.id}
@@ -341,13 +338,12 @@ export default async function TenantHomePage({
               
               {/* Content */}
               <div className="p-6 space-y-3">
-                {/* Category with red dash */}
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500 font-medium">—</span>
-                  <span className="text-red-500 text-sm font-medium font-raleway">
-                    {primaryCategory}
-                  </span>
-                </div>
+                {/* Subtitle */}
+                {post.subtitle && (
+                  <p className="text-sm text-gray-600 font-raleway line-clamp-2">
+                    {post.subtitle}
+                  </p>
+                )}
                 
                 {/* Title */}
                 <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance font-raleway group-hover:text-gray-700 transition-colors">

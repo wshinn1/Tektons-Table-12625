@@ -167,7 +167,6 @@ export default async function TenantBlogIndexPage({
 
         <div className="grid gap-8 md:grid-cols-2">
           {posts.map((post) => {
-            const primaryCategory = post.categories?.[0]?.category?.name || "Update"
             const readTime = post.read_time || 3
             
             return (
@@ -191,13 +190,12 @@ export default async function TenantBlogIndexPage({
                   
                   {/* Content */}
                   <div className="p-6 space-y-3">
-                    {/* Category with red dash */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-red-500 font-medium">—</span>
-                      <span className="text-red-500 text-sm font-medium">
-                        {primaryCategory}
-                      </span>
-                    </div>
+                    {/* Subtitle */}
+                    {post.subtitle && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {post.subtitle}
+                      </p>
+                    )}
                     
                     {/* Title */}
                     <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance group-hover:text-gray-700 transition-colors">
