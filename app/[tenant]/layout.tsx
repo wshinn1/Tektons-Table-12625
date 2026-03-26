@@ -777,50 +777,42 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
 
   if (isAdminPage) {
     return (
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        }
-      >
-        <div className={`min-h-screen bg-gray-100 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
-          <GoogleAnalytics />
-          <TenantHead
-            tenantName={tenantName}
-            faviconUrl={branding.faviconUrl}
-            ogImageUrl={branding.ogImageUrl}
-            siteTitle={branding.siteTitle}
-            siteDescription={branding.siteDescription}
+      <div className={`min-h-screen bg-gray-100 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
+        <GoogleAnalytics />
+        <TenantHead
+          tenantName={tenantName}
+          faviconUrl={branding.faviconUrl}
+          ogImageUrl={branding.ogImageUrl}
+          siteTitle={branding.siteTitle}
+          siteDescription={branding.siteDescription}
+          subdomain={subdomain}
+        />
+        <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
+
+        <div className="md:hidden">
+          <TenantAdminMobileMenu
             subdomain={subdomain}
-          />
-          <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
-
-          <div className="md:hidden">
-            <TenantAdminMobileMenu
-              subdomain={subdomain}
-              tenantName={tenantName}
-              user={user}
-              pageBuilderEnabled={pageBuilderEnabled}
-            >
-              {children}
-            </TenantAdminMobileMenu>
-          </div>
-
-          {/* Desktop layout */}
-          <div className="hidden md:block">
-            <TenantAdminSidebar
-              subdomain={subdomain}
-              tenantName={tenantName}
-              user={user}
-              pageBuilderEnabled={pageBuilderEnabled}
-            />
-            {/* The sidebar component handles its own width (64 or 16 when collapsed) */}
-            {/* Content has ml-64 by default, but CSS transitions handle the sidebar collapse */}
-            <main className="min-h-screen transition-all duration-300 md:ml-64">{children}</main>
-          </div>
+            tenantName={tenantName}
+            user={user}
+            pageBuilderEnabled={pageBuilderEnabled}
+          >
+            {children}
+          </TenantAdminMobileMenu>
         </div>
-      </Suspense>
+
+        {/* Desktop layout */}
+        <div className="hidden md:block">
+          <TenantAdminSidebar
+            subdomain={subdomain}
+            tenantName={tenantName}
+            user={user}
+            pageBuilderEnabled={pageBuilderEnabled}
+          />
+          {/* The sidebar component handles its own width (64 or 16 when collapsed) */}
+          {/* Content has ml-64 by default, but CSS transitions handle the sidebar collapse */}
+          <main className="min-h-screen transition-all duration-300 md:ml-64">{children}</main>
+        </div>
+      </div>
     )
   }
 

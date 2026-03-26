@@ -2,8 +2,7 @@
 
 import type React from "react"
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useState, useEffect, useCallback } from "react"
 import {
@@ -63,7 +62,6 @@ export function TenantAdminSidebar({
   pageBuilderEnabled = false,
 }: TenantAdminSidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -157,7 +155,7 @@ export function TenantAdminSidebar({
           const Icon = item.icon
           const active = isActive(item.href)
           return (
-            <Link
+            <a
               key={item.href}
               href={item.href}
               onClick={() => handleNavClick(isMobile)}
@@ -170,14 +168,14 @@ export function TenantAdminSidebar({
             >
               <Icon className="h-5 w-5 shrink-0" />
               {(isMobile || !isCollapsed) && <span>{item.label}</span>}
-            </Link>
+            </a>
           )
         })}
       </nav>
 
       {/* Footer */}
       <div className={cn("border-t border-gray-800 p-2 space-y-1", !isMobile && isCollapsed && "px-1")}>
-        <Link
+        <a
           href={`/${subdomain}`}
           onClick={() => handleNavClick(isMobile)}
           title={!isMobile && isCollapsed ? "View Site" : undefined}
@@ -188,7 +186,7 @@ export function TenantAdminSidebar({
         >
           <ExternalLink className="h-5 w-5 shrink-0" />
           {(isMobile || !isCollapsed) && <span>View Site</span>}
-        </Link>
+        </a>
         <form action={handleSignOut}>
           <button
             type="submit"
