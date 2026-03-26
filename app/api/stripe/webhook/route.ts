@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getResend, FROM_EMAIL } from "@/lib/resend"
 import { EMAIL_TEMPLATES } from "@/lib/email-templates"
 import { revalidatePath } from "next/cache"
+import { generateDonationReceiptPdf } from "@/lib/pdf/donation-receipt"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-11-20.acacia",
@@ -427,12 +428,34 @@ export async function POST(req: Request) {
               })
 
               try {
+                const pdfBuffer = await generateDonationReceiptPdf({
+                  donorName: donorName || "Valued Supporter",
+                  donorEmail,
+                  amount: Math.round(donationAmount * 100),
+                  currency: "$",
+                  tenantName: tenant.full_name,
+                  tenantSlug: tenant.subdomain,
+                  donationDate: new Date().toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }),
+                  transactionId: (session.payment_intent as string) || session.id,
+                  isRecurring: session.mode === "subscription",
+                })
+
                 await resend.emails.send({
                   from: `Kingdom Building <${FROM_EMAIL}>`,
                   to: donorEmail,
                   subject: receiptEmail.subject,
                   html: receiptEmail.html,
                   replyTo: tenant.email,
+                  attachments: [
+                    {
+                      filename: `donation-receipt-${new Date().toISOString().split("T")[0]}.pdf`,
+                      content: pdfBuffer,
+                    },
+                  ],
                 })
               } catch (emailError: any) {
                 console.error("Error sending campaign receipt:", emailError)
@@ -464,6 +487,58 @@ export async function POST(req: Request) {
             }
           } catch (subscribeError) {
             console.error("Exception adding donor to subscribers:", subscribeError)
+          }
+        }
+
+        if (donorEmail && !campaignId) {
+          try {
+            const receiptEmail = EMAIL_TEMPLATES.donationReceipt({
+              donorName: donorName || "Valued Supporter",
+              donorEmail,
+              amount: Math.round(donationAmount * 100),
+              currency: "$",
+              tenantName: tenant.full_name,
+              tenantSlug: tenant.subdomain,
+              donationDate: new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+              transactionId: (session.payment_intent as string) || session.id,
+              isRecurring: session.mode === "subscription",
+            })
+
+            const pdfBuffer = await generateDonationReceiptPdf({
+              donorName: donorName || "Valued Supporter",
+              donorEmail,
+              amount: Math.round(donationAmount * 100),
+              currency: "$",
+              tenantName: tenant.full_name,
+              tenantSlug: tenant.subdomain,
+              donationDate: new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+              transactionId: (session.payment_intent as string) || session.id,
+              isRecurring: session.mode === "subscription",
+            })
+
+            await resend.emails.send({
+              from: `Kingdom Building <${FROM_EMAIL}>`,
+              to: donorEmail,
+              subject: receiptEmail.subject,
+              html: receiptEmail.html,
+              replyTo: tenant.email,
+              attachments: [
+                {
+                  filename: `donation-receipt-${new Date().toISOString().split("T")[0]}.pdf`,
+                  content: pdfBuffer,
+                },
+              ],
+            })
+          } catch (emailError) {
+            console.error("Error sending donation receipt:", emailError)
           }
         }
 

@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState } from "react"
 import { useParams } from "next/navigation"
-import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +15,10 @@ import { createClient } from "@/lib/supabase/client"
 export default function TenantForgotPassword() {
   const params = useParams()
   const subdomain = params.tenant as string
+  
+  const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes(".tektonstable.com") && !window.location.hostname.startsWith("www.")
+  const loginPath = isSubdomain ? "/auth/login" : `/${subdomain}/auth/login`
+  
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
@@ -73,11 +76,11 @@ export default function TenantForgotPassword() {
               <p>Didn't receive the email? Check your spam folder or try again in a few minutes.</p>
             </div>
 
-            <Button asChild variant="outline" className="w-full bg-transparent">
-              <Link href={`/${subdomain}/auth/login`}>
+            <Button variant="outline" className="w-full bg-transparent">
+              <a href={loginPath} className="flex items-center justify-center w-full">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Login
-              </Link>
+              </a>
             </Button>
           </CardContent>
         </Card>
@@ -118,9 +121,9 @@ export default function TenantForgotPassword() {
 
             <div className="text-center text-sm text-muted-foreground">
               Remember your password?{" "}
-              <Link href={`/${subdomain}/auth/login`} className="text-primary hover:underline">
+              <a href={loginPath} className="text-primary hover:underline">
                 Back to Login
-              </Link>
+              </a>
             </div>
           </form>
         </CardContent>

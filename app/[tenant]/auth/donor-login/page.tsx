@@ -2,8 +2,6 @@
 
 import type React from "react"
 import { useState, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,12 +16,17 @@ export default function DonorLoginPage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = use(params)
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes(".tektonstable.com") && !window.location.hostname.startsWith("www.")
+  const donorPath = isSubdomain ? "/donor" : `/${tenantSlug}/donor`
+  const forgotPasswordPath = isSubdomain ? "/auth/forgot-password" : `/${tenantSlug}/auth/forgot-password`
+  const signupPath = isSubdomain ? "/auth/donor-signup" : `/${tenantSlug}/auth/donor-signup`
+  const homePath = isSubdomain ? "/" : `/${tenantSlug}`
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +44,7 @@ export default function DonorLoginPage({
         await new Promise(resolve => setTimeout(resolve, 500))
         
         // Use window.location for a full page reload to ensure server reads fresh cookies
-        window.location.href = `/${tenantSlug}/donor`
+        window.location.href = donorPath
       }
     } catch (err) {
       setError("An unexpected error occurred")
@@ -105,22 +108,22 @@ export default function DonorLoginPage({
             </Button>
 
             <div className="text-center text-sm">
-              <Link href={`/${tenantSlug}/auth/supporter-forgot-password`} className="text-muted-foreground hover:text-primary">
+              <a href={forgotPasswordPath} className="text-muted-foreground hover:text-primary">
                 Forgot password?
-              </Link>
+              </a>
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link href={`/${tenantSlug}/auth/donor-signup`} className="text-primary hover:underline">
+              Don&apos;t have an account?{" "}
+              <a href={signupPath} className="text-primary hover:underline">
                 Create one
-              </Link>
+              </a>
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
-              <Link href={`/${tenantSlug}`} className="text-primary hover:underline">
+              <a href={homePath} className="text-primary hover:underline">
                 Return to site
-              </Link>
+              </a>
             </div>
           </form>
         </CardContent>
