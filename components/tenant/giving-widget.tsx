@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronUp, TrendingUp, X, Heart } from "lucide-react"
-import Link from "next/link"
 import { formatCurrency } from "@/lib/donation-tiers"
 import { cn } from "@/lib/utils"
 
@@ -210,11 +209,28 @@ export function GivingWidget({
 
               {/* Buttons */}
               <div className="space-y-2">
-                <Button asChild size="lg" className="w-full font-semibold">
-                  <Link href={`/${subdomain}/giving`}>Donate now</Link>
+                <Button
+                  size="lg"
+                  className="w-full font-semibold"
+                  onClick={() => {
+                    const isSubdomain = window.location.hostname.includes('.tektonstable.com') &&
+                      !window.location.hostname.startsWith('www.')
+                    window.location.href = isSubdomain ? '/giving' : `/${subdomain}/giving`
+                  }}
+                >
+                  Donate now
                 </Button>
-                <Button asChild size="lg" variant="secondary" className="w-full">
-                  <Link href={`/${subdomain}/about`}>Learn More</Link>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    const isSubdomain = window.location.hostname.includes('.tektonstable.com') &&
+                      !window.location.hostname.startsWith('www.')
+                    window.location.href = isSubdomain ? '/about' : `/${subdomain}/about`
+                  }}
+                >
+                  Learn More
                 </Button>
               </div>
 
@@ -289,11 +305,28 @@ export function GivingWidget({
           </div>
 
           <div className="space-y-2">
-            <Button asChild size={compact ? "default" : "lg"} className="w-full font-semibold">
-              <Link href={`/${subdomain}/giving`}>Donate now</Link>
+            <Button
+              size={compact ? "default" : "lg"}
+              className="w-full font-semibold"
+              onClick={() => {
+                const isSubdomain = window.location.hostname.includes('.tektonstable.com') &&
+                  !window.location.hostname.startsWith('www.')
+                window.location.href = isSubdomain ? '/giving' : `/${subdomain}/giving`
+              }}
+            >
+              Donate now
             </Button>
-            <Button asChild size={compact ? "default" : "lg"} variant="secondary" className="w-full">
-              <Link href={`/${subdomain}/about`}>Learn More</Link>
+            <Button
+              size={compact ? "default" : "lg"}
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                const isSubdomain = window.location.hostname.includes('.tektonstable.com') &&
+                  !window.location.hostname.startsWith('www.')
+                window.location.href = isSubdomain ? '/about' : `/${subdomain}/about`
+              }}
+            >
+              Learn More
             </Button>
           </div>
 
