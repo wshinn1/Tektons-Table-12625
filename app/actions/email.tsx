@@ -186,7 +186,7 @@ async function sendTenantPostNotifications(post: any, tenantId: string, supabase
     .from("tenant_email_subscribers")
     .select("*")
     .eq("tenant_id", tenantId)
-    .eq("status", "active")
+    .in("status", ["subscribed", "active"])
 
   // Get all financial supporters
   const { data: supporters, error: supportersError } = await supabase
