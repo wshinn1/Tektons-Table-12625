@@ -185,6 +185,7 @@ export default async function TenantHomePage({
         id,
         slug,
         title,
+        subtitle,
         excerpt,
         featured_image_url,
         published_at,
@@ -353,6 +354,12 @@ export default async function TenantHomePage({
                 <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance font-raleway group-hover:text-gray-700 transition-colors">
                   {post.title}
                 </h2>
+
+                {post.subtitle && (
+                  <p className="text-sm text-gray-600 leading-snug font-raleway line-clamp-2">
+                    {post.subtitle}
+                  </p>
+                )}
                 
                 {/* Date and read time */}
                 <p className="text-sm text-gray-500 font-raleway">
