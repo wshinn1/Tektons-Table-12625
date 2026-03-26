@@ -141,11 +141,14 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
     if (!subject.trim()) {
       toast({
         title: "Subject required",
-        description: "Please enter a subject for your newsletter",
+        description: "Please enter a subject",
         variant: "destructive",
       })
       return
     }
+
+    const testEmail = window.prompt("Enter the email address to send the test to:")
+    if (!testEmail || !testEmail.includes("@")) return
 
     setIsSendingTest(true)
     try {
@@ -153,24 +156,18 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
         preheaderText: preheader,
         title: subject,
       })
-      const plainText = renderPuckToPlainText(puckData)
 
-      const response = await fetch("/api/newsletters/send-test", {
+      const response = await fetch("/api/newsletter/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tenantId,
-          subject: `[TEST] ${subject}`,
-          html: htmlContent,
-          text: plainText,
-        }),
+        body: JSON.stringify({ email: testEmail, subject, content: htmlContent }),
       })
 
       if (!response.ok) throw new Error("Failed to send test")
 
       toast({
         title: "Test email sent",
-        description: "Check your inbox for the test email",
+        description: `Check ${testEmail} for the test email`,
       })
     } catch (error) {
       toast({
