@@ -3,8 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,8 +13,11 @@ import { CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
+  
+  const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes(".tektonstable.com") && !window.location.hostname.startsWith("www.")
+  const loginPath = isSubdomain ? "/auth/login" : `/${tenantSlug}/auth/login`
+  const forgotPasswordPath = isSubdomain ? "/auth/forgot-password" : `/${tenantSlug}/auth/forgot-password`
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
@@ -58,7 +60,7 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
       } else {
         setSuccess(true)
         setTimeout(() => {
-          router.push(`/${tenantSlug}/auth/login`)
+          window.location.href = loginPath
         }, 3000)
       }
     } catch (err) {
@@ -81,8 +83,8 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
 
-            <Button asChild className="w-full">
-              <Link href={`/${tenantSlug}/auth/forgot-password`}>Request New Reset Link</Link>
+            <Button className="w-full">
+              <a href={forgotPasswordPath} className="flex items-center justify-center w-full">Request New Reset Link</a>
             </Button>
           </CardContent>
         </Card>
@@ -110,8 +112,8 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
 
             <p className="text-sm text-muted-foreground text-center">Redirecting to login page...</p>
 
-            <Button asChild className="w-full">
-              <Link href={`/${tenantSlug}/auth/login`}>Go to Login</Link>
+            <Button className="w-full">
+              <a href={loginPath} className="flex items-center justify-center w-full">Go to Login</a>
             </Button>
           </CardContent>
         </Card>
