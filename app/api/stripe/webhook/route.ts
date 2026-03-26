@@ -467,6 +467,36 @@ export async function POST(req: Request) {
           }
         }
 
+        if (donorEmail && !campaignId) {
+          try {
+            const receiptEmail = EMAIL_TEMPLATES.donationReceipt({
+              donorName: donorName || "Valued Supporter",
+              donorEmail,
+              amount: Math.round(donationAmount * 100),
+              currency: "$",
+              tenantName: tenant.full_name,
+              tenantSlug: tenant.subdomain,
+              donationDate: new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+              transactionId: (session.payment_intent as string) || session.id,
+              isRecurring: session.mode === "subscription",
+            })
+
+            await resend.emails.send({
+              from: `Kingdom Building <${FROM_EMAIL}>`,
+              to: donorEmail,
+              subject: receiptEmail.subject,
+              html: receiptEmail.html,
+              replyTo: tenant.email,
+            })
+          } catch (emailError) {
+            console.error("Error sending donation receipt:", emailError)
+          }
+        }
+
         try {
           const { data: tenantData } = await supabase.from("tenants").select("subdomain").eq("id", tenantId).single()
 

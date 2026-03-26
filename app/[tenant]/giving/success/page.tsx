@@ -1,8 +1,8 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
 
 export default async function GivingSuccessPage({
   params,
@@ -21,6 +21,11 @@ export default async function GivingSuccessPage({
     redirect("/")
   }
 
+  const headersList = await headers()
+  const tenantSubdomain = headersList.get("x-tenant-subdomain") || ""
+  const isSubdomain = tenantSubdomain === tenantSlug
+  const basePath = isSubdomain ? "" : `/${tenantSlug}`
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mx-auto max-w-md text-center">
@@ -33,10 +38,10 @@ export default async function GivingSuccessPage({
         </p>
         <div className="space-y-4">
           <Button asChild className="w-full">
-            <Link href={`/${tenantSlug}`}>Return to Homepage</Link>
+            <a href={`${basePath}/`}>Return to Homepage</a>
           </Button>
           <Button asChild variant="outline" className="w-full bg-transparent">
-            <Link href={`/${tenantSlug}/giving`}>Make Another Gift</Link>
+            <a href={`${basePath}/giving`}>Make Another Gift</a>
           </Button>
         </div>
       </div>
