@@ -316,7 +316,7 @@ export default async function TenantHomePage({
           const primaryCategory = categories[0] || "Update"
 
           return (
-            <Link
+            <a
               key={post.id}
               href={`${blogBasePath}/${post.slug}`}
               className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
@@ -365,7 +365,7 @@ export default async function TenantHomePage({
                   {estimateReadTime(post.excerpt)}
                 </p>
               </div>
-            </Link>
+            </a>
           )
         })}
       </div>
