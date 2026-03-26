@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,7 +38,6 @@ export function SubscribeForm({
   currentUserEmail?: string | null
   currentUserName?: string
 }) {
-  const router = useRouter()
   const basePath = isSubdomain ? "" : `/${tenantSlug}`
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -72,7 +70,7 @@ export function SubscribeForm({
         setSuccess(true)
         // Redirect to success page after a brief delay
         setTimeout(() => {
-          router.push(`${basePath}/subscribe/success`)
+          window.location.href = `${basePath}/subscribe/success`
         }, 1000)
       }
     } catch (err) {
@@ -108,7 +106,7 @@ export function SubscribeForm({
           setError(result.error)
         }
       } else {
-        router.push(`${basePath}/subscribe/success`)
+        window.location.href = `${basePath}/subscribe/success`
       }
     } catch (err) {
       setError("An unexpected error occurred")
@@ -134,7 +132,7 @@ export function SubscribeForm({
       if (result.error) {
         setError(result.error)
       } else {
-        router.push(`${basePath}/subscribe/success`)
+        window.location.href = `${basePath}/subscribe/success`
       }
     } catch (err) {
       setError("An unexpected error occurred")
