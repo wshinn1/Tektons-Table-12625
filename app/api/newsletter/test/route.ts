@@ -11,14 +11,19 @@ export async function POST(request: NextRequest) {
 
     const resend = getResend()
 
-    await resend.emails.send({
+    const { data, error: resendError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "hello@tektonstable.com",
       to: email,
       subject: `[TEST] ${subject}`,
       html: content,
     })
 
-    return NextResponse.json({ success: true })
+    if (resendError) {
+      console.error("Resend error sending test email:", resendError)
+      return NextResponse.json({ error: resendError.message || "Failed to send test email" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, id: data?.id })
   } catch (error) {
     console.error("Error sending test email:", error)
     return NextResponse.json({ error: "Failed to send test email" }, { status: 500 })

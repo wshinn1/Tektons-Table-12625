@@ -280,8 +280,13 @@ export async function sendNewsletter(newsletterId: string) {
         emailData.reply_to = replyToEmail
       }
 
-      await resend.emails.send(emailData)
-      successCount++
+      const { error: resendError } = await resend.emails.send(emailData)
+      if (resendError) {
+        console.error(`Resend error sending newsletter to ${subscriber.email}:`, resendError)
+        failCount++
+      } else {
+        successCount++
+      }
     } catch (error) {
       console.error(`Failed to send newsletter to ${subscriber.email}:`, error)
       failCount++
@@ -388,12 +393,17 @@ export async function sendTestNewsletter(newsletterId: string, testEmail: string
       emailData.reply_to = replyToEmail
     }
 
-    await resend.emails.send(emailData)
+    const { error: resendError } = await resend.emails.send(emailData)
+
+    if (resendError) {
+      console.error(`Resend error sending test newsletter to ${testEmail}:`, resendError)
+      throw new Error(resendError.message || "Failed to send test email")
+    }
 
     return { ok: true, message: "Test email sent successfully" }
   } catch (error) {
     console.error(`Failed to send test newsletter to ${testEmail}:`, error)
-    throw new Error("Failed to send test email")
+    throw error instanceof Error ? error : new Error("Failed to send test email")
   }
 }
 
