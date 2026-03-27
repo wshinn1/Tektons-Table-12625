@@ -90,12 +90,20 @@ export function TenantAdminSidebar({
     localStorage.setItem(`tenant-admin-sidebar-collapsed-${subdomain}`, String(newState))
   }
 
-  const adminNavItems = getAdminNavItems(subdomain)
-  const pageBuilderItems = getPageBuilderItems(subdomain)
+  // If subdomain prop is empty (layout's useEffect hasn't fired yet), derive it from the URL
+  // synchronously so nav hrefs are never built with an empty segment (which creates //admin/... URLs)
+  const navSubdomain = subdomain || (typeof window !== "undefined"
+    ? (window.location.hostname.split(".").length >= 3
+        ? window.location.hostname.split(".")[0]
+        : window.location.pathname.split("/").filter(Boolean)[0] || "")
+    : "")
+
+  const adminNavItems = getAdminNavItems(navSubdomain)
+  const pageBuilderItems = getPageBuilderItems(navSubdomain)
 
   const isActive = (href: string) => {
-    if (href === `/${subdomain}/admin`) {
-      return pathname === `/${subdomain}/admin`
+    if (href === `/${navSubdomain}/admin`) {
+      return pathname === `/${navSubdomain}/admin`
     }
     return pathname === href || pathname.startsWith(href + "/")
   }
@@ -180,7 +188,7 @@ export function TenantAdminSidebar({
       {/* Footer */}
       <div className={cn("border-t border-gray-800 p-2 space-y-1", !isMobile && isCollapsed && "px-1")}>
         <a
-          href={`/${subdomain}`}
+          href={`/${navSubdomain}`}
           onClick={() => handleNavClick(isMobile)}
           title={!isMobile && isCollapsed ? "View Site" : undefined}
           className={cn(
