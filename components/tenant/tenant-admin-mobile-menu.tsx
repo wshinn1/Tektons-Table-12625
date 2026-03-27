@@ -112,18 +112,19 @@ export function TenantAdminMobileMenu({
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Fixed top bar with hamburger menu */}
-      <header 
-        className="fixed top-0 left-0 right-0 bg-gray-900 text-white h-14 flex items-center px-4 z-50"
+      <header
+        className="fixed top-0 left-0 right-0 bg-gray-900 text-white h-14 flex items-center px-4 z-[60]"
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setMenuOpen(true)}
-          className="text-white hover:bg-gray-800 -ml-2"
+        <button
+          type="button"
           aria-label="Open menu"
+          className="flex items-center justify-center w-10 h-10 -ml-2 rounded-md text-white hover:bg-gray-800 active:bg-gray-700 cursor-pointer select-none"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+          onClick={() => setMenuOpen(true)}
+          onTouchEnd={(e) => { e.preventDefault(); setMenuOpen(true) }}
         >
-          <MenuIcon className="h-6 w-6" />
-        </Button>
+          <MenuIcon className="h-6 w-6 pointer-events-none" />
+        </button>
         <span className="flex-1 text-center font-semibold truncate px-2">{currentPage}</span>
         {/* Spacer to balance the hamburger button */}
         <div className="w-10" />
@@ -132,7 +133,7 @@ export function TenantAdminMobileMenu({
       {/* Slide-out menu overlay */}
       {menuOpen && (
         <div 
-          className="fixed inset-0 z-[100]"
+          className="fixed inset-0 z-[200]"
           aria-modal="true"
           role="dialog"
         >
