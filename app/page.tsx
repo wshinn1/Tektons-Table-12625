@@ -30,7 +30,7 @@ export default async function LandingPage() {
     .eq("is_active", true)
     .order("display_order", { ascending: true })
 
-  console.log("[v0] Homepage sections fetched:", { count: sections?.length, error })
+  // Silently handle sections fetch
 
   // Use empty array if no sections found
   const displaySections = sections || []

@@ -410,7 +410,7 @@ export async function POST(req: Request) {
             }
 
             if (donorEmail) {
-              const campaignUrl = `https://${tenant.tenant_id}.${process.env.NEXT_PUBLIC_SITE_URL || "tektonstable.com"}/campaigns/${campaign.slug}`
+              const campaignUrl = `https://${tenant.subdomain}.${process.env.NEXT_PUBLIC_SITE_URL || "tektonstable.com"}/campaigns/${campaign.slug}`
 
               const receiptEmail = EMAIL_TEMPLATES.campaignDonationReceipt({
                 donorName: donorName || "Valued Supporter",
@@ -427,6 +427,8 @@ export async function POST(req: Request) {
                 campaignUrl,
               })
 
+              // Generate PDF separately — non-blocking
+              let pdfAttachment: { filename: string; content: Buffer } | undefined
               try {
                 const pdfBuffer = await generateDonationReceiptPdf({
                   donorName: donorName || "Valued Supporter",
@@ -443,19 +445,22 @@ export async function POST(req: Request) {
                   transactionId: (session.payment_intent as string) || session.id,
                   isRecurring: session.mode === "subscription",
                 })
+                pdfAttachment = {
+                  filename: `donation-receipt-${new Date().toISOString().split("T")[0]}.pdf`,
+                  content: pdfBuffer,
+                }
+              } catch (pdfError) {
+                console.error("PDF generation failed, sending email without attachment:", pdfError)
+              }
 
+              try {
                 await resend.emails.send({
                   from: `Kingdom Building <${FROM_EMAIL}>`,
                   to: donorEmail,
                   subject: receiptEmail.subject,
                   html: receiptEmail.html,
                   replyTo: tenant.email,
-                  attachments: [
-                    {
-                      filename: `donation-receipt-${new Date().toISOString().split("T")[0]}.pdf`,
-                      content: pdfBuffer,
-                    },
-                  ],
+                  ...(pdfAttachment ? { attachments: [pdfAttachment] } : {}),
                 })
               } catch (emailError: any) {
                 console.error("Error sending campaign receipt:", emailError)
@@ -491,23 +496,25 @@ export async function POST(req: Request) {
         }
 
         if (donorEmail && !campaignId) {
-          try {
-            const receiptEmail = EMAIL_TEMPLATES.donationReceipt({
-              donorName: donorName || "Valued Supporter",
-              donorEmail,
-              amount: Math.round(donationAmount * 100),
-              currency: "$",
-              tenantName: tenant.full_name,
-              tenantSlug: tenant.subdomain,
-              donationDate: new Date().toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }),
-              transactionId: (session.payment_intent as string) || session.id,
-              isRecurring: session.mode === "subscription",
-            })
+          const receiptEmail = EMAIL_TEMPLATES.donationReceipt({
+            donorName: donorName || "Valued Supporter",
+            donorEmail,
+            amount: Math.round(donationAmount * 100),
+            currency: "$",
+            tenantName: tenant.full_name,
+            tenantSlug: tenant.subdomain,
+            donationDate: new Date().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            transactionId: (session.payment_intent as string) || session.id,
+            isRecurring: session.mode === "subscription",
+          })
 
+          // Generate PDF separately — non-blocking
+          let pdfAttachment: { filename: string; content: Buffer } | undefined
+          try {
             const pdfBuffer = await generateDonationReceiptPdf({
               donorName: donorName || "Valued Supporter",
               donorEmail,
@@ -523,19 +530,22 @@ export async function POST(req: Request) {
               transactionId: (session.payment_intent as string) || session.id,
               isRecurring: session.mode === "subscription",
             })
+            pdfAttachment = {
+              filename: `donation-receipt-${new Date().toISOString().split("T")[0]}.pdf`,
+              content: pdfBuffer,
+            }
+          } catch (pdfError) {
+            console.error("PDF generation failed, sending email without attachment:", pdfError)
+          }
 
+          try {
             await resend.emails.send({
               from: `Kingdom Building <${FROM_EMAIL}>`,
               to: donorEmail,
               subject: receiptEmail.subject,
               html: receiptEmail.html,
               replyTo: tenant.email,
-              attachments: [
-                {
-                  filename: `donation-receipt-${new Date().toISOString().split("T")[0]}.pdf`,
-                  content: pdfBuffer,
-                },
-              ],
+              ...(pdfAttachment ? { attachments: [pdfAttachment] } : {}),
             })
           } catch (emailError) {
             console.error("Error sending donation receipt:", emailError)

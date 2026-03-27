@@ -122,11 +122,8 @@ export default async function TenantHomePage({
   const blogBasePath = subdomain ? `/blog` : `/${tenantSlug}/blog`
 
   if (!subdomain) {
-    console.log("[v0] Tenant page - No subdomain header, rendering platform homepage")
     return <PlatformHomePage />
   }
-
-  console.log("[v0] Tenant page - subdomain from header:", subdomain, "tenant slug:", tenantSlug)
 
   const supabase = await createServerClient()
 
@@ -167,7 +164,7 @@ export default async function TenantHomePage({
 
   const givingSettings = givingSettingsResult
 
-  console.log("[v0] Tenant page - Loaded data:", { tenant: tenant?.subdomain, givingSettings })
+
 
   const adminClient = createAdminClient()
 

@@ -234,7 +234,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
 
   useEffect(() => {
     if (pathname !== pathnameRef.current) {
-      console.log("[v0] TenantLayout: Route changing from", pathnameRef.current, "to", pathname)
+
       // Note: isNavigatingRef should already be true from the click handler
       // This is just a backup
       isNavigatingRef.current = true
@@ -243,7 +243,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
       // Clear navigation flag after transition completes
       const timer = setTimeout(() => {
         isNavigatingRef.current = false
-        console.log("[v0] TenantLayout: Navigation complete")
+
       }, 1500) // Increased to 1.5s for safety
 
       return () => clearTimeout(timer)
@@ -275,31 +275,20 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
     async (currentUser: User | null, currentSubdomain: string) => {
       // Use ref for synchronous check - this is set in capture phase before React handles link clicks
       if (isNavigatingRef.current) {
-        console.log("[v0] TenantLayout: Skipping auth check during navigation")
         return
       }
 
-      console.log("[v0] TenantLayout: checkTenantOwnership called:", {
-        hasUser: !!currentUser,
-        subdomain: currentSubdomain,
-        authInProgress: authCheckInProgressRef.current,
-        timeSinceLastCheck: Date.now() - lastAuthCheckRef.current,
-      })
-
       if (authCheckInProgressRef.current) {
-        console.log("[v0] TenantLayout: Auth check already in progress, skipping")
         return
       }
 
       const now = Date.now()
       if (now - lastAuthCheckRef.current < 30000) {
-        console.log("[v0] TenantLayout: Recent auth check (within 30s), skipping")
         return
       }
       lastAuthCheckRef.current = now
 
       if (!currentUser || !currentSubdomain) {
-        console.log("[v0] TenantLayout: No user or subdomain, clearing auth state")
         setIsTenantOwner(false)
         setIsDonor(false)
         setIsCheckingAuth(false)

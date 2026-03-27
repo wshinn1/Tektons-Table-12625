@@ -168,7 +168,7 @@ export const EMAIL_TEMPLATES = {
                       <span style="color: #6b7280; font-size: 14px;">Amount</span>
                     </td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">
-                      <span style="color: #111827; font-size: 18px; font-weight: 700;">${currency}${(amount / 100).toFixed(2)}</span>
+                      <span style="color: #111827; font-size: 18px; font-weight: 700;">${currency || "$"}${(amount / 100).toFixed(2)}</span>
                       ${isRecurring ? '<span style="color: #10b981; font-size: 12px; margin-left: 8px;">Monthly</span>' : ""}
                     </td>
                   </tr>
@@ -177,7 +177,7 @@ export const EMAIL_TEMPLATES = {
                       <span style="color: #6b7280; font-size: 14px;">Date</span>
                     </td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">
-                      <span style="color: #111827; font-size: 14px;">${donationDate}</span>
+                      <span style="color: #111827; font-size: 14px;">${donationDate || new Date().toLocaleDateString()}</span>
                     </td>
                   </tr>
                   <tr>
