@@ -1,5 +1,7 @@
 "use client"
 
+// Last updated: 2026-03-26 - Added ErrorBoundary for SupportPageChat
+
 import { SupportPageChat } from "@/components/support-page-chat"
 import { SupportContactModal } from "@/components/support-contact-modal"
 import Link from "next/link"
