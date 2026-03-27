@@ -163,7 +163,10 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
         body: JSON.stringify({ email: testEmail, subject, content: htmlContent }),
       })
 
-      if (!response.ok) throw new Error("Failed to send test")
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to send test email")
+      }
 
       toast({
         title: "Test email sent",
@@ -172,7 +175,7 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to send test email",
+        description: error instanceof Error ? error.message : "Failed to send test email",
         variant: "destructive",
       })
     } finally {
@@ -230,11 +233,15 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to send")
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to send newsletter")
+      }
 
+      const result = await response.json()
       toast({
         title: "Newsletter sent",
-        description: "Your newsletter has been sent to all subscribers",
+        description: `Sent to ${result.recipients} subscriber${result.recipients !== 1 ? "s" : ""}${result.failed > 0 ? ` (${result.failed} failed)` : ""}`,
       })
 
       // Redirect to newsletter list
@@ -242,7 +249,7 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to send newsletter",
+        description: error instanceof Error ? error.message : "Failed to send newsletter",
         variant: "destructive",
       })
     } finally {
