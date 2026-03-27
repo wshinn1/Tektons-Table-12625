@@ -21,6 +21,7 @@ import {
   X,
   QrCode,
   HelpCircle,
+  LayoutList,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
@@ -39,6 +40,7 @@ const getAdminNavItems = (subdomain: string) => [
   { label: "Dashboard", href: `/${subdomain}/admin`, icon: LayoutDashboard },
   { label: "Manage Giving", href: `/${subdomain}/admin/giving`, icon: Heart },
   { label: "Blog Posts", href: `/${subdomain}/admin/blog`, icon: FileText },
+  { label: "Blog View", href: `/${subdomain}/admin/blog-view`, icon: LayoutList },
   { label: "Campaigns", href: `/${subdomain}/admin/campaigns`, icon: FolderOpen },
   { label: "Supporters", href: `/${subdomain}/admin/supporters`, icon: Users },
   { label: "Newsletter", href: `/${subdomain}/admin/newsletter`, icon: Mail },
