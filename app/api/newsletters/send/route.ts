@@ -29,12 +29,13 @@ export async function POST(request: NextRequest) {
 
     const { data: tenant } = await supabase
       .from("tenants")
-      .select("email, personal_reply_email")
+      .select("email, personal_reply_email, name")
       .eq("id", tenantId)
       .single()
 
     const fromEmail = process.env.RESEND_FROM_EMAIL || "hello@tektonstable.com"
     const replyToEmail = tenant?.personal_reply_email || tenant?.email
+    const tenantCopyEmail = tenant?.email
 
     let successCount = 0
     let failCount = 0
@@ -62,6 +63,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send one copy to the tenant so they have a record of what went out
+    if (tenantCopyEmail && successCount > 0) {
+      const copyData: any = {
+        from: fromEmail,
+        to: tenantCopyEmail,
+        subject: `[Your copy] ${subject}`,
+        html: `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:24px;font-family:sans-serif;font-size:14px;color:#166534;">
+          <strong>Newsletter sent successfully.</strong> This is your copy — ${successCount} subscriber${successCount !== 1 ? "s" : ""} received this email${failCount > 0 ? ` (${failCount} failed)` : ""}.
+        </div>${html}`,
+      }
+      if (replyToEmail) copyData.reply_to = replyToEmail
+      await resend.emails.send(copyData).catch((err: unknown) => {
+        console.error("Failed to send tenant copy email:", err)
+      })
+    }
+
+    // Update newsletter status
     if (newsletterId) {
       await supabase
         .from("tenant_newsletters")
