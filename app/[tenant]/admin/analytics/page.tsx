@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useParams } from "next/navigation"
-import { createBrowserClient } from "@/lib/supabase/client"
-import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -74,9 +72,6 @@ export default function TenantAnalyticsDashboard() {
   const params = useParams()
   const subdomain = params.tenant as string
 
-  const [user, setUser] = useState<any>(null)
-  const [isAuthorized, setIsAuthorized] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -85,64 +80,6 @@ export default function TenantAnalyticsDashboard() {
     coordinates: [0, 20],
     zoom: 1,
   })
-
-  // Check auth
-  useEffect(() => {
-    let cancelled = false
-
-    // Hard 5-second timeout so a hanging Supabase call never blocks the page indefinitely
-    const timeoutId = setTimeout(() => {
-      if (!cancelled) {
-        console.warn("[Analytics] Auth check timed out – forcing resolve")
-        setIsCheckingAuth(false)
-      }
-    }, 5000)
-
-    const checkAuth = async () => {
-      try {
-        const supabase = createBrowserClient()
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-        if (cancelled) return
-
-        if (userError || !user) {
-          window.location.href = `/${subdomain}/auth/login?redirect=/admin/analytics`
-          return
-        }
-
-        const { data: tenant, error: tenantError } = await supabase
-          .from("tenants")
-          .select("email")
-          .eq("subdomain", subdomain)
-          .maybeSingle()
-
-        if (cancelled) return
-
-        if (tenantError || !tenant || tenant.email?.toLowerCase() !== user.email?.toLowerCase()) {
-          window.location.href = `/${subdomain}`
-          return
-        }
-
-        clearTimeout(timeoutId)
-        setUser(user)
-        setIsAuthorized(true)
-        setIsCheckingAuth(false)
-      } catch (err) {
-        if (!cancelled) {
-          console.error("[Analytics] Auth check error:", err)
-          clearTimeout(timeoutId)
-          setIsCheckingAuth(false)
-        }
-      }
-    }
-
-    checkAuth()
-
-    return () => {
-      cancelled = true
-      clearTimeout(timeoutId)
-    }
-  }, [subdomain])
 
   // Fetch analytics data
   const fetchAnalytics = useCallback(async () => {
@@ -163,31 +100,12 @@ export default function TenantAnalyticsDashboard() {
   }, [subdomain, selectedPeriod])
 
   useEffect(() => {
-    if (isAuthorized) {
-      fetchAnalytics()
-    }
-  }, [isAuthorized, fetchAnalytics])
+    fetchAnalytics()
+  }, [fetchAnalytics])
 
   const handleZoom = useCallback((event: any) => {
     // Allow wheel zoom on map
   }, [])
-
-  if (isCheckingAuth) {
-    return (
-      <div className="p-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-            <span className="text-gray-600">Checking authorization...</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthorized) {
-    return null
-  }
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
