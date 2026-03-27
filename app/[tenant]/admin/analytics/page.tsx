@@ -88,10 +88,22 @@ export default function TenantAnalyticsDashboard() {
 
   // Check auth
   useEffect(() => {
+    let cancelled = false
+
+    // Hard 5-second timeout so a hanging Supabase call never blocks the page indefinitely
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        console.warn("[Analytics] Auth check timed out – forcing resolve")
+        setIsCheckingAuth(false)
+      }
+    }, 5000)
+
     const checkAuth = async () => {
       try {
         const supabase = createBrowserClient()
         const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (cancelled) return
 
         if (userError || !user) {
           window.location.href = `/${subdomain}/auth/login?redirect=/admin/analytics`
@@ -104,21 +116,32 @@ export default function TenantAnalyticsDashboard() {
           .eq("subdomain", subdomain)
           .maybeSingle()
 
+        if (cancelled) return
+
         if (tenantError || !tenant || tenant.email?.toLowerCase() !== user.email?.toLowerCase()) {
           window.location.href = `/${subdomain}`
           return
         }
 
+        clearTimeout(timeoutId)
         setUser(user)
         setIsAuthorized(true)
         setIsCheckingAuth(false)
       } catch (err) {
-        console.error("[Analytics] Auth check error:", err)
-        setIsCheckingAuth(false)
+        if (!cancelled) {
+          console.error("[Analytics] Auth check error:", err)
+          clearTimeout(timeoutId)
+          setIsCheckingAuth(false)
+        }
       }
     }
 
     checkAuth()
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
   }, [subdomain])
 
   // Fetch analytics data
