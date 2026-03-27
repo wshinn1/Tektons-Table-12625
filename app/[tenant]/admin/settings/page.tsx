@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { EmailRecipientsSettings } from "@/components/tenant/admin/email-recipients-settings"
+import { NewsletterFromSettings } from "@/components/tenant/admin/newsletter-from-settings"
 import { DangerZoneSettings } from "@/components/tenant/admin/danger-zone-settings"
 import { CampaignNotificationSettings } from "@/components/tenant/admin/campaign-notification-settings"
 import { BlogWidgetSettings } from "@/components/tenant/admin/blog-widget-settings"
@@ -51,6 +52,11 @@ export default async function TenantSettingsPage({
           currentSiteTitle={tenant.site_title}
           currentSiteDescription={tenant.site_description}
           tenantName={tenant.full_name || tenant.subdomain}
+        />
+
+        <NewsletterFromSettings
+          tenantId={tenant.id}
+          currentFromName={tenant.newsletter_from_name || tenant.full_name || ""}
         />
 
         <EmailRecipientsSettings

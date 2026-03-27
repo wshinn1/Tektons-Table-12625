@@ -160,7 +160,7 @@ export function NewsletterPuckEditor({ tenantId, tenantSlug, tenantName, newslet
       const response = await fetch("/api/newsletter/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: testEmail, subject, content: htmlContent }),
+        body: JSON.stringify({ email: testEmail, subject, content: htmlContent, tenantId }),
       })
 
       if (!response.ok) {

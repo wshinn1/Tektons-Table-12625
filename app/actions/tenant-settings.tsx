@@ -468,3 +468,20 @@ export async function updateHomepageWidgetPreference(formData: FormData) {
     return { success: false, error: "Failed to update preference" }
   }
 }
+
+export async function saveNewsletterFromName(tenantId: string, fromName: string) {
+  const supabase = await createClient()
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user || user.id !== tenantId) throw new Error("Unauthorized")
+    const { error } = await supabase
+      .from("tenants")
+      .update({ newsletter_from_name: fromName.trim() })
+      .eq("id", tenantId)
+    if (error) throw new Error(error.message)
+    revalidatePath(`/[tenant]/admin/settings`, "page")
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: "Failed to save" }
+  }
+}
