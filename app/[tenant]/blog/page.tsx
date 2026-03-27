@@ -5,6 +5,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { BlogFilters } from "@/components/blog/blog-filters"
 import { BlogPagination } from "@/components/blog/blog-pagination"
+import { BlogListView } from "@/components/blog/blog-list-view"
 
 const POSTS_PER_PAGE = 9
 
@@ -152,6 +153,7 @@ export default async function TenantBlogIndexPage({
   const totalPages = Math.ceil(total / POSTS_PER_PAGE)
   const categories = await getCategories(tenant.id)
   const tags = await getTags(tenant.id)
+  const layout = tenant.blog_view_layout || "grid"
 
   return (
     <main className="min-h-screen bg-background">
@@ -165,67 +167,84 @@ export default async function TenantBlogIndexPage({
           <BlogFilters categories={categories} tags={tags} basePath={blogBasePath} />
         </Suspense>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          {posts.map((post) => {
-            const primaryCategory = post.categories?.[0]?.category?.name || "Update"
-            const readTime = post.read_time || 3
-            
-            return (
-              <article key={post.id} className="h-full">
-                <a 
-                  href={`${blogBasePath}/${post.slug}`} 
-                  className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
-                >
-                  {/* Image */}
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
-                    {post.featured_image_url ? (
-                      <img
-                        src={post.featured_image_url || "/placeholder.svg"}
-                        alt={post.title}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
-                    )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-6 space-y-3">
-                    {/* Category with red dash */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-red-500 font-medium">—</span>
-                      <span className="text-red-500 text-sm font-medium">
-                        {primaryCategory}
-                      </span>
+        {layout === "list" ? (
+          <BlogListView
+            posts={posts.map((post) => ({
+              id: post.id,
+              title: post.title,
+              subtitle: post.subtitle,
+              slug: post.slug,
+              featuredImageUrl: post.featured_image_url,
+              publishedAt: post.published_at,
+              readTime: post.read_time || 3,
+              categories: post.categories?.map((c: { category: { name: string; slug: string } }) => c.category) || [],
+              isPremium: post.is_premium,
+            }))}
+            basePath={blogBasePath}
+          />
+        ) : (
+          <div className="grid gap-8 md:grid-cols-2">
+            {posts.map((post) => {
+              const primaryCategory = post.categories?.[0]?.category?.name || "Update"
+              const readTime = post.read_time || 3
+              
+              return (
+                <article key={post.id} className="h-full">
+                  <a 
+                    href={`${blogBasePath}/${post.slug}`} 
+                    className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
+                  >
+                    {/* Image */}
+                    <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
+                      {post.featured_image_url ? (
+                        <img
+                          src={post.featured_image_url || "/placeholder.svg"}
+                          alt={post.title}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
+                      )}
                     </div>
                     
-                    {/* Title */}
-                    <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance group-hover:text-gray-700 transition-colors">
-                      {post.title}
-                    </h2>
+                    {/* Content */}
+                    <div className="p-6 space-y-3">
+                      {/* Category with red dash */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-500 font-medium">—</span>
+                        <span className="text-red-500 text-sm font-medium">
+                          {primaryCategory}
+                        </span>
+                      </div>
+                      
+                      {/* Title */}
+                      <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance group-hover:text-gray-700 transition-colors">
+                        {post.title}
+                      </h2>
 
-                    {post.subtitle && (
-                      <p className="text-sm text-gray-600 leading-snug line-clamp-2">
-                        {post.subtitle}
+                      {post.subtitle && (
+                        <p className="text-sm text-gray-600 leading-snug line-clamp-2">
+                          {post.subtitle}
+                        </p>
+                      )}
+                      
+                      {/* Date and read time */}
+                      <p className="text-sm text-gray-500">
+                        {new Date(post.published_at).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                        <span className="mx-2">•</span>
+                        {readTime} min read
                       </p>
-                    )}
-                    
-                    {/* Date and read time */}
-                    <p className="text-sm text-gray-500">
-                      {new Date(post.published_at).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                      <span className="mx-2">•</span>
-                      {readTime} min read
-                    </p>
-                  </div>
-                </a>
-              </article>
-            )
-          })}
-        </div>
+                    </div>
+                  </a>
+                </article>
+              )
+            })}
+          </div>
+        )}
 
         {posts.length === 0 && (
           <div className="py-20 text-center">
