@@ -47,105 +47,39 @@ function TenantLoginForm() {
 
     try {
       const supabase = createBrowserClient()
-      
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (signInError) {
-        throw signInError
-      }
+      if (signInError) throw signInError
 
       if (data.session) {
-        console.log("[v0] Login successful - user:", data.session.user.email)
-        console.log("[v0] Session access_token (first 20 chars):", data.session.access_token?.substring(0, 20))
-        
-        // Detect Safari browser (has stricter cookie handling with ITP)
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-        console.log("[v0] Browser detection - Safari:", isSafari, "UA:", navigator.userAgent)
-        
-        // Force a session refresh to ensure cookies are properly set
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-        console.log("[v0] After refreshSession - success:", !!refreshData?.session, "error:", refreshError?.message)
-        
-        // For Safari, manually set the session cookies with proper domain
-        // Safari's ITP can be strict about cross-subdomain cookies
-        if (isSafari && refreshData?.session) {
-          const hostname = window.location.hostname
-          const isProduction = hostname.includes('tektonstable.com')
-          
-          // Extract the Supabase project ref from the URL to get correct cookie names
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-          const projectRef = supabaseUrl.split('//')[1]?.split('.')[0] || ''
-          
-          if (projectRef && isProduction) {
-            console.log("[v0] Safari detected - manually setting auth cookies for project:", projectRef)
-            
-            // Set the auth token cookie explicitly with the right domain
-            const accessToken = refreshData.session.access_token
-            const refreshToken = refreshData.session.refresh_token
-            
-            // Cookie options for cross-subdomain sharing
-            const cookieOptions = `path=/; domain=.tektonstable.com; SameSite=Lax; Secure; max-age=${60 * 60 * 24 * 365}`
-            
-            // Set the base64-encoded auth tokens (Supabase format)
-            const authData = JSON.stringify({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-              expires_at: Math.floor(Date.now() / 1000) + 3600,
-              expires_in: 3600,
-              token_type: 'bearer',
-              user: refreshData.session.user
-            })
-            
-            document.cookie = `sb-${projectRef}-auth-token=${encodeURIComponent(authData)}; ${cookieOptions}`
-            console.log("[v0] Manually set Safari auth cookie")
-          }
+        // Transfer session tokens to server-side cookies via API route.
+        // More reliable on mobile (especially iOS Safari) than relying on
+        // the browser client to write cookies the server can read back.
+        const res = await fetch('/api/auth/transfer-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          }),
+        })
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body.error || 'Failed to establish session')
         }
-        
-        // Verify the session is actually persisted
-        const { data: finalCheck, error: finalError } = await supabase.auth.getSession()
-        console.log("[v0] Final session check - success:", !!finalCheck?.session, "error:", finalError?.message)
-        
-        if (!finalCheck?.session) {
-          // If session still not found, try one more approach for Safari
-          if (isSafari) {
-            console.log("[v0] Safari session not persisted, using localStorage fallback")
-            // Store session in localStorage as a fallback
-            try {
-              localStorage.setItem('supabase-auth-token', JSON.stringify({
-                access_token: data.session.access_token,
-                refresh_token: data.session.refresh_token,
-                expires_at: Math.floor(Date.now() / 1000) + 3600
-              }))
-            } catch (e) {
-              console.log("[v0] Could not set localStorage fallback:", e)
-            }
-          } else {
-            setError("Session could not be established. Please try again or clear your browser cookies.")
-            return
-          }
-        }
-        
-        // Log all cookies to see what's set - specifically look for Supabase auth cookies
-        const allCookies = document.cookie.split(';').map(c => c.trim())
-        const authCookies = allCookies.filter(c => c.startsWith('sb-'))
-        console.log("[v0] All cookie names:", allCookies.map(c => c.split('=')[0]))
-        console.log("[v0] Supabase auth cookies found:", authCookies.length)
-        console.log("[v0] Auth cookie names:", authCookies.map(c => c.split('=')[0]))
-        console.log("[v0] Current hostname:", window.location.hostname)
-        console.log("[v0] Redirecting to:", redirectTo)
-        
-        // Add longer delay for Safari to ensure cookies propagate
-        const delay = isSafari ? 1000 : 500
-        await new Promise(resolve => setTimeout(resolve, delay))
-        
-        // Use window.location for a full page reload to ensure cookies are read fresh
+
+        // Brief delay so the Set-Cookie header propagates before the next request
+        await new Promise(resolve => setTimeout(resolve, 300))
+
+        // Full page reload so the server reads the freshly-set cookies
         window.location.href = redirectTo
       }
     } catch (err: any) {
-      // Provide more helpful error messages
       const errorMessage = err.message || "Failed to sign in"
       if (errorMessage.includes("Invalid login credentials")) {
         setError("Invalid email or password. Please check your credentials and try again, or use the 'Forgot password?' link to reset your password.")
