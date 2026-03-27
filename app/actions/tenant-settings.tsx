@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 
@@ -485,7 +486,8 @@ export async function saveNewsletterFromName(tenantId: string, fromName: string)
       throw new Error("Unauthorized")
     }
 
-    const { error } = await supabase
+    const adminClient = createAdminClient()
+    const { error } = await adminClient
       .from("tenants")
       .update({ newsletter_from_name: fromName.trim() })
       .eq("id", tenantId)
@@ -513,7 +515,8 @@ export async function saveBlogViewLayout(tenantId: string, layout: "grid" | "lis
       throw new Error("Unauthorized")
     }
 
-    const { error } = await supabase.from("tenants").update({ blog_view_layout: layout }).eq("id", tenantId)
+    const adminClient = createAdminClient()
+    const { error } = await adminClient.from("tenants").update({ blog_view_layout: layout }).eq("id", tenantId)
     if (error) throw new Error(error.message)
     revalidatePath(`/[tenant]/blog`, "page")
     revalidatePath(`/[tenant]/admin/blog-view`, "page")
