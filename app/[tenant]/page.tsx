@@ -14,6 +14,7 @@ import Image from "next/image"
 import { Montserrat, Bebas_Neue, Raleway } from "next/font/google"
 import { OrganizationSchema } from "@/components/seo/organization-schema"
 import { PuckPageRender } from "@/components/tenant/puck-page-editor"
+import { TenantBlogSection } from "@/components/tenant/blog-section"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -130,7 +131,7 @@ export default async function TenantHomePage({
   const tenantResult = await supabase
     .from("tenants")
     .select(
-      "id, subdomain, full_name, email, bio, profile_image_url, mission_organization, location, ministry_focus, primary_color, is_active",
+      "id, subdomain, full_name, email, bio, profile_image_url, mission_organization, location, ministry_focus, primary_color, is_active, blog_view_layout",
     )
     .eq("subdomain", subdomain)
     .eq("is_active", true)
@@ -294,134 +295,7 @@ export default async function TenantHomePage({
     : null
 
   const postsWithAuthors = posts || []
-
-  // Helper function to estimate read time based on excerpt length (rough estimate)
-  const estimateReadTime = (excerpt: string | null) => {
-    if (!excerpt) return "3 min read"
-    const wordCount = excerpt.split(/\s+/).length
-    // Assume excerpt is ~10% of full content, average reading speed 200 wpm
-    const estimatedFullWordCount = wordCount * 10
-    const minutes = Math.max(2, Math.ceil(estimatedFullWordCount / 200))
-    return `${minutes} min read`
-  }
-
-  const BlogGrid = () => (
-    <div className={`space-y-12 ${raleway.variable}`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {postsWithAuthors.map((post, index) => {
-          const categories =
-            post.blog_post_categories?.map((cat: any) => cat.blog_categories?.name).filter(Boolean) || []
-          const primaryCategory = categories[0] || "Update"
-
-          return (
-            <a
-              key={post.id}
-              href={`${blogBasePath}/${post.slug}`}
-              className="group block bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
-            >
-              {/* Image */}
-              <div className="aspect-[4/3] w-full overflow-hidden bg-muted relative">
-                {post.featured_image_url ? (
-                  <Image
-                    src={post.featured_image_url || "/placeholder.svg"}
-                    alt={post.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    priority={index < 2}
-                    loading={index < 2 ? "eager" : "lazy"}
-                    quality={75}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />
-                )}
-              </div>
-              
-              {/* Content */}
-              <div className="p-6 space-y-3">
-                {/* Category with red dash */}
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500 font-medium">—</span>
-                  <span className="text-red-500 text-sm font-medium font-raleway">
-                    {primaryCategory}
-                  </span>
-                </div>
-                
-                {/* Title */}
-                <h2 className="text-xl font-bold text-gray-900 leading-snug text-balance font-raleway group-hover:text-gray-700 transition-colors">
-                  {post.title}
-                </h2>
-
-                {post.subtitle && (
-                  <p className="text-sm text-gray-600 leading-snug font-raleway line-clamp-2">
-                    {post.subtitle}
-                  </p>
-                )}
-                
-                {/* Date and read time */}
-                <p className="text-sm text-gray-500 font-raleway">
-                  {new Date(post.published_at).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                  <span className="mx-2">•</span>
-                  {estimateReadTime(post.excerpt)}
-                </p>
-              </div>
-            </a>
-          )
-        })}
-      </div>
-      
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-8 font-raleway">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-gray-700 font-raleway bg-transparent border-gray-300 hover:bg-gray-50"
-            asChild={currentPage > 1}
-            disabled={currentPage === 1}
-          >
-            {currentPage > 1 ? (
-              <Link href={`?page=${currentPage - 1}`} prefetch={false}>
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Link>
-            ) : (
-              <span>
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </span>
-            )}
-          </Button>
-          <span className="text-sm text-gray-600 px-4 font-raleway">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-gray-700 font-raleway bg-transparent border-gray-300 hover:bg-gray-50"
-            asChild={currentPage < totalPages}
-            disabled={currentPage === totalPages}
-          >
-            {currentPage < totalPages ? (
-              <Link href={`?page=${currentPage + 1}`} prefetch={false}>
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            ) : (
-              <span>
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </span>
-            )}
-          </Button>
-        </div>
-      )}
-    </div>
-  )
+  const viewLayout = (tenant.blog_view_layout as "grid" | "list") || "grid"
 
   const baseUrl = `https://${tenant.subdomain}.tektonstable.com`
 
@@ -457,7 +331,15 @@ export default async function TenantHomePage({
             className={`max-w-4xl mx-auto px-4 py-12 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}
           >
             {/* Centered blog grid container */}
-            {postsWithAuthors.length > 0 && <BlogGrid />}
+{postsWithAuthors.length > 0 && (
+              <TenantBlogSection
+                posts={postsWithAuthors}
+                blogBasePath={blogBasePath}
+                viewLayout={viewLayout}
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            )}
           </div>
           {showAnyWidget && widgetData && (
             <>
@@ -525,7 +407,15 @@ export default async function TenantHomePage({
           className={`max-w-4xl mx-auto px-4 py-12 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}
         >
           {/* Centered blog grid container */}
-          {postsWithAuthors.length > 0 && <BlogGrid />}
+          {postsWithAuthors.length > 0 && (
+              <TenantBlogSection
+                posts={postsWithAuthors}
+                blogBasePath={blogBasePath}
+                viewLayout={viewLayout}
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            )}
         </div>
         {showAnyWidget && widgetData && (
           <>
