@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
 import { ChevronUp } from "lucide-react"
 
 export function CollapsibleCTA({ subdomain }: { subdomain: string }) {
@@ -24,6 +22,7 @@ export function CollapsibleCTA({ subdomain }: { subdomain: string }) {
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-full text-center cursor-pointer group py-4"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           aria-expanded={isExpanded}
           aria-label={isExpanded ? "Collapse call to action" : "Expand call to action"}
         >
@@ -54,17 +53,20 @@ export function CollapsibleCTA({ subdomain }: { subdomain: string }) {
               Your support makes a real difference in the lives of those we serve.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <Button size="default" variant="default" asChild>
-                <Link href={`/${subdomain}/giving`}>Make a Donation</Link>
-              </Button>
-              <Button
-                size="default"
-                variant="outline"
-                className="border-gray-300 text-gray-900 hover:bg-gray-50 bg-transparent"
-                asChild
+              <a
+                href={`/${subdomain}/giving`}
+                className="inline-flex items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 active:bg-gray-700 transition-colors select-none"
+                style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
               >
-                <Link href={`/${subdomain}/contact`}>Get in Touch</Link>
-              </Button>
+                Make a Donation
+              </a>
+              <a
+                href={`/${subdomain}/contact`}
+                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 active:bg-gray-100 transition-colors select-none"
+                style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
+              >
+                Get in Touch
+              </a>
             </div>
           </div>
         </div>
