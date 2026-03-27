@@ -70,16 +70,22 @@ export function TenantAdminMobileMenu({
 
 
 
-  const adminNavItems = getAdminNavItems(subdomain)
-  const pageBuilderItems = getPageBuilderItems(subdomain)
+  const navSubdomain = subdomain || (typeof window !== "undefined"
+    ? (window.location.hostname.split(".").length >= 3
+        ? window.location.hostname.split(".")[0]
+        : window.location.pathname.split("/").filter(Boolean)[0] || "")
+    : "")
+
+  const adminNavItems = getAdminNavItems(navSubdomain)
+  const pageBuilderItems = getPageBuilderItems(navSubdomain)
 
   // Check if a nav item is active based on the current pathname
   const isActive = useCallback((href: string) => {
-    if (href === `/${subdomain}/admin`) {
-      return pathname === `/${subdomain}/admin`
+    if (href === `/${navSubdomain}/admin`) {
+      return pathname === `/${navSubdomain}/admin`
     }
     return pathname === href || pathname.startsWith(href + "/")
-  }, [pathname, subdomain])
+  }, [pathname, navSubdomain])
 
   const allItems = pageBuilderEnabled 
     ? [...adminNavItems.slice(0, 9), ...pageBuilderItems, ...adminNavItems.slice(9)]
@@ -208,7 +214,7 @@ export function TenantAdminMobileMenu({
                 type="button"
                 onClick={() => {
                   setMenuOpen(false)
-                  window.location.href = `/${subdomain}`
+                  window.location.href = `/${navSubdomain}`
                 }}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full active:bg-gray-700 select-none cursor-pointer text-left"
                 style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
