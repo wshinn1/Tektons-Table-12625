@@ -14,7 +14,26 @@ import {
   MessageSquare,
   HelpCircle,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Component, useEffect, useState, type ReactNode } from "react"
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError)
+      return (
+        <div className="p-8 text-center text-muted-foreground border rounded-lg">
+          <p>Chat is temporarily unavailable. Please use the contact form below.</p>
+        </div>
+      )
+    return this.props.children
+  }
+}
 
 const QUICK_TOPICS = [
   {
@@ -113,7 +132,9 @@ export function SupportPageContent() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* AI Chat Section */}
         <div className="max-w-4xl mx-auto mb-12">
-          <SupportPageChat />
+          <ErrorBoundary>
+            <SupportPageChat />
+          </ErrorBoundary>
         </div>
 
         {/* Quick Topics Grid */}
