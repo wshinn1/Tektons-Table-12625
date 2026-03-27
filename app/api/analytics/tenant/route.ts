@@ -52,8 +52,9 @@ export async function GET(request: NextRequest) {
     const validDays = [1, 7, 14, 30]
     const queryDays = validDays.includes(days) ? days : 7
 
-    // Build the base filter
-    const tenantFilter = `properties.tenant = '${subdomain}'`
+    // Build the base filter - use $host property (automatically set on every event) as primary filter
+    const tenantHost = `${subdomain}.tektonstable.com`
+    const tenantFilter = `(properties.$host = '${tenantHost}' OR properties.tenant = '${subdomain}')`
     const timeFilter = `timestamp > now() - INTERVAL ${queryDays} DAY`
     const baseFilter = `event = '$pageview' AND ${tenantFilter} AND ${timeFilter}`
 
