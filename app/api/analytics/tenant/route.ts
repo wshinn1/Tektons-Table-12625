@@ -183,7 +183,9 @@ export async function GET(request: NextRequest) {
       period: queryDays,
     }
 
-    return NextResponse.json(analytics)
+    return NextResponse.json(analytics, {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error"
     console.error("[Analytics API Error]", message)
