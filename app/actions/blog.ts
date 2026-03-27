@@ -158,7 +158,7 @@ export async function updateBlogPost(
     slug?: string
     content?: any
     featuredImageUrl?: string
-    status?: "draft" | "published" | "archived"
+    status?: "draft" | "published" | "archived" | "trash"
     metaDescription?: string
     categoryIds?: string[]
     tagIds?: string[]
@@ -367,6 +367,39 @@ export async function unarchiveBlogPost(postId: string, tenantId: string) {
     .eq("id", postId)
     .eq("tenant_id", tenantId)
   if (error) throw new Error(`Failed to unarchive post: ${error.message}`)
+  revalidatePath("/admin/blog")
+}
+
+export async function trashBlogPost(postId: string, tenantId: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({ status: "trash" })
+    .eq("id", postId)
+    .eq("tenant_id", tenantId)
+  if (error) throw new Error(`Failed to move post to trash: ${error.message}`)
+  revalidatePath("/admin/blog")
+}
+
+export async function restoreFromTrash(postId: string, tenantId: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({ status: "draft" })
+    .eq("id", postId)
+    .eq("tenant_id", tenantId)
+  if (error) throw new Error(`Failed to restore post: ${error.message}`)
+  revalidatePath("/admin/blog")
+}
+
+export async function emptyTrash(tenantId: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("blog_posts")
+    .delete()
+    .eq("tenant_id", tenantId)
+    .eq("status", "trash")
+  if (error) throw new Error(`Failed to empty trash: ${error.message}`)
   revalidatePath("/admin/blog")
 }
 
