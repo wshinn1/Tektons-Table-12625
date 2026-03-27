@@ -48,7 +48,7 @@ const getAdminNavItems = (subdomain: string) => [
   { label: "Navigation", href: `/${subdomain}/admin/navigation`, icon: MenuIcon },
   { label: "About Page", href: `/${subdomain}/admin/about`, icon: UserCircle },
   { label: "Settings", href: `/${subdomain}/admin/settings`, icon: Settings },
-  { label: "Need Help?", href: `/${subdomain}/admin/help`, icon: HelpCircle },
+  { label: "Need Help/Feature Request?", href: `/${subdomain}/admin/help`, icon: HelpCircle },
 ]
 
 const getPageBuilderItems = (subdomain: string) => [
