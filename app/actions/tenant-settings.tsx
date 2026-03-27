@@ -485,3 +485,18 @@ export async function saveNewsletterFromName(tenantId: string, fromName: string)
     return { success: false, error: "Failed to save" }
   }
 }
+
+export async function saveBlogViewLayout(tenantId: string, layout: "grid" | "list") {
+  const supabase = await createClient()
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user || user.id !== tenantId) throw new Error("Unauthorized")
+    const { error } = await supabase.from("tenants").update({ blog_view_layout: layout }).eq("id", tenantId)
+    if (error) throw new Error(error.message)
+    revalidatePath(`/[tenant]/blog`, "page")
+    revalidatePath(`/[tenant]/admin/blog-view`, "page")
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: "Failed to save" }
+  }
+}
