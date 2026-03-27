@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { MarketingNav } from "@/components/marketing-nav"
 import { MarketingFooter } from "@/components/marketing-footer"
-import { createClient } from "@/lib/supabase/client"
+import { createServerClient } from "@/lib/supabase/server"
 import { getPageMetadata } from "@/lib/get-page-metadata"
 import { OptimizedVideo } from "@/components/optimized-video"
 
@@ -85,7 +85,7 @@ function getImageBackgroundStyle(section: any) {
 }
 
 export default async function PricingPage() {
-  const supabase = await createClient()
+  const supabase = await createServerClient()
 
   const { data: sections = [] } = await supabase
     .from("pricing_sections")
