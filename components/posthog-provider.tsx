@@ -4,6 +4,7 @@ import posthog from "posthog-js"
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react"
 import { useEffect, useRef, Suspense } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
+import { useCookieConsent } from "@/components/cookie-consent"
 
 let posthogInitialized = false
 
@@ -41,7 +42,11 @@ function PostHogPageViewInner({ subdomain }: { subdomain: string }) {
 }
 
 export function PostHogProvider({ children, subdomain }: PostHogProviderProps) {
+  const consent = useCookieConsent()
+
   useEffect(() => {
+    if (consent !== "accepted") return
+
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
 
     if (!key) {
@@ -70,9 +75,9 @@ export function PostHogProvider({ children, subdomain }: PostHogProviderProps) {
     } else if (posthogInitialized) {
       posthog.register({ tenant: subdomain })
     }
-  }, [subdomain])
+  }, [subdomain, consent])
 
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY || consent !== "accepted") {
     return <>{children}</>
   }
 

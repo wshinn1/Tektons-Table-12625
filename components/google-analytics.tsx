@@ -1,56 +1,33 @@
 "use client"
 
 import Script from "next/script"
-import { usePathname, useSearchParams } from "next/navigation"
-import { useEffect, Suspense } from "react"
+import { useCookieConsent } from "@/components/cookie-consent"
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+interface GoogleAnalyticsProps {
+  gaId?: string
+}
 
-function GoogleAnalyticsInner() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+export function GoogleAnalytics({ gaId }: GoogleAnalyticsProps) {
+  const consent = useCookieConsent()
+  const id = gaId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
-  useEffect(() => {
-    if (!GA_MEASUREMENT_ID) return
-
-    const url = pathname + searchParams.toString()
-
-    // Track page views
-    window.gtag("config", GA_MEASUREMENT_ID, {
-      page_path: url,
-    })
-  }, [pathname, searchParams])
-
-  if (!GA_MEASUREMENT_ID) {
-    return null
-  }
+  if (!id || consent !== "accepted") return null
 
   return (
     <>
-      <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
       <Script
-        id="google-analytics"
+        src={`https://www.googletagmanager.com/gtag/js?id=${id}`}
         strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}', {
-              page_path: window.location.pathname,
-            });
-          `,
-        }}
       />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${id}');
+        `}
+      </Script>
     </>
-  )
-}
-
-export function GoogleAnalytics() {
-  return (
-    <Suspense fallback={null}>
-      <GoogleAnalyticsInner />
-    </Suspense>
   )
 }
 
