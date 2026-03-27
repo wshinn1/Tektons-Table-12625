@@ -185,9 +185,18 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(analytics)
   } catch (error) {
-    console.error("[Analytics API Error]", error)
+    const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("[Analytics API Error]", message)
+
+    if (message === "Missing PostHog configuration") {
+      return NextResponse.json(
+        { error: "PostHog is not configured. Set POSTHOG_PROJECT_ID and POSTHOG_PERSONAL_API_KEY in your environment variables." },
+        { status: 503 }
+      )
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch analytics data" },
+      { error: message },
       { status: 500 }
     )
   }

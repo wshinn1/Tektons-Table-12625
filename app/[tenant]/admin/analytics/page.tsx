@@ -88,12 +88,12 @@ export default function TenantAnalyticsDashboard() {
 
     try {
       const res = await fetch(`/api/analytics/tenant?subdomain=${subdomain}&days=${selectedPeriod}`)
-      if (!res.ok) throw new Error("Failed to fetch analytics")
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to fetch analytics")
       setAnalytics(data)
     } catch (err) {
       console.error("[Analytics] Error fetching data:", err)
-      setError("Failed to load analytics data. Please check your PostHog configuration.")
+      setError(err instanceof Error ? err.message : "Failed to load analytics data.")
     } finally {
       setIsLoading(false)
     }
