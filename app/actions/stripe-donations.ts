@@ -167,6 +167,7 @@ export async function startDonationCheckout(
 
   const sessionParams: any = {
     mode: tier.recurring ? "subscription" : "payment",
+    payment_method_types: ["card"],
     success_url: campaignSlug
       ? `https://${tenant.subdomain}.tektonstable.com/campaigns/${campaignSlug}/success?session_id={CHECKOUT_SESSION_ID}`
       : `https://${tenant.subdomain}.tektonstable.com/giving/success?session_id={CHECKOUT_SESSION_ID}`,
