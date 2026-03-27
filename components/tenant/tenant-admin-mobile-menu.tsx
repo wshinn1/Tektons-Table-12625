@@ -19,6 +19,8 @@ import {
   ExternalLink,
   UserCircle,
   X,
+  QrCode,
+  HelpCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
@@ -42,9 +44,11 @@ const getAdminNavItems = (subdomain: string) => [
   { label: "Newsletter", href: `/${subdomain}/admin/newsletter`, icon: Mail },
   { label: "Contact Forms", href: `/${subdomain}/admin/contact-submissions`, icon: MessageSquare },
   { label: "Analytics", href: `/${subdomain}/admin/analytics`, icon: BarChart3 },
+  { label: "QR Code", href: `/${subdomain}/admin/qr-code`, icon: QrCode },
   { label: "Navigation", href: `/${subdomain}/admin/navigation`, icon: MenuIcon },
   { label: "About Page", href: `/${subdomain}/admin/about`, icon: UserCircle },
   { label: "Settings", href: `/${subdomain}/admin/settings`, icon: Settings },
+  { label: "Need Help?", href: `/${subdomain}/admin/help`, icon: HelpCircle },
 ]
 
 const getPageBuilderItems = (subdomain: string) => [
