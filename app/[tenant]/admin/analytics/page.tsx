@@ -89,28 +89,33 @@ export default function TenantAnalyticsDashboard() {
   // Check auth
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createBrowserClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const supabase = createBrowserClient()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-      if (!user) {
-        window.location.href = `/${subdomain}/auth/login?redirect=/admin/analytics`
-        return
+        if (userError || !user) {
+          window.location.href = `/${subdomain}/auth/login?redirect=/admin/analytics`
+          return
+        }
+
+        const { data: tenant, error: tenantError } = await supabase
+          .from("tenants")
+          .select("email")
+          .eq("subdomain", subdomain)
+          .maybeSingle()
+
+        if (tenantError || !tenant || tenant.email?.toLowerCase() !== user.email?.toLowerCase()) {
+          window.location.href = `/${subdomain}`
+          return
+        }
+
+        setUser(user)
+        setIsAuthorized(true)
+        setIsCheckingAuth(false)
+      } catch (err) {
+        console.error("[Analytics] Auth check error:", err)
+        setIsCheckingAuth(false)
       }
-
-      const { data: tenant } = await supabase
-        .from("tenants")
-        .select("email")
-        .eq("subdomain", subdomain)
-        .single()
-
-      if (!tenant || tenant.email?.toLowerCase() !== user.email?.toLowerCase()) {
-        window.location.href = `/${subdomain}`
-        return
-      }
-
-      setUser(user)
-      setIsAuthorized(true)
-      setIsCheckingAuth(false)
     }
 
     checkAuth()

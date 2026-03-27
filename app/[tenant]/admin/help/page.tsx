@@ -23,34 +23,32 @@ export default function TenantHelpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [dataLoading, setDataLoading] = useState(true)
 
   // Determine if we're on a subdomain for proper navigation
   const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes(".tektonstable.com") && !window.location.hostname.startsWith("www.")
   const dashboardPath = isSubdomain ? "/admin" : `/${subdomain}/admin`
 
   // Fetch user and tenant data
-  const { data } = useSWR(`tenant-help-${subdomain}`, async () => {
+  const { data, isLoading: dataLoading } = useSWR(`tenant-help-${subdomain}`, async () => {
     const supabase = createClient()
     
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       router.push(`/${subdomain}/auth/login?redirect=/admin/help`)
       return null
     }
 
-    const { data: tenant } = await supabase
+    const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
       .select("id, full_name, email")
       .eq("subdomain", subdomain)
-      .single()
+      .maybeSingle()
 
-    if (!tenant || !emailsMatch(tenant.email, user.email)) {
+    if (tenantError || !tenant || !emailsMatch(tenant.email, user.email)) {
       router.push(`/${subdomain}`)
       return null
     }
 
-    setDataLoading(false)
     return { user, tenant }
   })
 
