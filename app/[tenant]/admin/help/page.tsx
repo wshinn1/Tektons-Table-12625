@@ -28,8 +28,8 @@ export default function TenantHelpPage() {
   const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes(".tektonstable.com") && !window.location.hostname.startsWith("www.")
   const dashboardPath = isSubdomain ? "/admin" : `/${subdomain}/admin`
 
-  // Fetch user and tenant data
-  const { data, isLoading: dataLoading } = useSWR(`tenant-help-${subdomain}`, async () => {
+  // Fetch user and tenant data in the background - doesn't block form UI
+  const { data } = useSWR(`tenant-help-${subdomain}`, async () => {
     const supabase = createClient()
     
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -56,8 +56,6 @@ export default function TenantHelpPage() {
     e.preventDefault()
     setError(null)
     
-    if (!data?.user || !data?.tenant) return
-    
     if (!subject.trim() || !details.trim()) {
       setError("Please fill in both fields.")
       return
@@ -67,11 +65,11 @@ export default function TenantHelpPage() {
 
     try {
       const result = await submitTenantSupportRequest({
-        email: data.user.email!,
-        name: data.tenant.full_name,
+        email: data?.user?.email ?? "",
+        name: data?.tenant?.full_name ?? subdomain,
         subject: subject.trim(),
         details: details.trim(),
-        tenantName: data.tenant.full_name,
+        tenantName: data?.tenant?.full_name ?? subdomain,
         subdomain,
       })
 
@@ -141,7 +139,7 @@ export default function TenantHelpPage() {
                 placeholder="What do you need help with?"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                disabled={isSubmitting || dataLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -153,7 +151,7 @@ export default function TenantHelpPage() {
                 rows={6}
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                disabled={isSubmitting || dataLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -161,16 +159,11 @@ export default function TenantHelpPage() {
               <p className="text-sm text-red-500">{error}</p>
             )}
 
-            <Button type="submit" disabled={isSubmitting || dataLoading} className="w-full">
+            <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Sending...
-                </>
-              ) : dataLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
                 </>
               ) : (
                 "Submit Request"
