@@ -158,7 +158,7 @@ export async function updateBlogPost(
     slug?: string
     content?: any
     featuredImageUrl?: string
-    status?: "draft" | "published"
+    status?: "draft" | "published" | "archived"
     metaDescription?: string
     categoryIds?: string[]
     tagIds?: string[]
@@ -335,6 +335,39 @@ export async function updateBlogPost(
     console.error("[v0] updateBlogPost: Caught error:", err)
     throw err
   }
+}
+
+export async function archiveBlogPost(postId: string, tenantId: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({ status: "archived" })
+    .eq("id", postId)
+    .eq("tenant_id", tenantId)
+  if (error) throw new Error(`Failed to archive post: ${error.message}`)
+  revalidatePath("/admin/blog")
+}
+
+export async function unpublishBlogPost(postId: string, tenantId: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({ status: "draft" })
+    .eq("id", postId)
+    .eq("tenant_id", tenantId)
+  if (error) throw new Error(`Failed to unpublish post: ${error.message}`)
+  revalidatePath("/admin/blog")
+}
+
+export async function unarchiveBlogPost(postId: string, tenantId: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({ status: "draft" })
+    .eq("id", postId)
+    .eq("tenant_id", tenantId)
+  if (error) throw new Error(`Failed to unarchive post: ${error.message}`)
+  revalidatePath("/admin/blog")
 }
 
 export async function deleteBlogPost(id: string) {
