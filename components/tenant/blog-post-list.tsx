@@ -138,7 +138,7 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            className={`px-4 py-2 text-base font-bold border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.key
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
