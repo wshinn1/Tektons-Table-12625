@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import {
   Clock,
   TrendingUp,
   BarChart3,
+  RefreshCw,
 } from "lucide-react"
 import {
   ComposableMap,
@@ -76,21 +77,27 @@ export default function TenantAnalyticsDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(7)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const autoRefreshRef = useRef<NodeJS.Timeout | null>(null)
   const [mapPosition, setMapPosition] = useState<{ coordinates: [number, number]; zoom: number }>({
     coordinates: [0, 20],
     zoom: 1,
   })
 
   // Fetch analytics data
-  const fetchAnalytics = useCallback(async () => {
-    setIsLoading(true)
+  const fetchAnalytics = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true)
     setError(null)
 
     try {
-      const res = await fetch(`/api/analytics/tenant?subdomain=${subdomain}&days=${selectedPeriod}`)
+      const res = await fetch(
+        `/api/analytics/tenant?subdomain=${subdomain}&days=${selectedPeriod}&_t=${Date.now()}`,
+        { cache: "no-store" }
+      )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to fetch analytics")
       setAnalytics(data)
+      setLastUpdated(new Date())
     } catch (err) {
       console.error("[Analytics] Error fetching data:", err)
       setError(err instanceof Error ? err.message : "Failed to load analytics data.")
@@ -101,6 +108,12 @@ export default function TenantAnalyticsDashboard() {
 
   useEffect(() => {
     fetchAnalytics()
+    autoRefreshRef.current = setInterval(() => {
+      fetchAnalytics(true) // silent – keeps existing data visible
+    }, 60_000)
+    return () => {
+      if (autoRefreshRef.current) clearInterval(autoRefreshRef.current)
+    }
   }, [fetchAnalytics])
 
   const handleZoom = useCallback((event: any) => {
@@ -137,11 +150,23 @@ export default function TenantAnalyticsDashboard() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Site Analytics</h1>
-          <p className="text-gray-500 mt-1">Track visitor activity and engagement metrics</p>
+          <p className="text-gray-500 mt-1">
+            Track visitor activity and engagement metrics
+            {lastUpdated && (
+              <span className="ml-2 text-xs text-gray-400">
+                · Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+            )}
+          </p>
         </div>
 
         {/* Time Period Filter */}
-        <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => fetchAnalytics()} disabled={isLoading} className="text-gray-600">
+            <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border">
           {([1, 7, 14, 30] as TimePeriod[]).map((period) => (
             <Button
               key={period}
@@ -153,6 +178,7 @@ export default function TenantAnalyticsDashboard() {
               {periodLabels[period]}
             </Button>
           ))}
+          </div>
         </div>
       </div>
 
