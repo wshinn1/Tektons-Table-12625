@@ -29,11 +29,13 @@ export async function POST(request: NextRequest) {
 
     const { data: tenant } = await supabase
       .from("tenants")
-      .select("email, personal_reply_email, name")
+      .select("email, personal_reply_email, name, newsletter_from_name, full_name")
       .eq("id", tenantId)
       .single()
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "hello@tektonstable.com"
+    const baseEmail = process.env.RESEND_FROM_EMAIL || "hello@tektonstable.com"
+    const displayName = tenant?.newsletter_from_name || tenant?.full_name
+    const fromEmail = displayName ? `${displayName} <${baseEmail}>` : baseEmail
     const replyToEmail = tenant?.personal_reply_email || tenant?.email
     const tenantCopyEmail = tenant?.email
 
