@@ -193,7 +193,7 @@ export const EMAIL_TEMPLATES = {
                       <span style="color: #6b7280; font-size: 14px;">Transaction ID</span>
                     </td>
                     <td style="padding: 8px 0; text-align: right;">
-                      <span style="color: #6b7280; font-size: 12px; font-family: monospace;">${transactionId}</span>
+                      <span style="color: #6b7280; font-size: 12px; font-family: monospace;">${transactionId || "N/A"}</span>
                     </td>
                   </tr>
                 </table>
