@@ -24,13 +24,24 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [validToken, setValidToken] = useState(true)
+  const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
     const code = searchParams.get("code")
     if (!code) {
       setValidToken(false)
       setError("Invalid or expired reset link. Please request a new password reset.")
+      return
     }
+    const supabase = createClient()
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        setValidToken(false)
+        setError("Invalid or expired reset link. Please request a new password reset.")
+      } else {
+        setSessionReady(true)
+      }
+    })
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,12 +59,14 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
     }
 
     setLoading(true)
+    const timeout = setTimeout(() => {
+      setLoading(false)
+      setError("Request timed out. Please try again or request a new reset link.")
+    }, 15000)
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.updateUser({
-        password,
-      })
+      const { error } = await supabase.auth.updateUser({ password })
 
       if (error) {
         setError(error.message)
@@ -66,6 +79,7 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
     } catch (err) {
       setError("An unexpected error occurred")
     } finally {
+      clearTimeout(timeout)
       setLoading(false)
     }
   }
@@ -163,8 +177,8 @@ function TenantResetPasswordContent({ tenantSlug }: { tenantSlug: string }) {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Resetting..." : "Reset Password"}
+            <Button type="submit" className="w-full" disabled={loading || !sessionReady}>
+              {loading ? "Resetting..." : !sessionReady ? "Verifying link..." : "Reset Password"}
             </Button>
           </form>
         </CardContent>
