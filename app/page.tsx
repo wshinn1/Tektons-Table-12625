@@ -1,8 +1,25 @@
-// v1.0.0 - Homepage with cart merge and checkout improvements
+// v1.0.1 - Homepage with cart merge and checkout improvements - added caching
 import { MarketingNavClient } from "@/components/marketing-nav-client"
 import { HomepageSectionRenderer } from "@/components/homepage-section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
 import { createServerClient } from "@/lib/supabase/server"
+import { unstable_cache } from "next/cache"
+
+// Cache the homepage sections query
+const getHomepageSections = unstable_cache(
+  async () => {
+    const supabase = await createServerClient()
+    const { data: sections, error } = await supabase
+      .from("homepage_sections")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true })
+    
+    return { sections, error }
+  },
+  ["homepage-sections"],
+  { revalidate: 60, tags: ["homepage-sections"] }
+)
 
 const STATIC_NAV_ITEMS = [
   { id: "1", label: "About", url: "/about", position: 1, published: true, navigation_side: "left" },
@@ -21,16 +38,8 @@ const STATIC_NAV_SETTINGS = {
 }
 
 export default async function LandingPage() {
-  const supabase = await createServerClient()
-
-  // Fetch sections from database
-  const { data: sections, error } = await supabase
-    .from("homepage_sections")
-    .select("*")
-    .eq("is_active", true)
-    .order("display_order", { ascending: true })
-
-  // Silently handle sections fetch
+  // Use the cached function to fetch sections
+  const { sections, error } = await getHomepageSections()
 
   // Use empty array if no sections found
   const displaySections = sections || []
