@@ -146,6 +146,21 @@ export default function TenantAnalyticsDashboard() {
 
   return (
     <div className="p-4 md:p-8 space-y-6">
+      {isLoading && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-blue-100 overflow-hidden">
+          <div
+            className="h-full bg-blue-500"
+            style={{ width: "40%", animation: "progress-bar 1.5s ease-in-out infinite" }}
+          />
+          <style>{`
+            @keyframes progress-bar {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(350%); }
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
