@@ -29,22 +29,11 @@ const getFontFamily = (fontType: string | undefined) => {
 }
 
 export function HomepageSectionRenderer({ sections }: HomepageSectionRendererProps) {
-  console.log("[v0] Rendering sections:", sections.length)
-
   const sortedSections = [...sections].sort((a, b) => {
     const orderA = a.display_order ?? a.section_order ?? 0
     const orderB = b.display_order ?? b.section_order ?? 0
     return orderA - orderB
   })
-
-  console.log(
-    "[v0] Sorted section orders:",
-    sortedSections.map((s) => ({
-      id: s.id,
-      type: s.section_type,
-      order: s.display_order ?? s.section_order,
-    })),
-  )
 
   return (
     <>
