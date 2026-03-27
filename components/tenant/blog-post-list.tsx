@@ -4,14 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  archiveBlogPost,
-  unpublishBlogPost,
-  unarchiveBlogPost,
-  trashBlogPost,
-  restoreFromTrash,
-  emptyTrash,
-} from "@/app/actions/blog"
+
 import {
   Archive,
   ArchiveRestore,
@@ -89,15 +82,16 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
     setPendingIds((prev) => { const next = new Set(prev); next.delete(id); return next })
 
   const handleAction = useCallback(
-    async (
-      postId: string,
-      action: (id: string, tid: string) => Promise<void>,
-      nextStatus: PostStatus,
-    ) => {
+    async (postId: string, nextStatus: PostStatus) => {
       if (pendingIds.has(postId)) return
       addPending(postId)
       try {
-        await action(postId, tenantId)
+        const res = await fetch("/api/blog/update-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postId, tenantId, status: nextStatus }),
+        })
+        if (!res.ok) throw new Error("Failed to update status")
         setPosts((prev) =>
           prev.map((p) => (p.id === postId ? { ...p, status: nextStatus } : p)),
         )
@@ -113,7 +107,12 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
   const handleEmptyTrash = async () => {
     setEmptyingTrash(true)
     try {
-      await emptyTrash(tenantId)
+      const res = await fetch("/api/blog/update-status", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId }),
+      })
+      if (!res.ok) throw new Error("Failed to empty trash")
       setPosts((prev) => prev.filter((p) => p.status !== "trash"))
     } catch (err) {
       console.error(err)
@@ -242,7 +241,7 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
                           variant="outline"
                           size="sm"
                           disabled={isBusy}
-                          onClick={() => handleAction(post.id, restoreFromTrash, "draft")}
+                          onClick={() => handleAction(post.id, "draft")}
                         >
                           {isBusy ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <RotateCcw className="h-3 w-3 mr-1" />}
                           Restore
@@ -254,7 +253,7 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
                               variant="outline"
                               size="sm"
                               disabled={isBusy}
-                              onClick={() => handleAction(post.id, unpublishBlogPost, "draft")}
+                              onClick={() => handleAction(post.id, "draft")}
                             >
                               {isBusy ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
                               Unpublish
@@ -265,7 +264,7 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
                               variant="outline"
                               size="sm"
                               disabled={isBusy}
-                              onClick={() => handleAction(post.id, unarchiveBlogPost, "draft")}
+                              onClick={() => handleAction(post.id, "draft")}
                             >
                               {isBusy ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ArchiveRestore className="h-3 w-3 mr-1" />}
                               Unarchive
@@ -275,7 +274,7 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
                               variant="outline"
                               size="sm"
                               disabled={isBusy}
-                              onClick={() => handleAction(post.id, archiveBlogPost, "archived")}
+                              onClick={() => handleAction(post.id, "archived")}
                             >
                               {isBusy ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Archive className="h-3 w-3 mr-1" />}
                               Archive
@@ -286,7 +285,7 @@ export function BlogPostList({ posts: initialPosts, tenantSlug, tenantId }: Blog
                             size="sm"
                             disabled={isBusy}
                             className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => handleAction(post.id, trashBlogPost, "trash")}
+                            onClick={() => handleAction(post.id, "trash")}
                           >
                             {isBusy ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
                             Trash
