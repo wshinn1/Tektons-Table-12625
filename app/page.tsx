@@ -2,13 +2,13 @@
 import { MarketingNavClient } from "@/components/marketing-nav-client"
 import { HomepageSectionRenderer } from "@/components/homepage-section-renderer"
 import { MarketingFooter } from "@/components/marketing-footer"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { unstable_cache } from "next/cache"
 
-// Cache the homepage sections query
+// Cache the homepage sections query - uses admin client since cached functions cannot access cookies
 const getHomepageSections = unstable_cache(
   async () => {
-    const supabase = await createServerClient()
+    const supabase = createAdminClient()
     const { data: sections, error } = await supabase
       .from("homepage_sections")
       .select("*")
