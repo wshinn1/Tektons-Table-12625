@@ -477,12 +477,13 @@ export async function saveNewsletterFromName(tenantId: string, fromName: string)
 
     const { data: tenantCheck } = await supabase
       .from("tenants")
-      .select("id")
+      .select("email")
       .eq("id", tenantId)
-      .eq("email", user.email!)
       .maybeSingle()
 
-    if (!tenantCheck) throw new Error("Unauthorized")
+    if (!tenantCheck || tenantCheck.email?.toLowerCase() !== user.email?.toLowerCase()) {
+      throw new Error("Unauthorized")
+    }
 
     const { error } = await supabase
       .from("tenants")
@@ -504,12 +505,13 @@ export async function saveBlogViewLayout(tenantId: string, layout: "grid" | "lis
 
     const { data: tenantCheck } = await supabase
       .from("tenants")
-      .select("id")
+      .select("email")
       .eq("id", tenantId)
-      .eq("email", user.email!)
       .maybeSingle()
 
-    if (!tenantCheck) throw new Error("Unauthorized")
+    if (!tenantCheck || tenantCheck.email?.toLowerCase() !== user.email?.toLowerCase()) {
+      throw new Error("Unauthorized")
+    }
 
     const { error } = await supabase.from("tenants").update({ blog_view_layout: layout }).eq("id", tenantId)
     if (error) throw new Error(error.message)
