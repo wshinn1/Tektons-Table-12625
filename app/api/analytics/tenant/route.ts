@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
       OR properties.tenant = '${subdomain}'
     )`
     const timeFilter = `timestamp > now() - INTERVAL ${queryDays} DAY`
-    const baseFilter = `event = '$pageview' AND ${tenantFilter} AND ${timeFilter}`
+    const eventFilter = `event NOT IN ('$feature_flag_called', '$$heatmap', '$rageclick')`
+    const baseFilter = `${tenantFilter} AND ${timeFilter} AND ${eventFilter}`
 
     // Run all queries in parallel
     const [
@@ -75,11 +76,14 @@ export async function GET(request: NextRequest) {
       locationsResult,
     ] = await Promise.all([
       // Total pageviews
-      runHogQLQuery(`SELECT count() as total FROM events WHERE ${baseFilter}`),
+      runHogQLQuery(
+        `SELECT count(DISTINCT concat(toString(properties.$session_id), '|', toString(properties.$pathname))) as total
+         FROM events WHERE ${baseFilter} AND properties.$pathname IS NOT NULL AND properties.$session_id IS NOT NULL`
+      ),
 
       // Unique sessions
       runHogQLQuery(
-        `SELECT count(DISTINCT properties.$session_id) as sessions FROM events WHERE ${baseFilter}`
+        `SELECT count(DISTINCT properties.$session_id) as sessions FROM events WHERE ${baseFilter} AND properties.$session_id IS NOT NULL`
       ),
 
       // Countries
@@ -114,20 +118,21 @@ export async function GET(request: NextRequest) {
 
       // Top pages
       runHogQLQuery(
-        `SELECT properties.$pathname as path, count() as views 
-         FROM events 
-         WHERE ${baseFilter} 
-         GROUP BY properties.$pathname 
-         ORDER BY views DESC 
+        `SELECT properties.$pathname as path, count(DISTINCT properties.$session_id) as views
+         FROM events
+         WHERE ${baseFilter} AND properties.$pathname IS NOT NULL AND properties.$session_id IS NOT NULL
+         GROUP BY properties.$pathname
+         ORDER BY views DESC
          LIMIT 10`
       ),
 
       // Daily pageviews
       runHogQLQuery(
-        `SELECT toDate(timestamp) as date, count() as views 
-         FROM events 
-         WHERE ${baseFilter} 
-         GROUP BY date 
+        `SELECT toDate(timestamp) as date,
+                count(DISTINCT concat(toString(properties.$session_id), '|', toString(properties.$pathname))) as views
+         FROM events
+         WHERE ${baseFilter} AND properties.$pathname IS NOT NULL AND properties.$session_id IS NOT NULL
+         GROUP BY date
          ORDER BY date ASC`
       ),
 
