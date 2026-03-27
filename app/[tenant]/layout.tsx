@@ -31,6 +31,7 @@ import cn from "classnames"
 import { getMenuItemsByLocation } from "@/app/actions/tenant-menu"
 import { TenantHead } from "@/components/tenant/tenant-head"
 import { PostHogProvider } from "@/components/posthog-provider"
+import { CookieConsent } from "@/components/cookie-consent"
 
 const montserrat = Montserrat({
   weight: ["900"],
@@ -801,6 +802,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
             />
             <main className="flex-1 min-h-screen md:ml-64">{children}</main>
           </div>
+          <CookieConsent />
         </div>
       </PostHogProvider>
     )
@@ -845,6 +847,7 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
           />
         )}
         <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>
+        <CookieConsent />
       </div>
     </PostHogProvider>
   )

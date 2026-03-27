@@ -6,6 +6,7 @@ import { Toaster } from "sonner"
 import { SentryInit } from "@/components/sentry-init"
 import { GoogleAnalytics } from "@/components/google-analytics"
 import { SupportChatbot } from "@/components/support-chatbot" // Added import for SupportChatbot
+import { CookieConsent } from "@/components/cookie-consent"
 import { headers } from "next/headers"
 import { createAdminClient } from "@/lib/supabase/admin"
 import "./globals.css"
@@ -172,6 +173,7 @@ export default function RootLayout({
         <SupportChatbot />
         <Toaster position="top-center" />
         <Analytics />
+        <CookieConsent />
       </body>
     </html>
   )
