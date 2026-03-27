@@ -473,7 +473,17 @@ export async function saveNewsletterFromName(tenantId: string, fromName: string)
   const supabase = await createClient()
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== tenantId) throw new Error("Unauthorized")
+    if (!user) throw new Error("Unauthorized")
+
+    const { data: tenantCheck } = await supabase
+      .from("tenants")
+      .select("id")
+      .eq("id", tenantId)
+      .eq("email", user.email!)
+      .maybeSingle()
+
+    if (!tenantCheck) throw new Error("Unauthorized")
+
     const { error } = await supabase
       .from("tenants")
       .update({ newsletter_from_name: fromName.trim() })
@@ -490,7 +500,17 @@ export async function saveBlogViewLayout(tenantId: string, layout: "grid" | "lis
   const supabase = await createClient()
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== tenantId) throw new Error("Unauthorized")
+    if (!user) throw new Error("Unauthorized")
+
+    const { data: tenantCheck } = await supabase
+      .from("tenants")
+      .select("id")
+      .eq("id", tenantId)
+      .eq("email", user.email!)
+      .maybeSingle()
+
+    if (!tenantCheck) throw new Error("Unauthorized")
+
     const { error } = await supabase.from("tenants").update({ blog_view_layout: layout }).eq("id", tenantId)
     if (error) throw new Error(error.message)
     revalidatePath(`/[tenant]/blog`, "page")
