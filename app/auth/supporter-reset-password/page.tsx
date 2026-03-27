@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { resetPassword } from "@/app/actions/supporter-auth"
+import { createClient } from "@/lib/supabase/client"
 import { CheckCircle2 } from "lucide-react"
 
 function SupporterResetPasswordContent() {
@@ -22,14 +22,24 @@ function SupporterResetPasswordContent() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [validToken, setValidToken] = useState(true)
+  const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
-    // Check if we have the required token/code parameters
     const code = searchParams.get("code")
     if (!code) {
       setValidToken(false)
       setError("Invalid or expired reset link. Please request a new password reset.")
+      return
     }
+    const supabase = createClient()
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        setValidToken(false)
+        setError("Invalid or expired reset link. Please request a new password reset.")
+      } else {
+        setSessionReady(true)
+      }
+    })
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,15 +59,19 @@ function SupporterResetPasswordContent() {
     }
 
     setLoading(true)
+    const timeout = setTimeout(() => {
+      setLoading(false)
+      setError("Request timed out. Please try again or request a new reset link.")
+    }, 15000)
 
     try {
-      const result = await resetPassword({ password })
+      const supabase = createClient()
+      const { error } = await supabase.auth.updateUser({ password })
 
-      if (result.error) {
-        setError(result.error)
+      if (error) {
+        setError(error.message)
       } else {
         setSuccess(true)
-        // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push("/auth/supporter-login")
         }, 3000)
@@ -65,6 +79,7 @@ function SupporterResetPasswordContent() {
     } catch (err) {
       setError("An unexpected error occurred")
     } finally {
+      clearTimeout(timeout)
       setLoading(false)
     }
   }
@@ -162,8 +177,8 @@ function SupporterResetPasswordContent() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Resetting..." : "Reset Password"}
+            <Button type="submit" className="w-full" disabled={loading || !sessionReady}>
+              {loading ? "Resetting..." : !sessionReady ? "Verifying link..." : "Reset Password"}
             </Button>
           </form>
         </CardContent>
