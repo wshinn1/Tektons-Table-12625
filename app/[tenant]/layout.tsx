@@ -30,6 +30,7 @@ import { Suspense } from "react"
 import cn from "classnames"
 import { getMenuItemsByLocation } from "@/app/actions/tenant-menu"
 import { TenantHead } from "@/components/tenant/tenant-head"
+import { PostHogProvider } from "@/components/posthog-provider"
 
 const montserrat = Montserrat({
   weight: ["900"],
@@ -777,42 +778,44 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
 
   if (isAdminPage) {
     return (
-      <div className={`min-h-screen bg-gray-100 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
-        <GoogleAnalytics />
-        <TenantHead
-          tenantName={tenantName}
-          faviconUrl={branding.faviconUrl}
-          ogImageUrl={branding.ogImageUrl}
-          siteTitle={branding.siteTitle}
-          siteDescription={branding.siteDescription}
-          subdomain={subdomain}
-        />
-        <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
-
-        <div className="md:hidden">
-          <TenantAdminMobileMenu
-            subdomain={subdomain}
+      <PostHogProvider subdomain={subdomain}>
+        <div className={`min-h-screen bg-gray-100 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
+          <GoogleAnalytics />
+          <TenantHead
             tenantName={tenantName}
-            user={user}
-            pageBuilderEnabled={pageBuilderEnabled}
-          >
-            {children}
-          </TenantAdminMobileMenu>
-        </div>
-
-        {/* Desktop layout */}
-        <div className="hidden md:block">
-          <TenantAdminSidebar
+            faviconUrl={branding.faviconUrl}
+            ogImageUrl={branding.ogImageUrl}
+            siteTitle={branding.siteTitle}
+            siteDescription={branding.siteDescription}
             subdomain={subdomain}
-            tenantName={tenantName}
-            user={user}
-            pageBuilderEnabled={pageBuilderEnabled}
           />
-          {/* The sidebar component handles its own width (64 or 16 when collapsed) */}
-          {/* Content has ml-64 by default, but CSS transitions handle the sidebar collapse */}
-          <main className="min-h-screen transition-all duration-300 md:ml-64">{children}</main>
+          <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
+
+          <div className="md:hidden">
+            <TenantAdminMobileMenu
+              subdomain={subdomain}
+              tenantName={tenantName}
+              user={user}
+              pageBuilderEnabled={pageBuilderEnabled}
+            >
+              {children}
+            </TenantAdminMobileMenu>
+          </div>
+
+          {/* Desktop layout */}
+          <div className="hidden md:block">
+            <TenantAdminSidebar
+              subdomain={subdomain}
+              tenantName={tenantName}
+              user={user}
+              pageBuilderEnabled={pageBuilderEnabled}
+            />
+            {/* The sidebar component handles its own width (64 or 16 when collapsed) */}
+            {/* Content has ml-64 by default, but CSS transitions handle the sidebar collapse */}
+            <main className="min-h-screen transition-all duration-300 md:ml-64">{children}</main>
+          </div>
         </div>
-      </div>
+      </PostHogProvider>
     )
   }
 
@@ -830,31 +833,33 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
-      <GoogleAnalytics />
-      <TenantHead
-        tenantName={tenantName}
-        faviconUrl={branding.faviconUrl}
-        ogImageUrl={branding.ogImageUrl}
-        siteTitle={branding.siteTitle}
-        siteDescription={branding.siteDescription}
-        subdomain={subdomain}
-      />
-      <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
-      {!isAdminPage && (
-        <TenantNavbar
-          subdomain={subdomain}
+    <PostHogProvider subdomain={subdomain}>
+      <div className={`min-h-screen bg-gray-50 ${montserrat.variable} ${bebasNeue.variable} ${raleway.variable}`}>
+        <GoogleAnalytics />
+        <TenantHead
           tenantName={tenantName}
-          navItems={navItems}
-          user={user}
-          isTenantOwner={isTenantOwner}
-          isDonor={isDonor}
-          campaigns={campaigns}
-          isCheckingAuth={isCheckingAuth}
+          faviconUrl={branding.faviconUrl}
+          ogImageUrl={branding.ogImageUrl}
+          siteTitle={branding.siteTitle}
+          siteDescription={branding.siteDescription}
+          subdomain={subdomain}
         />
-      )}
-      <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>
-    </div>
+        <div id="tenant-data" data-tenant-id={tenantId ?? ""} className="hidden" />
+        {!isAdminPage && (
+          <TenantNavbar
+            subdomain={subdomain}
+            tenantName={tenantName}
+            navItems={navItems}
+            user={user}
+            isTenantOwner={isTenantOwner}
+            isDonor={isDonor}
+            campaigns={campaigns}
+            isCheckingAuth={isCheckingAuth}
+          />
+        )}
+        <main className={cn("w-full", !isAdminPage && "pt-14 md:pt-0")}>{children}</main>
+      </div>
+    </PostHogProvider>
   )
 }
 

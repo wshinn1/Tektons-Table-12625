@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react"
-import Link from "next/link"
 import { submitTenantSupportRequest } from "@/app/actions/support"
 import { createClient } from "@/lib/supabase/client"
 import useSWR from "swr"
@@ -24,6 +23,11 @@ export default function TenantHelpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dataLoading, setDataLoading] = useState(true)
+
+  // Determine if we're on a subdomain for proper navigation
+  const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes(".tektonstable.com") && !window.location.hostname.startsWith("www.")
+  const dashboardPath = isSubdomain ? "/admin" : `/${subdomain}/admin`
 
   // Fetch user and tenant data
   const { data } = useSWR(`tenant-help-${subdomain}`, async () => {
@@ -37,7 +41,7 @@ export default function TenantHelpPage() {
 
     const { data: tenant } = await supabase
       .from("tenants")
-      .select("id, name, email")
+      .select("id, full_name, email")
       .eq("subdomain", subdomain)
       .single()
 
@@ -46,6 +50,7 @@ export default function TenantHelpPage() {
       return null
     }
 
+    setDataLoading(false)
     return { user, tenant }
   })
 
@@ -62,21 +67,25 @@ export default function TenantHelpPage() {
 
     setIsSubmitting(true)
 
-    const result = await submitTenantSupportRequest({
-      email: data.user.email!,
-      name: data.tenant.name,
-      subject: subject.trim(),
-      details: details.trim(),
-      tenantName: data.tenant.name,
-      subdomain,
-    })
+    try {
+      const result = await submitTenantSupportRequest({
+        email: data.user.email!,
+        name: data.tenant.full_name,
+        subject: subject.trim(),
+        details: details.trim(),
+        tenantName: data.tenant.full_name,
+        subdomain,
+      })
 
-    setIsSubmitting(false)
-
-    if (result.success) {
-      setIsSubmitted(true)
-    } else {
-      setError(result.error || "Something went wrong. Please try again.")
+      if (result.success) {
+        setIsSubmitted(true)
+      } else {
+        setError(result.error || "Something went wrong. Please try again.")
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -91,13 +100,13 @@ export default function TenantHelpPage() {
               </div>
               <h2 className="text-2xl font-semibold">Request Submitted</h2>
               <p className="text-muted-foreground">
-                We've received your support request and will get back to you via email as soon as possible.
+                We&apos;ve received your support request and will get back to you via email as soon as possible.
               </p>
               <Button asChild className="mt-4">
-                <Link href={`/${subdomain}/admin`}>
+                <a href={dashboardPath}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Dashboard
-                </Link>
+                </a>
               </Button>
             </div>
           </CardContent>
@@ -109,20 +118,20 @@ export default function TenantHelpPage() {
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="mb-6">
-        <Link 
-          href={`/${subdomain}/admin`}
+        <a 
+          href={dashboardPath}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
-        </Link>
+        </a>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Need Help?</CardTitle>
           <CardDescription>
-            Let us know what you need help with and we'll get back to you as soon as possible.
+            Let us know what you need help with and we&apos;ll get back to you as soon as possible.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -134,7 +143,7 @@ export default function TenantHelpPage() {
                 placeholder="What do you need help with?"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || dataLoading}
               />
             </div>
 
@@ -146,7 +155,7 @@ export default function TenantHelpPage() {
                 rows={6}
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || dataLoading}
               />
             </div>
 
@@ -154,11 +163,16 @@ export default function TenantHelpPage() {
               <p className="text-sm text-red-500">{error}</p>
             )}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
+            <Button type="submit" disabled={isSubmitting || dataLoading} className="w-full">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Sending...
+                </>
+              ) : dataLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
                 </>
               ) : (
                 "Submit Request"
