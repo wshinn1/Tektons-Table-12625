@@ -791,17 +791,15 @@ function TenantLayoutInner({ children, params }: TenantLayoutProps) {
             </TenantAdminMobileMenu>
           </div>
 
-          {/* Desktop layout */}
-          <div className="hidden md:block">
+          {/* Desktop layout — hidden on mobile so children only render once */}
+          <div className="hidden md:flex">
             <TenantAdminSidebar
               subdomain={subdomain}
               tenantName={tenantName}
               user={user}
               pageBuilderEnabled={pageBuilderEnabled}
             />
-            {/* The sidebar component handles its own width (64 or 16 when collapsed) */}
-            {/* Content has ml-64 by default, but CSS transitions handle the sidebar collapse */}
-            <main className="min-h-screen transition-all duration-300 md:ml-64">{children}</main>
+            <main className="flex-1 min-h-screen md:ml-64">{children}</main>
           </div>
         </div>
       </PostHogProvider>
