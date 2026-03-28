@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Users, DollarSign, TrendingUp, HelpCircle } from "lucide-react"
 import Link from "next/link"
 import { emailsMatch } from "@/lib/utils"
+import { DashboardTopPages } from "@/components/tenant/dashboard-top-pages"
 
 export default async function TenantAdminDashboard({
   params,
@@ -66,8 +67,11 @@ export default async function TenantAdminDashboard({
     .select("*", { count: "exact", head: true })
     .eq("tenant_id", tenant.id)
 
-  // Get follower count (placeholder for Phase 4)
-  const followerCount = 0
+  // Get email subscriber count
+  const { count: subscriberCount } = await supabase
+    .from("tenant_email_subscribers")
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenant.id)
 
   // Get financial stats (placeholder for Phase 6)
   const monthlyRevenue = 0
@@ -93,12 +97,12 @@ export default async function TenantAdminDashboard({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Followers</CardTitle>
+            <CardTitle className="text-sm font-medium">Subscribers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{followerCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Active followers</p>
+            <div className="text-2xl font-bold">{subscriberCount || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Email subscribers</p>
           </CardContent>
         </Card>
 
@@ -126,16 +130,7 @@ export default async function TenantAdminDashboard({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              No recent activity yet. Start by creating your first blog post!
-            </p>
-          </CardContent>
-        </Card>
+        <DashboardTopPages subdomain={subdomain} />
 
         <Card>
           <CardHeader>
