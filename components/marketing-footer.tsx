@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { NewsletterSignup } from "./newsletter-signup"
 
@@ -39,17 +40,33 @@ const DEFAULT_FOOTER_SETTINGS = {
 export function MarketingFooter() {
   const { site_title, site_subtitle, copyright_text, menu_columns } = DEFAULT_FOOTER_SETTINGS
 
+  // Handle dynamic height resizing from theadoptedson.com embed
+  useEffect(() => {
+    function handleMessage(e: MessageEvent) {
+      if (e.data && e.data.type === "tas-resize") {
+        const iframe = document.getElementById("tas-embed") as HTMLIFrameElement | null
+        if (iframe) {
+          iframe.style.height = e.data.height + "px"
+        }
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
+  }, [])
+
   return (
     <>
       {/* Blog embed from theadoptedson.com */}
       <div className="w-full max-w-7xl mx-auto px-6 py-12">
         <iframe
+          id="tas-embed"
           src="https://theadoptedson.com/embed/blog-rectangular"
           width="100%"
-          height="420"
+          height="500"
           frameBorder="0"
-          style={{ borderRadius: "8px", overflow: "hidden" }}
-          loading="lazy"
+          scrolling="no"
+          style={{ border: "none", borderRadius: "8px" }}
           title="Blog posts from The Adopted Son"
         />
       </div>

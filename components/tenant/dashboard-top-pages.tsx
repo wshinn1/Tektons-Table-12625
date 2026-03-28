@@ -16,7 +16,7 @@ interface DashboardTopPagesProps {
 }
 
 export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
-  const [topPages, setTopPages] = useState<TopPage[]>([])
+  const [topBlogPosts, setTopBlogPosts] = useState<TopPage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,7 +33,13 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
           throw new Error(data.error || "Failed to fetch analytics")
         }
 
-        setTopPages(data.topPages || [])
+        // Filter to only include blog post paths (e.g., /subdomain/blog/slug)
+        const blogPosts = (data.topPages || []).filter((page: TopPage) => {
+          // Match paths like /subdomain/blog/something or /blog/something
+          return page.path && /\/blog\/[^/]+/.test(page.path)
+        })
+
+        setTopBlogPosts(blogPosts)
       } catch (err) {
         console.error("[DashboardTopPages] Error fetching data:", err)
         setError(err instanceof Error ? err.message : "Failed to load page data")
@@ -51,14 +57,27 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
     return num.toString()
   }
 
-  const maxViews = topPages.length > 0 ? topPages[0].views : 1
+  // Extract just the blog post slug from the path for display
+  const formatBlogPath = (path: string): string => {
+    const match = path.match(/\/blog\/([^/]+)/)
+    if (match) {
+      // Convert slug to readable title (replace hyphens with spaces, capitalize)
+      return match[1]
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    }
+    return path
+  }
+
+  const maxViews = topBlogPosts.length > 0 ? topBlogPosts[0].views : 1
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <FileText className="h-4 w-4 text-blue-600" />
-          Top Pages
+          Top Blog Posts
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -73,17 +92,17 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
           </div>
         ) : error ? (
           <p className="text-sm text-red-500">{error}</p>
-        ) : topPages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No page view data yet.</p>
+        ) : topBlogPosts.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No blog post view data yet.</p>
         ) : (
           <div className="space-y-3">
-            {topPages.slice(0, 5).map((page, index) => {
+            {topBlogPosts.slice(0, 5).map((page, index) => {
               const percentage = (page.views / maxViews) * 100
               return (
                 <div key={page.path || index} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-700 truncate max-w-[200px]" title={page.path}>
-                      {page.path || "/"}
+                      {formatBlogPath(page.path)}
                     </span>
                     <span className="text-gray-500 font-medium">{formatNumber(page.views)}</span>
                   </div>
