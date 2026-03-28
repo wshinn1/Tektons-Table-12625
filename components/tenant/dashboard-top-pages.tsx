@@ -33,11 +33,10 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
           throw new Error(data.error || "Failed to fetch analytics")
         }
 
-        // Filter to only include blog post paths (e.g., /subdomain/blog/slug)
-        const blogPosts = (data.topPages || []).filter((page: TopPage) => {
-          // Match paths like /subdomain/blog/something or /blog/something
-          return page.path && /\/blog\/[^/]+/.test(page.path)
-        })
+        // Filter to only include blog post paths (e.g., /blog/slug)
+        const blogPosts = (data.topPages || []).filter(
+          (p: TopPage) => p.path?.startsWith("/blog/") && p.path !== "/blog/"
+        )
 
         setTopBlogPosts(blogPosts)
       } catch (err) {
@@ -58,17 +57,7 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
   }
 
   // Extract just the blog post slug from the path for display
-  const formatBlogPath = (path: string): string => {
-    const match = path.match(/\/blog\/([^/]+)/)
-    if (match) {
-      // Convert slug to readable title (replace hyphens with spaces, capitalize)
-      return match[1]
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    }
-    return path
-  }
+  const formatPath = (path: string) => path.replace("/blog/", "").replace(/-/g, " ")
 
   const maxViews = topBlogPosts.length > 0 ? topBlogPosts[0].views : 1
 
@@ -102,7 +91,7 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
                 <div key={page.path || index} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-700 truncate max-w-[200px]" title={page.path}>
-                      {formatBlogPath(page.path)}
+                      {formatPath(page.path)}
                     </span>
                     <span className="text-gray-500 font-medium">{formatNumber(page.views)}</span>
                   </div>
