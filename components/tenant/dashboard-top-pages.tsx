@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FileText } from "lucide-react"
@@ -107,12 +106,13 @@ export function DashboardTopPages({ subdomain }: DashboardTopPagesProps) {
           </div>
         )}
 
-        <Link
+        <a
           href={`/${subdomain}/admin/analytics`}
-          className="block text-sm text-blue-600 hover:underline mt-4"
+          className="mt-4 block text-xs text-blue-600 hover:underline"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
         >
           View full analytics &rarr;
-        </Link>
+        </a>
       </CardContent>
     </Card>
   )
