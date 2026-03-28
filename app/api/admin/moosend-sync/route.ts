@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { isSuperAdmin } from "@/lib/supabase/admin"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { isSuperAdmin } from "@/lib/auth"
 import { addTenantToMoosend, addContactToMoosend } from "@/lib/moosend"
 
 export async function POST() {
