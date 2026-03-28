@@ -1,36 +1,32 @@
-import { isSuperAdmin } from "@/lib/auth"
+import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient, isSuperAdmin } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
-import { createAdminClient } from "@/lib/supabase/admin"
 import { ContactsManager } from "@/components/admin/crm/contacts-manager"
 import { TenantContactsManager } from "@/components/admin/crm/tenant-contacts-manager"
 import { ContactsPageHeader } from "@/components/admin/crm/contacts-page-header"
 
 export default async function ContactsPage() {
-  if (!(await isSuperAdmin())) {
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user || !(await isSuperAdmin(user.id))) {
     redirect("/admin")
   }
 
-  const supabase = createAdminClient()
+  const adminClient = createAdminClient()
 
-  // Fetch all active tenants
-  const { data: tenants } = await supabase
-    .from("tenants")
-    .select("id, subdomain, full_name")
-    .eq("status", "active")
-    .order("full_name")
-
-  // Fetch counts in parallel
-  const [subscribersResult, supportersResult, followersResult] = await Promise.all([
-    supabase
-      .from("tenant_email_subscribers")
-      .select("tenant_id")
-      .eq("status", "subscribed"),
-    supabase
-      .from("tenant_financial_supporters")
-      .select("tenant_id"),
-    supabase
-      .from("tenant_followers")
-      .select("tenant_id"),
+  // Fetch all data in parallel
+  const [tenantsResult, subscribersResult, supportersResult, followersResult] = await Promise.all([
+    adminClient
+      .from("tenants")
+      .select("id, subdomain, full_name")
+      .eq("is_active", true)
+      .order("full_name"),
+    adminClient.from("tenant_email_subscribers").select("tenant_id"),
+    adminClient.from("tenant_financial_supporters").select("tenant_id"),
+    adminClient.from("tenant_followers").select("tenant_id"),
   ])
 
   // Build count maps
@@ -51,7 +47,7 @@ export default async function ContactsPage() {
   }
 
   // Merge counts into tenant list
-  const tenantsWithCounts = (tenants || []).map((tenant) => ({
+  const tenantsWithCounts = (tenantsResult.data || []).map((tenant) => ({
     ...tenant,
     subscriberCount: subscriberCounts.get(tenant.id) || 0,
     supporterCount: supporterCounts.get(tenant.id) || 0,
