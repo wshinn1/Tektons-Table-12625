@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { RefreshCw, CheckCircle, XCircle } from "lucide-react"
 
 interface SyncResult {
-  synced: { tenants: number; subscribers: number; supporters: number }
+  synced: { tenants: number; subscribers: number; supporters: number; followers: number }
   errors: number
+  queryErrors?: string[]
 }
 
 export function MoosendSyncButton() {
@@ -25,9 +26,11 @@ export function MoosendSyncButton() {
         throw new Error("Sync failed")
       }
 
+      const { tenants, subscribers, supporters, followers } = data.synced
+      const queryErrors = data.queryErrors?.length ? ` | DB errors: ${data.queryErrors.join("; ")}` : ""
       setResult({
         success: true,
-        message: `Synced: ${data.synced.tenants} tenants, ${data.synced.subscribers} subscribers, ${data.synced.supporters} supporters${data.errors > 0 ? ` (${data.errors} errors)` : ""}`,
+        message: `Synced: ${tenants} tenants, ${subscribers} subscribers, ${supporters} donors, ${followers} followers${data.errors > 0 ? ` (${data.errors} Moosend errors)` : ""}${queryErrors}`,
       })
     } catch (error) {
       setResult({
