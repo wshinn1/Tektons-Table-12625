@@ -11,6 +11,7 @@ import {
   sendSubscriptionCanceledEmail,
   sendTrialEndedEmail,
 } from "@/lib/premium-emails"
+import { addContactToMoosend } from "@/lib/moosend"
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -551,6 +552,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, connect
       } else {
         supporterId = newSupporter?.id
         console.log("[v0] Created new supporter:", supporterId)
+
+        // Add new supporter to Moosend
+        if (customerEmail) {
+          addContactToMoosend(customerEmail, customerName).catch(() => {})
+        }
       }
     }
   }

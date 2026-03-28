@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { createStarterBlogPost } from "@/app/actions/blog"
 import { notifyNewTenantCreated, sendTenantWelcomeEmail } from "@/app/actions/tenant-notifications"
+import { addTenantToMoosend } from "@/lib/moosend"
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
@@ -149,6 +150,11 @@ export default function OnboardingPage() {
         if (tenantError) {
           console.error("[v0] Tenant creation error:", tenantError)
           throw tenantError
+        }
+
+        // Add tenant to Moosend email list
+        if (user.email) {
+          addTenantToMoosend(user.email, fullName).catch(() => {})
         }
       }
 
