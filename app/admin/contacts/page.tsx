@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { ContactsManager } from "@/components/admin/crm/contacts-manager"
 import { TenantContactsManager } from "@/components/admin/crm/tenant-contacts-manager"
+import { ContactsPageHeader } from "@/components/admin/crm/contacts-page-header"
 
 export default async function ContactsPage() {
   if (!(await isSuperAdmin())) {
@@ -59,10 +60,7 @@ export default async function ContactsPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Contact Management</h1>
-        <p className="text-muted-foreground mt-2">Manage all contacts, organize groups, and track engagement</p>
-      </div>
+      <ContactsPageHeader />
 
       <div className="space-y-8">
         <section>
