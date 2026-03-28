@@ -4,96 +4,40 @@ import { isSuperAdmin } from "@/lib/auth"
 import { addTenantToMoosend, addContactToMoosend } from "@/lib/moosend"
 
 export async function POST() {
-  // Verify super admin auth
   if (!(await isSuperAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const supabase = createAdminClient()
+  const admin = createAdminClient()
 
-  // Fetch all data in parallel
-  const [tenantsResult, subscribersResult, supportersResult] = await Promise.all([
-    supabase
-      .from("tenants")
-      .select("email, full_name")
-      .eq("is_active", true),
-    supabase
-      .from("tenant_email_subscribers")
-      .select("email, name")
-      .eq("status", "subscribed"),
-    supabase
-      .from("tenant_financial_supporters")
-      .select("email, name"),
+  const [tenantsRes, subscribersRes, supportersRes] = await Promise.all([
+    admin.from("tenants").select("email, full_name").eq("is_active", true),
+    admin.from("tenant_email_subscribers").select("email, name"),
+    admin.from("tenant_financial_supporters").select("email, name"),
   ])
 
-  // Deduplicate tenants by email
-  const tenantsMap = new Map<string, string | null>()
-  for (const tenant of tenantsResult.data || []) {
-    if (tenant.email && !tenantsMap.has(tenant.email)) {
-      tenantsMap.set(tenant.email, tenant.full_name)
+  const dedup = <T extends { email: string }>(rows: T[]) => {
+    const map = new Map<string, T>()
+    for (const row of rows) {
+      if (row.email) map.set(row.email.toLowerCase(), row)
     }
+    return Array.from(map.values())
   }
 
-  // Deduplicate subscribers by email
-  const subscribersMap = new Map<string, string | null>()
-  for (const sub of subscribersResult.data || []) {
-    if (sub.email && !subscribersMap.has(sub.email)) {
-      subscribersMap.set(sub.email, sub.name)
-    }
-  }
+  const tenants = dedup(tenantsRes.data || [])
+  const subscribers = dedup(subscribersRes.data || [])
+  const supporters = dedup(supportersRes.data || [])
 
-  // Deduplicate supporters by email
-  const supportersMap = new Map<string, string | null>()
-  for (const sup of supportersResult.data || []) {
-    if (sup.email && !supportersMap.has(sup.email)) {
-      supportersMap.set(sup.email, sup.name)
-    }
-  }
-
-  // Build promises for all Moosend calls
-  const tenantPromises = Array.from(tenantsMap.entries()).map(([email, name]) =>
-    addTenantToMoosend(email, name)
-  )
-
-  const subscriberPromises = Array.from(subscribersMap.entries()).map(([email, name]) =>
-    addContactToMoosend(email, name)
-  )
-
-  const supporterPromises = Array.from(supportersMap.entries()).map(([email, name]) =>
-    addContactToMoosend(email, name)
-  )
-
-  // Run all calls with Promise.allSettled so one failure doesn't stop the rest
-  const [tenantResults, subscriberResults, supporterResults] = await Promise.all([
-    Promise.allSettled(tenantPromises),
-    Promise.allSettled(subscriberPromises),
-    Promise.allSettled(supporterPromises),
+  const results = await Promise.allSettled([
+    ...tenants.map((t) => addTenantToMoosend(t.email, t.full_name)),
+    ...subscribers.map((s) => addContactToMoosend(s.email, s.name)),
+    ...supporters.map((s) => addContactToMoosend(s.email, s.name)),
   ])
 
-  // Count successes and errors
-  const countResults = (results: PromiseSettledResult<void>[]) => {
-    let success = 0
-    let errors = 0
-    for (const result of results) {
-      if (result.status === "fulfilled") {
-        success++
-      } else {
-        errors++
-      }
-    }
-    return { success, errors }
-  }
-
-  const tenantStats = countResults(tenantResults)
-  const subscriberStats = countResults(subscriberResults)
-  const supporterStats = countResults(supporterResults)
+  const errors = results.filter((r) => r.status === "rejected").length
 
   return NextResponse.json({
-    synced: {
-      tenants: tenantStats.success,
-      subscribers: subscriberStats.success,
-      supporters: supporterStats.success,
-    },
-    errors: tenantStats.errors + subscriberStats.errors + supporterStats.errors,
+    synced: { tenants: tenants.length, subscribers: subscribers.length, supporters: supporters.length },
+    errors,
   })
 }
