@@ -5,6 +5,7 @@ import { BlogEngagement } from "@/components/blog/blog-engagement"
 import { BlogComments } from "@/components/blog/blog-comments"
 import { ReadingProgress } from "@/components/blog/reading-progress"
 import { generateBlogJsonLd } from "@/components/blog/blog-seo"
+import { BlogShareButtons } from "@/components/blog/blog-share-buttons"
 import { Button } from "@/components/ui/button"
 import { Lock, Calendar, Clock, ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -353,10 +354,16 @@ export default async function TenantBlogPostPage({
               </h1>
 
               {(post.excerpt || post.subtitle) && (
-                <p className="mb-12 text-xl leading-relaxed text-muted-foreground text-pretty font-raleway">
+                <p className="mb-6 text-xl leading-relaxed text-muted-foreground text-pretty font-raleway">
                   {post.excerpt || post.subtitle}
                 </p>
               )}
+
+              <BlogShareButtons
+                postUrl={postUrl}
+                title={post.title}
+                excerpt={post.excerpt || post.subtitle}
+              />
             </div>
           </div>
 
