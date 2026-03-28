@@ -102,7 +102,11 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
       try {
         const res = await fetch(`/api/admin/tenant-contacts?tenantId=${tenant.id}`)
         const json = await res.json()
-        setData(json)
+        setData({
+          subscribers: json.subscribers || [],
+          supporters: json.supporters || [],
+          followers: json.followers || [],
+        })
         setHasFetched(true)
       } catch (error) {
         console.error("Failed to fetch tenant contacts:", error)
