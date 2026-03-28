@@ -1,20 +1,31 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import {
-  ChevronRight,
   ChevronDown,
+  ChevronRight,
   Users,
   DollarSign,
-  Heart,
   TrendingUp,
-  FileText,
-  Building2,
-  MapPin,
   Globe,
+  MapPin,
+  Building2,
+  BookOpen,
+  Heart,
+  RefreshCw,
 } from "lucide-react"
+
+type Period = 1 | 7 | 30
+
+const periodLabels: Record<Period, string> = {
+  1: "24h",
+  7: "7 days",
+  30: "30 days",
+}
 
 interface Tenant {
   id: string
@@ -43,223 +54,212 @@ interface TenantData {
   error: string | null
 }
 
-interface PlatformAnalyticsProps {
-  tenants: Tenant[]
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount)
 }
 
-export function PlatformAnalytics({ tenants }: PlatformAnalyticsProps) {
-  const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set())
-  const [tenantData, setTenantData] = useState<Record<string, TenantData>>({})
+function formatNumber(num: number): string {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+  return num.toString()
+}
 
-  const toggleTenant = async (tenantId: string, subdomain: string) => {
-    const newExpanded = new Set(expandedTenants)
+function TenantRow({ tenant, period }: { tenant: Tenant; period: Period }) {
+  const [open, setOpen] = useState(false)
+  const [data, setData] = useState<TenantData | null>(null)
+  const hasLoadedRef = useRef(false)
 
-    if (newExpanded.has(tenantId)) {
-      newExpanded.delete(tenantId)
-    } else {
-      newExpanded.add(tenantId)
+  const fetchData = useCallback(async () => {
+    setData((prev) => prev ? { ...prev, isLoading: true } : { analytics: null, giving: null, isLoading: true, error: null })
 
-      // Only fetch if we haven't already
-      if (!tenantData[tenantId]) {
-        setTenantData((prev) => ({
-          ...prev,
-          [tenantId]: { analytics: null, giving: null, isLoading: true, error: null },
-        }))
+    try {
+      const [analyticsRes, givingRes] = await Promise.all([
+        fetch(`/api/analytics/tenant?subdomain=${tenant.subdomain}&days=${period}&_t=${Date.now()}`, { cache: "no-store" }),
+        fetch(`/api/tenant/giving/stats?subdomain=${tenant.subdomain}&_t=${Date.now()}`, { cache: "no-store" }),
+      ])
 
-        try {
-          const [analyticsRes, givingRes] = await Promise.all([
-            fetch(`/api/analytics/tenant?subdomain=${subdomain}&days=30`),
-            fetch(`/api/tenant/giving/stats?subdomain=${subdomain}`),
-          ])
+      const [analyticsData, givingData] = await Promise.all([
+        analyticsRes.json(),
+        givingRes.json(),
+      ])
 
-          const [analyticsData, givingData] = await Promise.all([
-            analyticsRes.json(),
-            givingRes.json(),
-          ])
-
-          setTenantData((prev) => ({
-            ...prev,
-            [tenantId]: {
-              analytics: analyticsRes.ok ? analyticsData : null,
-              giving: givingRes.ok ? givingData : null,
-              isLoading: false,
-              error: !analyticsRes.ok && !givingRes.ok ? "Failed to load data" : null,
-            },
-          }))
-        } catch (err) {
-          setTenantData((prev) => ({
-            ...prev,
-            [tenantId]: {
-              analytics: null,
-              giving: null,
-              isLoading: false,
-              error: "Failed to load data",
-            },
-          }))
-        }
-      }
+      setData({
+        analytics: analyticsRes.ok ? analyticsData : null,
+        giving: givingRes.ok ? givingData : null,
+        isLoading: false,
+        error: !analyticsRes.ok && !givingRes.ok ? "Failed to load data" : null,
+      })
+    } catch {
+      setData({
+        analytics: null,
+        giving: null,
+        isLoading: false,
+        error: "Failed to load data",
+      })
     }
+  }, [tenant.subdomain, period])
 
-    setExpandedTenants(newExpanded)
-  }
+  // Refetch when period changes and row is open
+  useEffect(() => {
+    if (open && hasLoadedRef.current) {
+      fetchData()
+    }
+  }, [period, open, fetchData])
 
-  const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`
+  // Auto-refresh every 10 minutes while open
+  useEffect(() => {
+    if (!open) return
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
+    const interval = setInterval(() => {
+      fetchData()
+    }, 10 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [open, fetchData])
+
+  const handleToggle = () => {
+    if (!open && !hasLoadedRef.current) {
+      hasLoadedRef.current = true
+      fetchData()
+    }
+    setOpen(!open)
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        {tenants.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No active tenants found.</div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {tenants.map((tenant) => {
-              const isExpanded = expandedTenants.has(tenant.id)
-              const data = tenantData[tenant.id]
-
-              return (
-                <div key={tenant.id}>
-                  {/* Row Header */}
-                  <button
-                    onClick={() => toggleTenant(tenant.id, tenant.subdomain)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                    style={{
-                      touchAction: "manipulation",
-                      WebkitTapHighlightColor: "transparent",
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                      )}
-                      <div className="text-left">
-                        <p className="font-semibold text-gray-900">
-                          {tenant.full_name || tenant.subdomain}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {tenant.subdomain}.tektonstable.com
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-                      <Users className="h-3.5 w-3.5" />
-                      {tenant.subscriberCount}
-                    </div>
-                  </button>
-
-                  {/* Expanded Content */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-100">
-                      {data?.isLoading ? (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {[...Array(4)].map((_, i) => (
-                              <Skeleton key={i} className="h-20 w-full rounded-lg" />
-                            ))}
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                            {[...Array(4)].map((_, i) => (
-                              <Skeleton key={i} className="h-48 w-full rounded-lg" />
-                            ))}
-                          </div>
-                        </div>
-                      ) : data?.error ? (
-                        <div className="text-center py-4 text-red-500">{data.error}</div>
-                      ) : (
-                        <div className="space-y-4">
-                          {/* Section 1: Stat Cards */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <StatCard
-                              icon={<Users className="h-5 w-5" />}
-                              label="Subscribers"
-                              value={formatNumber(tenant.subscriberCount)}
-                            />
-                            <StatCard
-                              icon={<DollarSign className="h-5 w-5" />}
-                              label="Total Raised"
-                              value={formatCurrency(data?.giving?.totalRaised || 0)}
-                            />
-                            <StatCard
-                              icon={<TrendingUp className="h-5 w-5" />}
-                              label="Monthly Revenue"
-                              value={formatCurrency(data?.giving?.monthlyRevenue || 0)}
-                            />
-                            <StatCard
-                              icon={<Heart className="h-5 w-5" />}
-                              label="Supporters"
-                              value={formatNumber(data?.giving?.donationCount || 0)}
-                            />
-                          </div>
-
-                          {/* Section 2: List Cards */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <ListCard
-                              icon={<FileText className="h-4 w-4" />}
-                              title="Top Blog Posts"
-                              items={
-                                data?.analytics?.topPages
-                                  ?.filter(
-                                    (p) =>
-                                      p.path?.startsWith("/blog/") && p.path !== "/blog/"
-                                  )
-                                  .slice(0, 5)
-                                  .map((p) => ({
-                                    label: p.path
-                                      .replace("/blog/", "")
-                                      .replace(/-/g, " "),
-                                    value: p.views,
-                                  })) || []
-                              }
-                            />
-                            <ListCard
-                              icon={<Building2 className="h-4 w-4" />}
-                              title="Top Cities"
-                              items={
-                                data?.analytics?.cities?.slice(0, 5).map((c) => ({
-                                  label: c.city,
-                                  value: c.users,
-                                })) || []
-                              }
-                            />
-                            <ListCard
-                              icon={<MapPin className="h-4 w-4" />}
-                              title="Top States"
-                              items={
-                                data?.analytics?.states?.slice(0, 5).map((s) => ({
-                                  label: s.state,
-                                  value: s.users,
-                                })) || []
-                              }
-                            />
-                            <ListCard
-                              icon={<Globe className="h-4 w-4" />}
-                              title="Top Countries"
-                              items={
-                                data?.analytics?.countries?.slice(0, 5).map((c) => ({
-                                  label: c.country,
-                                  value: c.users,
-                                })) || []
-                              }
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+    <div>
+      {/* Row Header */}
+      <button
+        onClick={handleToggle}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+        style={{
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          {open ? (
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+          )}
+          <div className="text-left">
+            <p className="font-semibold text-gray-900">
+              {tenant.full_name || tenant.subdomain}
+            </p>
+            <p className="text-sm text-gray-500">
+              {tenant.subdomain}.tektonstable.com
+            </p>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+        <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+          <Users className="h-3.5 w-3.5 mr-1" />
+          {tenant.subscriberCount}
+        </Badge>
+      </button>
+
+      {/* Expanded Content */}
+      {open && (
+        <div className="px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-100">
+          {data?.isLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-48 w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+          ) : data?.error ? (
+            <div className="text-center py-4 text-red-500">{data.error}</div>
+          ) : (
+            <div className="space-y-4">
+              {/* Section 1: Stat Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <StatCard
+                  icon={<Users className="h-5 w-5" />}
+                  label="Subscribers"
+                  value={formatNumber(tenant.subscriberCount)}
+                />
+                <StatCard
+                  icon={<DollarSign className="h-5 w-5" />}
+                  label="Total Raised"
+                  value={formatCurrency(data?.giving?.totalRaised || 0)}
+                />
+                <StatCard
+                  icon={<TrendingUp className="h-5 w-5" />}
+                  label="Monthly Revenue"
+                  value={formatCurrency(data?.giving?.monthlyRevenue || 0)}
+                />
+                <StatCard
+                  icon={<Heart className="h-5 w-5" />}
+                  label="Supporters"
+                  value={formatNumber(data?.giving?.donationCount || 0)}
+                />
+              </div>
+
+              {/* Section 2: List Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <ListCard
+                  icon={<BookOpen className="h-4 w-4" />}
+                  title="Top Blog Posts"
+                  items={
+                    data?.analytics?.topPages
+                      ?.filter(
+                        (p) =>
+                          p.path?.startsWith("/blog/") && p.path !== "/blog/"
+                      )
+                      .slice(0, 5)
+                      .map((p) => ({
+                        label: p.path
+                          .replace("/blog/", "")
+                          .replace(/-/g, " "),
+                        value: p.views,
+                      })) || []
+                  }
+                />
+                <ListCard
+                  icon={<Building2 className="h-4 w-4" />}
+                  title="Top Cities"
+                  items={
+                    data?.analytics?.cities?.slice(0, 5).map((c) => ({
+                      label: c.city,
+                      value: c.users,
+                    })) || []
+                  }
+                />
+                <ListCard
+                  icon={<MapPin className="h-4 w-4" />}
+                  title="Top States"
+                  items={
+                    data?.analytics?.states?.slice(0, 5).map((s) => ({
+                      label: s.state,
+                      value: s.users,
+                    })) || []
+                  }
+                />
+                <ListCard
+                  icon={<Globe className="h-4 w-4" />}
+                  title="Top Countries"
+                  items={
+                    data?.analytics?.countries?.slice(0, 5).map((c) => ({
+                      label: c.country,
+                      value: c.users,
+                    })) || []
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -298,12 +298,6 @@ function ListCard({
 }) {
   const maxValue = items.length > 0 ? items[0].value : 1
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
-  }
-
   return (
     <Card>
       <CardContent className="p-4">
@@ -336,6 +330,76 @@ function ListCard({
                 </div>
               )
             })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+interface PlatformAnalyticsProps {
+  tenants: Tenant[]
+}
+
+export function PlatformAnalytics({ tenants }: PlatformAnalyticsProps) {
+  const [period, setPeriod] = useState<Period>(7)
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date())
+
+  // Update lastRefreshed every 10 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastRefreshed(new Date())
+    }, 10 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Period Toggle */}
+          <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+            {(Object.keys(periodLabels) as unknown as Period[]).map((p) => (
+              <Button
+                key={p}
+                variant={period === p ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setPeriod(p)}
+                className={
+                  period === p
+                    ? "bg-white shadow-sm text-gray-900 hover:bg-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-transparent"
+                }
+              >
+                {periodLabels[p]}
+              </Button>
+            ))}
+          </div>
+
+          {/* Auto-refresh indicator */}
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <RefreshCw className="h-4 w-4" />
+            <span>Auto-refreshes every 10 min · Last: {formatTime(lastRefreshed)}</span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {tenants.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">No active tenants found.</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {tenants.map((tenant) => (
+              <TenantRow key={tenant.id} tenant={tenant} period={period} />
+            ))}
           </div>
         )}
       </CardContent>
