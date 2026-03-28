@@ -5,7 +5,7 @@ import type React from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useState, useEffect, useCallback } from "react"
-import { Menu, X, ChevronDown } from "lucide-react"
+import { Menu, X, ChevronDown, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { User } from "@supabase/supabase-js"
 
@@ -52,6 +52,7 @@ export function TenantNavbar({
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [campaignsOpen, setCampaignsOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
 
@@ -70,6 +71,7 @@ export function TenantNavbar({
   useEffect(() => {
     setMobileMenuOpen(false)
     setCampaignsOpen(false)
+    setAccountOpen(false)
     setIsNavigating(false)
   }, [pathname])
 
@@ -209,21 +211,58 @@ export function TenantNavbar({
                   {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
                 </a>
               ) : (
-                <div className="flex items-center gap-2 ml-2">
-                  <a
-                    href={`/${subdomain}/auth/donor-login`}
-                    onClick={(e) => handleNavClick(e, `/${subdomain}/auth/donor-login`)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors font-open-sans"
+                <div className="relative ml-2">
+                  <button
+                    onClick={() => setAccountOpen(!accountOpen)}
+                    className={cn(
+                      "flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 font-open-sans border border-gray-300",
+                      accountOpen
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-700 hover:bg-gray-50",
+                    )}
+                    style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
                   >
-                    Donor Login
-                  </a>
-                  <a
-                    href={`/${subdomain}/auth/login`}
-                    onClick={(e) => handleNavClick(e, `/${subdomain}/auth/login`)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors font-open-sans"
-                  >
-                    Admin Login
-                  </a>
+                    <UserCircle className="h-4 w-4" />
+                    Account
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", accountOpen && "rotate-180")} />
+                  </button>
+
+                  {accountOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setAccountOpen(false)}
+                        style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                      />
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-2">
+                        <a
+                          href={`/${subdomain}/auth/donor-login`}
+                          className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                          onClick={(e) => {
+                            setAccountOpen(false)
+                            handleNavClick(e, `/${subdomain}/auth/donor-login`)
+                          }}
+                          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                        >
+                          <div className="font-semibold text-sm text-gray-900">Supporter Account</div>
+                          <div className="text-xs text-gray-500 mt-0.5">Manage giving & subscriptions</div>
+                        </a>
+                        <div className="border-t border-gray-100 my-1" />
+                        <a
+                          href={`/${subdomain}/auth/login`}
+                          className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                          onClick={(e) => {
+                            setAccountOpen(false)
+                            handleNavClick(e, `/${subdomain}/auth/login`)
+                          }}
+                          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                        >
+                          <div className="font-semibold text-sm text-gray-900">Admin Login</div>
+                          <div className="text-xs text-gray-500 mt-0.5">Site owner access</div>
+                        </a>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -295,32 +334,38 @@ export function TenantNavbar({
                       setMobileMenuOpen(false)
                       handleNavClick(e, isTenantOwner ? `/${subdomain}/admin` : isDonor ? `/${subdomain}/donor` : `/${subdomain}/admin`)
                     }}
+                    style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
                   >
                     {isTenantOwner ? "Dashboard" : isDonor ? "My Account" : "Dashboard"}
                   </a>
                 ) : (
-                  <div className="space-y-2">
+                  <>
+                    <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase">Account</div>
                     <a
                       href={`/${subdomain}/auth/donor-login`}
-                      className="block px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold text-center"
+                      className="block px-4 py-3 hover:bg-gray-50 rounded-lg"
                       onClick={(e) => {
                         setMobileMenuOpen(false)
                         handleNavClick(e, `/${subdomain}/auth/donor-login`)
                       }}
+                      style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
                     >
-                      Donor Login
+                      <div className="font-semibold text-sm text-gray-900">Supporter Account</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Manage giving & subscriptions</div>
                     </a>
                     <a
                       href={`/${subdomain}/auth/login`}
-                      className="block px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold text-center"
+                      className="block px-4 py-3 hover:bg-gray-50 rounded-lg"
                       onClick={(e) => {
                         setMobileMenuOpen(false)
                         handleNavClick(e, `/${subdomain}/auth/login`)
                       }}
+                      style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
                     >
-                      Admin Login
+                      <div className="font-semibold text-sm text-gray-900">Admin Login</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Site owner access</div>
                     </a>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
