@@ -1,6 +1,6 @@
 "use client"
 
-// Last updated: 2026-03-27 - Added blog embed from theadoptedson.com
+// Last updated: 2026-03-27T12:00:00Z - Added blog embed from theadoptedson.com
 
 import Link from "next/link"
 import { NewsletterSignup } from "./newsletter-signup"
