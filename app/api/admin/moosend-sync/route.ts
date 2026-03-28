@@ -14,7 +14,7 @@ export async function POST() {
     admin.from("tenants").select("email, full_name").eq("is_active", true),
     admin.from("tenant_email_subscribers").select("email, name"),
     admin.from("tenant_financial_supporters").select("email, name"),
-    admin.from("tenant_followers").select("follower_id"),
+    admin.from("tenant_followers").select("user_id"),
   ])
 
   const dedup = <T extends { email: string }>(rows: T[]) => {
@@ -30,7 +30,7 @@ export async function POST() {
   const supporters = dedup(supportersRes.data || [])
 
   // Fetch follower profiles by their IDs (two-step, no broken join)
-  const followerIds = [...new Set((followerIdsRes.data || []).map((f) => f.follower_id).filter(Boolean))]
+  const followerIds = [...new Set((followerIdsRes.data || []).map((f) => f.user_id).filter(Boolean))]
   let followers: { email: string; name?: string }[] = []
   let followerProfilesError: string | null = null
   if (followerIds.length > 0) {
