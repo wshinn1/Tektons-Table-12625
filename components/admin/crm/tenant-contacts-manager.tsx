@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { ChevronRight, ChevronDown, Mail, DollarSign, UserCheck } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -87,32 +87,39 @@ function formatDate(dateString: string): string {
 
 function TenantRow({ tenant }: { tenant: Tenant }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [data, setData] = useState<ContactsData | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [contacts, setContacts] = useState<ContactsData | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [hasFetched, setHasFetched] = useState(false)
 
   const totalCount = tenant.subscriberCount + tenant.supporterCount + tenant.followerCount
+
+  const fetchContacts = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/tenant-contacts?tenantId=${tenant.id}`)
+      if (!res.ok) throw new Error(`Failed to load (${res.status})`)
+      const data = await res.json()
+      setContacts({
+        subscribers: Array.isArray(data.subscribers) ? data.subscribers : [],
+        supporters: Array.isArray(data.supporters) ? data.supporters : [],
+        followers: Array.isArray(data.followers) ? data.followers : [],
+      })
+    } catch (err) {
+      setError("Failed to load contacts.")
+    } finally {
+      setLoading(false)
+    }
+  }, [tenant.id])
 
   const handleToggle = async () => {
     const newOpen = !isOpen
     setIsOpen(newOpen)
 
     if (newOpen && !hasFetched) {
-      setIsLoading(true)
-      try {
-        const res = await fetch(`/api/admin/tenant-contacts?tenantId=${tenant.id}`)
-        const json = await res.json()
-        setData({
-          subscribers: json.subscribers || [],
-          supporters: json.supporters || [],
-          followers: json.followers || [],
-        })
-        setHasFetched(true)
-      } catch (error) {
-        console.error("Failed to fetch tenant contacts:", error)
-      } finally {
-        setIsLoading(false)
-      }
+      await fetchContacts()
+      setHasFetched(true)
     }
   }
 
@@ -153,21 +160,23 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
 
       {isOpen && (
         <div className="border-t p-4 bg-gray-50 space-y-6">
-          {isLoading ? (
+          {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-32 w-full" />
               <Skeleton className="h-32 w-full" />
               <Skeleton className="h-32 w-full" />
             </div>
-          ) : data ? (
+          ) : error ? (
+            <p className="text-sm text-red-500">{error}</p>
+          ) : contacts ? (
             <>
               {/* Email Subscribers */}
               <div>
                 <h4 className="flex items-center gap-2 font-semibold text-blue-700 mb-3">
                   <Mail className="h-4 w-4" />
-                  Email Subscribers ({data.subscribers.length})
+                  Email Subscribers ({(contacts.subscribers ?? []).length})
                 </h4>
-                {data.subscribers.length === 0 ? (
+                {(contacts.subscribers ?? []).length === 0 ? (
                   <p className="text-sm text-gray-500 italic">No subscribers yet.</p>
                 ) : (
                   <div className="bg-white rounded border overflow-hidden">
@@ -181,7 +190,7 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.subscribers.map((s, i) => (
+                        {(contacts.subscribers ?? []).map((s, i) => (
                           <tr key={i} className="border-b last:border-b-0">
                             <td className="p-3">{s.name || "—"}</td>
                             <td className="p-3">{s.email}</td>
@@ -201,9 +210,9 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
               <div>
                 <h4 className="flex items-center gap-2 font-semibold text-green-700 mb-3">
                   <DollarSign className="h-4 w-4" />
-                  Financial Supporters ({data.supporters.length})
+                  Financial Supporters ({(contacts.supporters ?? []).length})
                 </h4>
-                {data.supporters.length === 0 ? (
+                {(contacts.supporters ?? []).length === 0 ? (
                   <p className="text-sm text-gray-500 italic">No supporters yet.</p>
                 ) : (
                   <div className="bg-white rounded border overflow-hidden">
@@ -217,7 +226,7 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.supporters.map((s, i) => (
+                        {(contacts.supporters ?? []).map((s, i) => (
                           <tr key={i} className="border-b last:border-b-0">
                             <td className="p-3">{s.name || "—"}</td>
                             <td className="p-3">{s.email}</td>
@@ -242,9 +251,9 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
               <div>
                 <h4 className="flex items-center gap-2 font-semibold text-purple-700 mb-3">
                   <UserCheck className="h-4 w-4" />
-                  Followers ({data.followers.length})
+                  Followers ({(contacts.followers ?? []).length})
                 </h4>
-                {data.followers.length === 0 ? (
+                {(contacts.followers ?? []).length === 0 ? (
                   <p className="text-sm text-gray-500 italic">No followers yet.</p>
                 ) : (
                   <div className="bg-white rounded border overflow-hidden">
@@ -258,7 +267,7 @@ function TenantRow({ tenant }: { tenant: Tenant }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.followers.map((f, i) => (
+                        {(contacts.followers ?? []).map((f, i) => (
                           <tr key={i} className="border-b last:border-b-0">
                             <td className="p-3">{f.name || "—"}</td>
                             <td className="p-3">{f.email}</td>
