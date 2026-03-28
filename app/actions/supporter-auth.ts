@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { sendEmail, SUBSCRIBE_EMAIL } from "@/lib/resend"
 import { EMAIL_TEMPLATES } from "@/lib/email-templates"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { addContactToMoosend } from "@/lib/moosend"
 
 export async function signupSupporter({
   email,
@@ -264,6 +265,8 @@ export async function subscribeToTenant({
 
     if (subscriberError) {
       console.error("[v0] Error adding subscriber to email list:", subscriberError)
+    } else {
+      addContactToMoosend(email, fullName).catch(() => {})
     }
   }
 
@@ -425,6 +428,9 @@ export async function loginAndFollowTenant({
 
     if (subscriberError) {
       console.error("[v0] Error adding subscriber to email list:", subscriberError)
+    } else {
+      const fullName = anyProfile?.full_name || authData.user.user_metadata?.full_name || email.split("@")[0]
+      addContactToMoosend(email, fullName).catch(() => {})
     }
   }
 
@@ -634,6 +640,8 @@ export async function followTenantAsLoggedInUser({
 
     if (subscriberError) {
       console.error("[v0] Error adding subscriber to email list:", subscriberError)
+    } else {
+      addContactToMoosend(email, fullName).catch(() => {})
     }
 
     // Send welcome email
