@@ -41,6 +41,18 @@ export function MarketingFooter() {
 
   return (
     <>
+      {/* Blog embed from theadoptedson.com */}
+      <div className="w-full max-w-7xl mx-auto px-6 py-12">
+        <iframe
+          src="https://theadoptedson.com/embed/blog-rectangular"
+          width="100%"
+          height="420"
+          frameBorder="0"
+          style={{ borderRadius: "8px", overflow: "hidden" }}
+          loading="lazy"
+          title="Blog posts from The Adopted Son"
+        />
+      </div>
       <NewsletterSignup />
       <footer className="border-t border-border bg-background py-12">
         <div className="max-w-7xl mx-auto px-6">
