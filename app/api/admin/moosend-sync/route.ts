@@ -10,13 +10,11 @@ export async function POST() {
 
   const admin = createAdminClient()
 
-  const [tenantsRes, subscribersRes, supportersRes, followersRes] = await Promise.all([
+  const [tenantsRes, subscribersRes, supportersRes, followerIdsRes] = await Promise.all([
     admin.from("tenants").select("email, full_name").eq("is_active", true),
     admin.from("tenant_email_subscribers").select("email, name"),
     admin.from("tenant_financial_supporters").select("email, name"),
-    admin
-      .from("tenant_followers")
-      .select("follower:supporter_profiles!tenant_followers_follower_id_fkey(email, full_name)"),
+    admin.from("tenant_followers").select("follower_id"),
   ])
 
   const dedup = <T extends { email: string }>(rows: T[]) => {
@@ -31,16 +29,25 @@ export async function POST() {
   const subscribers = dedup(subscribersRes.data || [])
   const supporters = dedup(supportersRes.data || [])
 
-  const followerRows = (followersRes.data || [])
-    .map((f: any) => ({ email: f.follower?.email, name: f.follower?.full_name }))
-    .filter((f) => !!f.email)
-  const followers = dedup(followerRows as { email: string; name?: string }[])
+  // Fetch follower profiles by their IDs (two-step, no broken join)
+  const followerIds = [...new Set((followerIdsRes.data || []).map((f) => f.follower_id).filter(Boolean))]
+  let followers: { email: string; name?: string }[] = []
+  let followerProfilesError: string | null = null
+  if (followerIds.length > 0) {
+    const { data: profiles, error } = await admin
+      .from("supporter_profiles")
+      .select("email, full_name")
+      .in("id", followerIds)
+    if (error) followerProfilesError = error.message
+    followers = dedup((profiles || []).map((p) => ({ email: p.email, name: p.full_name })))
+  }
 
   const queryErrors = [
     tenantsRes.error?.message,
     subscribersRes.error?.message,
     supportersRes.error?.message,
-    followersRes.error?.message,
+    followerIdsRes.error?.message,
+    followerProfilesError,
   ].filter(Boolean)
 
   const results = await Promise.allSettled([
